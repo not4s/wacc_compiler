@@ -1,6 +1,13 @@
 stages:
+  - pre
   - build
   - test
+
+get-dependencies:
+  stage: pre
+  script:
+    - apt-get update
+    - apt-get install -y make
 
 make:
   stage: build
