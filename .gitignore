@@ -10,3 +10,12 @@ src/antlr
 
 #ignore test result directory
 test/results
+
+#ignore IntelliJ IDEA files
+*.iml
+*.ipr
+.idea
+.classpath
+.settings
+.project
+.DS_Store
