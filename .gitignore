@@ -11,6 +11,9 @@ src/antlr
 #ignore test result directory
 test/results
 
+# ignore target
+target
+
 #ignore IntelliJ IDEA files
 *.iml
 *.ipr
