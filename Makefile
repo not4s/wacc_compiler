@@ -12,7 +12,6 @@ OUTPUT_DIR	 := bin
 ANTLR	:= antlrBuild
 MKDIR	:= mkdir -p
 JAVAC	:= javac
-KOTLINC	:= kotlinc
 RM	:= rm -rf
 
 # Configure project Java flags
@@ -28,7 +27,6 @@ all:
 	cd $(ANTLR_DIR) && ./$(ANTLR)
 	$(MKDIR) $(OUTPUT_DIR)
 	$(JAVAC) $(JFLAGS) $(ANTLR_SOURCE_DIR)/*.java
-	$(KOTLINC) $(FLAGS) $(SOURCE_DIR)/*.kt
 	mvn compile
 
 # clean up all of the compiled files
