@@ -3,7 +3,7 @@
 # Useful locations
 
 ANTLR_DIR	 := antlr_config
-SOURCE_DIR	 := src
+SOURCE_DIR	 := src/main/kotlin
 ANTLR_SOURCE_DIR := $(SOURCE_DIR)/antlr
 OUTPUT_DIR	 := bin
 
@@ -12,23 +12,28 @@ OUTPUT_DIR	 := bin
 ANTLR	:= antlrBuild
 MKDIR	:= mkdir -p
 JAVAC	:= javac
+KOTLINC	:= kotlinc
 RM	:= rm -rf
 
 # Configure project Java flags
 
-JFLAGS	:= -sourcepath $(SOURCE_DIR) -d $(OUTPUT_DIR) -cp lib/antlr-4.9.3-complete.jar 
+FLAGS := -d $(OUTPUT_DIR) -cp bin:lib/antlr-4.9.3-complete.jar
+JFLAGS	:= -sourcepath $(SOURCE_DIR) $(FLAGS)
 
 
 # The make rules:
 
 # run the antlr build script then attempts to compile all .java files within src/antlr
 all:
-	cd $(ANTLR_DIR) && ./$(ANTLR) 
+	cd $(ANTLR_DIR) && ./$(ANTLR)
 	$(MKDIR) $(OUTPUT_DIR)
 	$(JAVAC) $(JFLAGS) $(ANTLR_SOURCE_DIR)/*.java
+	$(KOTLINC) $(FLAGS) $(SOURCE_DIR)/*.kt
+	mvn compile
 
 # clean up all of the compiled files
 clean:
 	$(RM) $(OUTPUT_DIR) $(SOURCE_DIR)/antlr
+	mvn clean
 
 .PHONY: all clean

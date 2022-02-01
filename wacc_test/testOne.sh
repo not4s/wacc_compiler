@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 # Run our ./compile, get output and error code
-actualStd=$(../compile $1)
+cd ..
+actualStd=$(./compile $1)
 actualErr=$?
+cd wacc_test
 
 # Run reference compiler
 expectedStd=$(./refCompile -s $1)
@@ -18,7 +20,7 @@ fi
 
 # Workaround to rename root folder "example_wacc" to "results"
 oldDir=$(dirname $1)
-dir=${oldDir/example_wacc/results}
+dir=${oldDir/sample_programs/results}
 name=$(basename $1 .wacc)
 
 # Make directory and any intermediates, save test output to it

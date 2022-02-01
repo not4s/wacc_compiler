@@ -1,6 +1,6 @@
 #ignore generated binary files and auto-generated ANTLR code
 bin
-src/antlr
+src/main/kotlin/antlr
 antlr_config/BasicLexer.tokens
 gen
 
@@ -11,9 +11,9 @@ gen
 *~
 
 #ignore test result directory
-test/results
+wacc_test/results
 
-# ignore target
+# ignore maven target directory
 target
 
 #ignore IntelliJ IDEA files
