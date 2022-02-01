@@ -1,7 +1,6 @@
 stages:
   - build
-  - main-test
-  - foobar-test
+  - test
   - wacc-test-valid
   - wacc-test-invalid-semantic
   - wacc-test-invalid-syntax
@@ -12,12 +11,12 @@ make:
     - make
 
 main-test:
-  stage: main-test
+  stage: test
   script:
     - mvn test -Dtest=MainTest
 
 foobar-test:
-  stage: foobar-test
+  stage: test
   script:
     - mvn test -Dtest=FoobarTest
 
