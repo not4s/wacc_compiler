@@ -1,336 +1,309 @@
 stages:
   - build
-  - test
+  - main-test
+  - foobar-test
+  - wacc-test-valid
+  - wacc-test-invalid-semantic
+  - wacc-test-invalid-syntax
 
 make:
   stage: build
   script:
     - make
 
-#/invalid/semanticErr/exit:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/exit/*.wacc"
-#
-#invalid/semanticErr/expressions:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/expressions/*.wacc"
-#
-#invalid/semanticErr/function:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/function/*.wacc"
-#
-#invalid/semanticErr/if:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/if/*.wacc"
-#
-#invalid/semanticErr/IO:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/IO/*.wacc"
-#
-#invalid/semanticErr/multiple:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/multiple/*.wacc"
-#
-#invalid/semanticErr/pairs:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/pairs/*.wacc"
-#
-#invalid/semanticErr/print:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/print/*.wacc"
-#
-#invalid/semanticErr/read:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/read/*.wacc"
-#
-#invalid/semanticErr/scope:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/scope/*.wacc"
-#
-#invalid/semanticErr/variables:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/variables/*.wacc"
-#
-#invalid/semanticErr/while:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/semanticErr/while/*.wacc"
-#
-#invalid/syntaxErr/array:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/array/*.wacc"
-#
-#invalid/syntaxErr/basic:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/basic/*.wacc"
-#
-#invalid/syntaxErr/expressions:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/expressions/*.wacc"
-#
-#invalid/syntaxErr/function:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/function/*.wacc"
-#
-#invalid/syntaxErr/if:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/if/*.wacc"
-#
-#invalid/syntaxErr/pairs:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/pairs/*.wacc"
-#
-#invalid/syntaxErr/print:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/print/*.wacc"
-#
-#invalid/syntaxErr/sequence:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/sequence/*.wacc"
-#
-#invalid/syntaxErr/variables:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/variables/*.wacc"
-#
-#invalid/syntaxErr/while:
-#  stage: test
-#  allow_failure: true
-#  interruptible: true
-#  script:
-#    - cd test
-#    - ./testDir.sh "example_wacc/invalid/syntaxErr/while/*.wacc"
+main-test:
+  stage: main-test
+  script:
+    - mvn test -Dtest=MainTest
 
-valid/advanced:
-  stage: test
-  allow_failure: true
+foobar-test:
+  stage: foobar-test
+  script:
+    - mvn test -Dtest=FoobarTest
+
+.in.valid/semanticErr/exit:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/advanced/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/exit/*.wacc"
 
-valid/array:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/expressions:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/array/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/expressions/*.wacc"
 
-valid/basic/exit:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/function:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/basic/exit/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/function/*.wacc"
 
-valid/basic/skip:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/if:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/basic/skip/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/if/*.wacc"
 
-valid/expressions:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/IO:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/expressions/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/IO/*.wacc"
 
-valid/function/nested_functions:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/multiple:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/function/nested_functions/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/multiple/*.wacc"
 
-valid/function/simple_functions:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/pairs:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/function/simple_functions/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/pairs/*.wacc"
 
-valid/if:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/print:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/if/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/print/*.wacc"
 
-valid/IO/print:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/read:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/IO/print/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/read/*.wacc"
 
-valid/IO/read:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/scope:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/IO/read/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/scope/*.wacc"
 
-valid/pairs:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/variables:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/pairs/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/variables/*.wacc"
 
-valid/runtimeErr/arrayOutOfBounds:
-  stage: test
-  allow_failure: true
+.in.valid/semanticErr/while:
+  stage: wacc-test-invalid-semantic
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/runtimeErr/arrayOutOfBounds/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/semanticErr/while/*.wacc"
 
-valid/runtimeErr/divideByZero:
-  stage: test
-  allow_failure: true
+.in.valid/syntaxErr/array:
+  stage: wacc-test-invalid-syntax
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/runtimeErr/divideByZero/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/array/*.wacc"
 
-valid/runtimeErr/integerOverflow:
-  stage: test
-  allow_failure: true
+.in.valid/syntaxErr/basic:
+  stage: wacc-test-invalid-syntax
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/runtimeErr/integerOverflow/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/basic/*.wacc"
 
-valid/runtimeErr/nullDereference:
-  stage: test
-  allow_failure: true
+.in.valid/syntaxErr/expressions:
+  stage: wacc-test-invalid-syntax
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/runtimeErr/nullDereference/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/expressions/*.wacc"
 
-valid/scope:
-  stage: test
-  allow_failure: true
+.in.valid/syntaxErr/function:
+  stage: wacc-test-invalid-syntax
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/scope/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/function/*.wacc"
 
-valid/sequence:
-  stage: test
-  allow_failure: true
+.in.valid/syntaxErr/if:
+  stage: wacc-test-invalid-syntax
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/sequence/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/if/*.wacc"
 
-valid/variables:
-  stage: test
-  allow_failure: true
+.in.valid/syntaxErr/pairs:
+  stage: wacc-test-invalid-syntax
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/variables/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/pairs/*.wacc"
 
-valid/while:
-  stage: test
-  allow_failure: true
+.in.valid/syntaxErr/print:
+  stage: wacc-test-invalid-syntax
   interruptible: true
   script:
     - cd test
-    - ./testDir.sh "example_wacc/valid/while/*.wacc"
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/print/*.wacc"
+
+.in.valid/syntaxErr/sequence:
+  stage: wacc-test-invalid-syntax
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/sequence/*.wacc"
+
+.in.valid/syntaxErr/variables:
+  stage: wacc-test-invalid-syntax
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/variables/*.wacc"
+
+.in.valid/syntaxErr/while:
+  stage: wacc-test-invalid-syntax
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.in.valid/syntaxErr/while/*.wacc"
+
+.valid/advanced:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/advanced/*.wacc"
+
+.valid/array:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/array/*.wacc"
+
+.valid/basic/exit:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/basic/exit/*.wacc"
+
+.valid/basic/skip:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/basic/skip/*.wacc"
+
+.valid/expressions:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/expressions/*.wacc"
+
+.valid/function/nested_functions:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/function/nested_functions/*.wacc"
+
+.valid/function/simple_functions:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/function/simple_functions/*.wacc"
+
+.valid/if:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/if/*.wacc"
+
+.valid/IO/print:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/IO/print/*.wacc"
+
+.valid/IO/read:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/IO/read/*.wacc"
+
+.valid/pairs:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/pairs/*.wacc"
+
+.valid/runtimeErr/arrayOutOfBounds:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/runtimeErr/arrayOutOfBounds/*.wacc"
+
+.valid/runtimeErr/divideByZero:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/runtimeErr/divideByZero/*.wacc"
+
+.valid/runtimeErr/integerOverflow:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/runtimeErr/ integerOverflow/*.wacc"
+
+.valid/runtimeErr/nullDereference:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/runtimeErr/nullDereference/*.wacc"
+
+.valid/scope:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/scope/*.wacc"
+
+.valid/sequence:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/sequence/*.wacc"
+
+.valid/variables:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/variables/*.wacc"
+
+.valid/while:
+  stage: wacc-test-valid
+  interruptible: true
+  script:
+    - cd test
+    - ./testDir.sh "example_wacc/.valid/while/*.wacc"

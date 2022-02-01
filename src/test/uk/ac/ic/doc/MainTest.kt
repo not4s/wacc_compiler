@@ -6,6 +6,13 @@ class MainTest {
 
     @Test
     fun foo() {
+        main()
+        // pass
+    }
+    @Test
+    fun aaa() {
+        main()
+        main()
         // pass
     }
 }

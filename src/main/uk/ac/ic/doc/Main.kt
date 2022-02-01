@@ -1,5 +1,5 @@
 package uk.ac.ic.doc
 
-fun main(ags: Array<String>) {
+fun main() {
     println("Hello World!")
 }
