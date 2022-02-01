@@ -4,7 +4,7 @@ class MainTest {
 
     @Test
     fun foo() {
-        main(arrayOf("Arg1", "Arg2"))
+        println("This was from MainTest")
         // pass
     }
 }
