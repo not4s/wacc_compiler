@@ -7,6 +7,10 @@
     <groupId>uk.ac.ic.doc</groupId>
     <artifactId>WACC_06</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <build>
+        <sourceDirectory>src/main</sourceDirectory>
+        <testSourceDirectory>src/test</testSourceDirectory>
+    </build>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
