@@ -20,11 +20,4 @@ fun main(args: Array<String>) {
 
     println(tree.toStringTree(parser))
 
-    println()
-    println("If the argument passed in contains \'invalid\', this code will exit with 42.")
-    if (args[0].contains("invalid")) {
-        exitProcess(42)
-    } else {
-        exitProcess(0)
-    }
 }
