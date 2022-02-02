@@ -190,8 +190,8 @@ valid/basic/exit:
   stage: wacc-test-valid
   interruptible: true
   script:
-    - cd test
-    - ./testDir.sh "example_wacc/valid/basic/exit/*.wacc"
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/valid/basic/exit/*.wacc"
 
 .valid/basic/skip:
   stage: wacc-test-valid
