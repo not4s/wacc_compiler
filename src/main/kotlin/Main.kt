@@ -1,15 +1,16 @@
 import antlr.BasicLexer
 import antlr.BasicParser
 import org.antlr.v4.runtime.*
+import java.io.File
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
 
     println("You have passed in: ${args.joinToString()}")
-    val file = System.getProperty("user.dir") + "/" + args[0]
+    val file = File(args[0])
     println("Opening file: $file\n")
 
-    val input = CharStreams.fromFileName(file)
+    val input = CharStreams.fromFileName(file.absolutePath)
 
     val lexer = BasicLexer(input)
 
