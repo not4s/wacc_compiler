@@ -158,12 +158,12 @@ invalid/syntaxErr/basic:
     - cd test
     - ./testDir.sh "example_wacc/invalid/syntaxErr/sequence/*.wacc"
 
-.invalid/syntaxErr/variables:
+invalid/syntaxErr/variables:
   stage: wacc-test-invalid-syntax
   interruptible: true
   script:
-    - cd test
-    - ./testDir.sh "example_wacc/invalid/syntaxErr/variables/*.wacc"
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/variables/*.wacc"
 
 .invalid/syntaxErr/while:
   stage: wacc-test-invalid-syntax
@@ -291,12 +291,12 @@ valid/basic/skip:
     - cd test
     - ./testDir.sh "example_wacc/valid/sequence/*.wacc"
 
-.valid/variables:
+valid/variables:
   stage: wacc-test-valid
   interruptible: true
   script:
-    - cd test
-    - ./testDir.sh "example_wacc/valid/variables/*.wacc"
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/valid/variables/*.wacc"
 
 .valid/while:
   stage: wacc-test-valid
