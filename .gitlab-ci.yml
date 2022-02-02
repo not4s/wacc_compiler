@@ -17,10 +17,6 @@ main-test:
   script:
     - mvn test -Dtest=MainTest
 
-foobar-test:
-  stage: test
-  script:
-    - mvn test -Dtest=FoobarTest
 
 .invalid/semanticErr/exit:
   stage: wacc-test-invalid-semantic
@@ -190,7 +186,7 @@ foobar-test:
     - cd test
     - ./testDir.sh "example_wacc/valid/array/*.wacc"
 
-.valid/basic/exit:
+valid/basic/exit:
   stage: wacc-test-valid
   interruptible: true
   script:
