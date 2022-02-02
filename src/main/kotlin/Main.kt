@@ -1,14 +1,15 @@
+import antlr.BasicLexer
+import antlr.BasicParser
 import org.antlr.v4.runtime.*
-import org.antlr.v4.runtime.tree.*
-import antlr.*
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
 
     println("You have passed in: ${args.joinToString()}")
-    println("Hello world! The following is a test to make sure BasicLexer works.")
+    val file = System.getProperty("user.dir") + "/" + args[0]
+    println("Opening file: $file\n")
 
-    val input = CharStreams.fromString("1+2+(3+4)")
+    val input = CharStreams.fromFileName(file)
 
     val lexer = BasicLexer(input)
 
@@ -16,8 +17,31 @@ fun main(args: Array<String>) {
 
     val parser = BasicParser(tokens)
 
+    parser.removeErrorListeners()
+    parser.addErrorListener(object : BaseErrorListener() {
+        override fun syntaxError(
+            recognizer: Recognizer<*, *>?,
+            offendingSymbol: Any?,
+            line: Int,
+            charPositionInLine: Int,
+            msg: String?,
+            e: RecognitionException?
+        ) {
+            println(msg)
+            exitProcess(100)
+        }
+    })
+    parser.errorHandler = TerminateOnErrorStrategy()
+
     val tree = parser.prog()
 
-    println(tree.toStringTree(parser))
+    println("Parsed: ${tree.toStringTree(parser)}")
 
+}
+
+class TerminateOnErrorStrategy : DefaultErrorStrategy() {
+    override fun reportError(recognizer: Parser?, e: RecognitionException?) {
+        println(e)
+        exitProcess(100)
+    }
 }

@@ -7,7 +7,7 @@ stages:
 
 make:
   stage: build
-  artifacts: 
+  artifacts:
     untracked: true
   script:
     - make
@@ -109,12 +109,12 @@ main-test:
     - cd test
     - ./testDir.sh "example_wacc/invalid/syntaxErr/array/*.wacc"
 
-.invalid/syntaxErr/basic:
+invalid/syntaxErr/basic:
   stage: wacc-test-invalid-syntax
   interruptible: true
   script:
-    - cd test
-    - ./testDir.sh "example_wacc/invalid/syntaxErr/basic/*.wacc"
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/basic/*.wacc"
 
 .invalid/syntaxErr/expressions:
   stage: wacc-test-invalid-syntax
@@ -193,12 +193,12 @@ valid/basic/exit:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/basic/exit/*.wacc"
 
-.valid/basic/skip:
+valid/basic/skip:
   stage: wacc-test-valid
   interruptible: true
   script:
-    - cd test
-    - ./testDir.sh "example_wacc/valid/basic/skip/*.wacc"
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/valid/basic/skip/*.wacc"
 
 .valid/expressions:
   stage: wacc-test-valid
