@@ -34,7 +34,7 @@ fun main(args: Array<String>) {
     })
     parser.errorHandler = TerminateOnErrorStrategy()
 
-    val tree = parser.prog()
+    val tree = parser.program()
 
     println("Parsed: ${tree.toStringTree(parser)}")
 

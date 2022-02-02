@@ -1,27 +1,47 @@
 parser grammar BasicParser;
 
 options {
-  tokenVocab=BasicLexer;
+    tokenVocab=BasicLexer;
 }
 
-prog: BEGIN .*? BEGIN .*?
-      {notifyErrorListeners("Program cannot have multiple `begin` statements.");}
-    | BEGIN END
-      {notifyErrorListeners("Program is missing body.");}
-    | BEGIN func* stat END
-    | BEGIN func* .*? END
-      {notifyErrorListeners("Program does not have valid body.");}
-    | BEGIN func* .*?
-      {notifyErrorListeners("Program is missing `end`.");}
-    | .*?
-      {notifyErrorListeners("Program is missing `begin`.");}
-    ;
+program
+  : KW_BEGIN func* stat KW_END
+  ;
 
-stat: SKIP_
-    | EXIT INTEGER
-    | EXIT NEGATIVE
-    | .*?
-      {notifyErrorListeners("Invalid statement.");}
-    ;
+type
+  : baseType #typeBaseType
+  ;
 
-func: TEMPORARY;
+baseType
+  : KW_INT #baseTypeInt
+  | KW_BOOL #baseTypeBool
+  | KW_CHAR #baseTypeChar
+  | KW_STRING #baseTypeString
+  ;
+
+literal
+  : INTEGER #integerLiteral
+  | BOOLEAN #booleanLiteral
+  | CHARACTER #charLiteral
+  | STRING #stringLiteral
+  | KW_NULL #pairLiteral
+  ;
+
+expr
+  : literal #literalExpr
+  | IDENTIFIER #identExpr
+  | SYM_LBRACKET expr SYM_RBRACKET #bracketExpr
+  ;
+
+assignRhs
+  : expr #assignRhsExpr
+  ;
+
+stat
+  : KW_SKIP #skipStat
+  | type IDENTIFIER SYM_EQUALS assignRhs #assignRhsStat
+  | KW_EXIT expr #exitStat
+  | stat SYM_SEMICOLON stat #joinStat
+  ;
+
+func: KW_BEGIN KW_BEGIN KW_BEGIN;
