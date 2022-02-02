@@ -4,34 +4,34 @@ options {
   tokenVocab=BasicLexer;
 }
 
-prog: 'begin' func* stat 'end' ;
+prog: BEGIN func* stat END ;
 
-stat: 'skip'
-      | type ident '=' assign_rhs
-      | assign_lhs '=' assign_rhs
-      | 'read' assign_lhs
-      | 'free' expr
-      | 'return' expr
-      | 'exit' expr
-      | 'print' expr
-      | 'println' expr
-      | 'if' expr 'then' stat 'else' stat 'fi'
-      | 'while' expr 'do' stat 'done'
-      | 'begin' stat 'end'
-      | stat ';' stat
+stat: SKIP_
+      | type ident ASSIGN assign_rhs
+      | assign_lhs ASSIGN assign_rhs
+      | READ assign_lhs
+      | FREE expr
+      | RETURN expr
+      | EXIT expr
+      | PRINT expr
+      | PRINTLN expr
+      | IF expr THEN stat ELSE stat FI
+      | WHILE expr DO stat DONE
+      | BEGIN stat END
+      | stat SEMICOLON stat
       ;
 
-binaryOper: PLUS | MINUS | MULT | DIV ;
+binaryOper: PLUS | MINUS | MUL | DIV ;
 
-assign_rhs: 'expr'
+assign_rhs: expr
             | array_liter
-            | 'new pair' OPEN_PARENTHESES expr ',' expr CLOSE_PARENTHESES
+            | NEWPAIR OPEN_PARENTHESES expr COMMA expr CLOSE_PARENTHESES
             | pair_elem
-            | 'call' ident OPEN_PARENTHESES arg_list? CLOSE_PARENTHESES
+            | CALL ident OPEN_PARENTHESES arg_list? CLOSE_PARENTHESES
             ;
 
-pair_type: 'pair' OPEN_PARENTHESES
-                  pair_elem_type ',' pair_elem_type
+pair_type: PAIR OPEN_PARENTHESES
+                  pair_elem_type COMMA pair_elem_type
                   CLOSE_PARENTHESES
                   ;
 
@@ -39,6 +39,16 @@ expr: expr binaryOper expr
 | INTEGER
 | OPEN_PARENTHESES expr CLOSE_PARENTHESES
 ;
+
+func: SKIP_;
+type: SKIP_;
+ident: SKIP_;
+assign_lhs: SKIP_;
+array_liter: SKIP_;
+pair_elem: SKIP_;
+arg_list: SKIP_;
+pair_elem_type: SKIP_;
+
 
 /*
  TODO: Parser Rules for
