@@ -49,6 +49,8 @@ binaryOperator
 expr
   : literal #literalExpr
   | IDENTIFIER #identExpr
+  | expr binaryOperator expr #binaryExpr
+  | expr logicalOperator expr #logicalExpr
   | SYM_LBRACKET expr SYM_RBRACKET #bracketExpr
   ;
 
