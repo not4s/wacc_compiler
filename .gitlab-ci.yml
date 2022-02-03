@@ -165,7 +165,7 @@ invalid/syntaxErr/variables:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/syntaxErr/variables/*.wacc"
 
-.invalid/syntaxErr/while:
+invalid/syntaxErr/while:
   stage: wacc-test-invalid-syntax
   interruptible: true
   script:
@@ -298,7 +298,7 @@ valid/variables:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/variables/*.wacc"
 
-.valid/while:
+valid/while:
   stage: wacc-test-valid
   interruptible: true
   script:
