@@ -7,6 +7,7 @@ KW_BEGIN: 'begin' ;
 KW_END: 'end' ;
 KW_SKIP: 'skip' ;
 KW_EXIT: 'exit' ;
+KW_RETURN: 'return';
 
 /* Base types */
 KW_INT: 'int';
@@ -14,8 +15,12 @@ KW_BOOL: 'bool';
 KW_CHAR: 'char';
 KW_STRING: 'string';
 
+/* Pair stuff */
 KW_FREE: 'free';
-KW_RETURN: 'return';
+KW_NEWPAIR: 'newpair';
+KW_PAIR: 'pair';
+KW_FST: 'fst';
+KW_SND: 'snd';
 
 /* Type literals */
 KW_TRUE: 'true';
