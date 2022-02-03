@@ -64,7 +64,6 @@ stat
   | KW_PRINTLN expr                               #printlnStat
   | KW_READ expr                                  #readStat
   | KW_IF expr KW_THEN stat KW_ELSE stat KW_FI    #ifThenElseStat
-  | KW_IF expr KW_THEN stat KW_FI                 #ifThenStat
   | KW_WHILE expr KW_DO stat KW_DONE              #whileDoDoneStat
   | type IDENTIFIER SYM_EQUALS assignRhs          #assignRhsStat
   | assignLhs SYM_EQUALS assignRhs                #assignLhsStat
