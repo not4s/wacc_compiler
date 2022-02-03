@@ -61,6 +61,8 @@ stat
   | KW_EXIT expr                         #exitStat
   | KW_PRINT expr                        #printStat
   | KW_PRINTLN expr                      #printlnStat
+  | KW_IF expr THEN stat ELSE stat FI    #ifThenElseStat
+  | KW_IF expr THEN stat FI              #ifThenStat
   | type IDENTIFIER SYM_EQUALS assignRhs #assignRhsStat
   | assignLhs SYM_EQUALS assignRhs       #assignLhsStat
   | stat SYM_SEMICOLON stat              #joinStat
