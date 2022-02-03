@@ -53,7 +53,6 @@ OP_NOT: '!';
 OP_ORD: 'ord';
 OP_CHR: 'chr';
 OP_LEN: 'len';
-OP_NEG: '-' ;
 
 
 /* Symbols */

@@ -28,11 +28,11 @@ literal
   ;
 
 unaryOperator
-  : OP_NOT    #unaryNotOperator
-  | OP_ORD    #unaryOrdOperator
-  | OP_CHR    #unaryChrOperator
-  | OP_LEN    #unaryLenOperator
-  | OP_NEG    #unaryNegOperator
+  : OP_NOT     #unaryNotOperator
+  | OP_ORD     #unaryOrdOperator
+  | OP_CHR     #unaryChrOperator
+  | OP_LEN     #unaryLenOperator
+  | OP_SUBT    #unaryNegOperator
   ;
 
 expr
