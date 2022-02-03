@@ -21,10 +21,10 @@ IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
 fragment ID_CHAR: '_' | 'a'..'z' | 'A'..'Z';
 
 /* Integer */
-fragment DIGIT: [0-9] ;
-INTEGER: ('+'|'-')* DIGIT+ ;
+INTEGER: ('+'|'-')* DIGIT+;
+fragment DIGIT: [0-9];
 
-/* Chars, string */
+/* Characters and Strings */
 CHARACTER: '\'' ASCII '\'';
 STRING: '"' ASCII* '"';
 
@@ -46,6 +46,9 @@ OP_NOT_EQUAL: '!=';
 OP_AND: '&&';
 OP_OR: '||';
 OP_NOT: '!';
+OP_ORD: 'ord';
+OP_CHR: 'chr';
+OP_LEN: 'len';
 
 
 /* Symbols */
