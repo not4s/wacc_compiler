@@ -27,30 +27,16 @@ literal
   | KW_NULL #pairLiteral
   ;
 
-binaryOperator
-  : OP_ADD #binaryAdd
-  | OP_SUBT #binarySubtract
-  | OP_MULT #binaryMultiply
-  | OP_DIV #binaryDivide
-  | OP_MODULO #binaryModulo
-  ;
-
-  logicalOperator
-  : OP_GREATER #logicalGreater
-  | OP_GREATER_OR_EQUAL #logicalGreaterOrEqual
-  | OP_LESS #logicalLess
-  | OP_LESS_OR_EQUAL #logicalLessOrEqual
-  | OP_EQUAL #logicalEqual
-  | OP_NOT_EQUAL #logicalNotEqual
-  | OP_AND #logicalAnd
-  | OP_OR #logicalOr
-  ;
-
 expr
   : literal #literalExpr
   | IDENTIFIER #identExpr
-  | expr binaryOperator expr #binaryExpr
-  | expr logicalOperator expr #logicalExpr
+  | expr (OP_MULT | OP_DIV | OP_MODULO) expr  #binaryExprFirstPrecedence
+  | expr (OP_ADD | OP_DIV) expr               #binaryExprSecondPrecedence
+  | expr (OP_GREATER | OP_GREATER_OR_EQUAL | 
+             OP_LESS | OP_LESS_OR_EQUAL) expr #logicalExprFirstPrecedence
+  | expr (OP_EQUAL | OP_NOT_EQUAL) expr       #logicalExprSecondPrecedence
+  | expr OP_AND expr                          #logicalExprThirdPrecedence
+  | expr OP_OR expr                           #logicalExprFourthPrecedence
   | SYM_LBRACKET expr SYM_RBRACKET #bracketExpr
   ;
 
