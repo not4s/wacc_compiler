@@ -135,7 +135,7 @@ invalid/syntaxErr/if:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/syntaxErr/if/*.wacc"
 
-.invalid/syntaxErr/pairs:
+invalid/syntaxErr/pairs:
   stage: wacc-test
   interruptible: true
   script:
@@ -240,7 +240,7 @@ valid/IO/read:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/IO/read/*.wacc"
 
-.valid/pairs:
+valid/pairs:
   stage: wacc-test
   interruptible: true
   script:
