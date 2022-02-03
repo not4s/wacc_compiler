@@ -130,7 +130,7 @@ invalid/syntaxErr/expressions:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/syntaxErr/function/*.wacc"
 
-.invalid/syntaxErr/if:
+invalid/syntaxErr/if:
   stage: wacc-test-invalid-syntax
   interruptible: true
   script:
@@ -221,7 +221,7 @@ valid/expressions:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/function/simple_functions/*.wacc"
 
-.valid/if:
+valid/if:
   stage: wacc-test-valid
   interruptible: true
   script:
