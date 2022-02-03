@@ -12,6 +12,9 @@ KW_STRING: 'string';
 KW_NULL: 'null';
 KW_PRINT: 'print';
 KW_PRINTLN: 'println';
+KW_IF: 'if';
+KW_THEN: 'then';
+KW_ELSE: 'else';
 
 /* Boolean */
 BOOLEAN: 'true' | 'false' ;
@@ -21,7 +24,7 @@ IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
 fragment ID_CHAR: '_' | 'a'..'z' | 'A'..'Z';
 
 /* Integer */
-INTEGER: ('+'|'-')* DIGIT+;
+INTEGER: ('+'|'-')? DIGIT+;
 fragment DIGIT: [0-9];
 
 /* Characters and Strings */
