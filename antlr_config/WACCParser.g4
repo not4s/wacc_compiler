@@ -60,8 +60,10 @@ assignRhs
 
 stat
   : KW_SKIP #skipStat
-  | type IDENTIFIER SYM_EQUALS assignRhs #assignRhsStat
   | KW_EXIT expr #exitStat
+  | KW_PRINT expr #printStat
+  | KW_PRINT expr #printlnStat
+  | type IDENTIFIER SYM_EQUALS assignRhs #assignRhsStat
   | stat SYM_SEMICOLON stat #joinStat
   ;
 
