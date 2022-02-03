@@ -52,7 +52,7 @@ class TerminateOnErrorStrategy : DefaultErrorStrategy() {
 }
 
 class CustomVisitor : WACCParserBaseVisitor<Void>() {
-    override fun visitIntegerLiteral(ctx: WACCParser.IntegerLiteralContext?): Void? {
+    override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext?): Void? {
         // Check if int is within limits
         try {
             val integer: Int = Integer.parseInt(ctx?.text)
