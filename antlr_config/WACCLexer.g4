@@ -64,7 +64,7 @@ fragment WS: [ \t\r\n];
 
 /* Ignore comments and white space */
 COMMENT_IGNORE: '#' ~'\n'* '\n' -> skip;
-WHITESPACE_IGNORE: WS+ -> skip;
+WHITESPACE_IGNORE: WS+ -> channel(HIDDEN);
 
 
 /* Match anything */
