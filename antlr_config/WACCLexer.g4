@@ -22,7 +22,7 @@ fragment ID_CHAR: '_' | 'a'..'z' | 'A'..'Z';
 
 /* Integer */
 fragment DIGIT: [0-9] ;
-INTEGER: ('+'|'-')? DIGIT+ ;
+INTEGER: ('+'|'-')* DIGIT+ ;
 
 /* Chars, string */
 CHARACTER: '\'' ASCII '\'';
@@ -45,6 +45,7 @@ OP_EQUAL: '==';
 OP_NOT_EQUAL: '!=';
 OP_AND: '&&';
 OP_OR: '||';
+OP_NOT: '!';
 
 
 /* Symbols */
