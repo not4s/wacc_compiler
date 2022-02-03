@@ -1,7 +1,7 @@
-parser grammar BasicParser;
+parser grammar WACCParser;
 
 options {
-    tokenVocab=BasicLexer;
+    tokenVocab=WACCLexer;
 }
 
 program

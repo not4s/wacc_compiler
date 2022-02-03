@@ -1,6 +1,6 @@
-import antlr.BasicLexer
-import antlr.BasicParser
-import antlr.BasicParserBaseVisitor
+import antlr.WACCLexer
+import antlr.WACCParser
+import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.*
 import java.io.File
 import kotlin.system.exitProcess
@@ -13,11 +13,11 @@ fun main(args: Array<String>) {
 
     val input = CharStreams.fromFileName(file.absolutePath)
 
-    val lexer = BasicLexer(input)
+    val lexer = WACCLexer(input)
 
     val tokens = CommonTokenStream(lexer)
 
-    val parser = BasicParser(tokens)
+    val parser = WACCParser(tokens)
 
     parser.removeErrorListeners()
     parser.addErrorListener(object : BaseErrorListener() {
@@ -50,8 +50,8 @@ class TerminateOnErrorStrategy : DefaultErrorStrategy() {
     }
 }
 
-class CustomVisitor : BasicParserBaseVisitor<Void>() {
-    override fun visitIntegerLiteral(ctx: BasicParser.IntegerLiteralContext?): Void? {
+class CustomVisitor : WACCParserBaseVisitor<Void>() {
+    override fun visitIntegerLiteral(ctx: WACCParser.IntegerLiteralContext?): Void? {
         // Check if int is within limits
         try {
             val integer: Int = Integer.parseInt(ctx?.text)

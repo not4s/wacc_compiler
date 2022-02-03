@@ -1,4 +1,4 @@
-lexer grammar BasicLexer;
+lexer grammar WACCLexer;
 
 /* Keywords */
 KW_BEGIN: 'begin' ;
