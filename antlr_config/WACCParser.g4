@@ -35,6 +35,17 @@ binaryOperator
   | OP_MODULO #binaryModulo
   ;
 
+  logicalOperator
+  : OP_GREATER #logicalGreater
+  | OP_GREATER_OR_EQUAL #logicalGreaterOrEqual
+  | OP_LESS #logicalLess
+  | OP_LESS_OR_EQUAL #logicalLessOrEqual
+  | OP_EQUAL #logicalEqual
+  | OP_NOT_EQUAL #logicalNotEqual
+  | OP_AND #logicalAnd
+  | OP_OR #logicalOr
+  ;
+
 expr
   : literal #literalExpr
   | IDENTIFIER #identExpr
