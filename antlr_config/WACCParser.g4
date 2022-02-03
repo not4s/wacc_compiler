@@ -32,6 +32,7 @@ unaryOperator
   | OP_ORD    #unaryOrdOperator
   | OP_CHR    #unaryChrOperator
   | OP_LEN    #unaryLenOperator
+  | OP_NEG    #unaryNegOperator
   ;
 
 expr
