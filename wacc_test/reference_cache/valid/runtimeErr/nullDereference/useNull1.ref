@@ -1,0 +1,25 @@
+sample_programs/valid/runtimeErr/nullDereference/useNull1.wacc
+calling the reference compiler on sample_programs/valid/runtimeErr/nullDereference/useNull1.wacc
+-- Test: useNull1.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# attempt dereference of a null pair by using it
+
+# Output:
+# #runtime_error#
+
+# Exit:
+# 255
+
+# Program:
+
+begin
+	pair(int, int) p = null ;
+	int x = fst p
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

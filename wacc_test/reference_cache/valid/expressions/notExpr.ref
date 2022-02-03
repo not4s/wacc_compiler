@@ -1,0 +1,25 @@
+sample_programs/valid/expressions/notExpr.wacc
+calling the reference compiler on sample_programs/valid/expressions/notExpr.wacc
+-- Test: notExpr.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# evaluating not
+
+# Output:
+# false
+# true
+
+# Program:
+
+begin
+  bool a = true ;
+  bool b = false ;
+  println !a ;
+  println !b
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

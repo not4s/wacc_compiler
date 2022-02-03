@@ -1,0 +1,21 @@
+sample_programs/valid/variables/stringDeclaration.wacc
+calling the reference compiler on sample_programs/valid/variables/stringDeclaration.wacc
+-- Test: stringDeclaration.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple string variable declaration
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  string s = "Hello World!"
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

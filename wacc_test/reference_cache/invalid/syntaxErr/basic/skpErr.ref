@@ -1,0 +1,24 @@
+sample_programs/invalid/syntaxErr/basic/skpErr.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/basic/skpErr.wacc
+-- Test: skpErr.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# skip typo
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin skp end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 11:10 -- mismatched input 'end' expecting {'[', '='}
+1 parser error(s) detected, no further compilation attempted.

@@ -1,0 +1,21 @@
+sample_programs/valid/pairs/createPair.wacc
+calling the reference compiler on sample_programs/valid/pairs/createPair.wacc
+-- Test: createPair.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# create a pair (int, int)
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  pair(int, int) p = newpair(10, 3)
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

@@ -1,0 +1,39 @@
+sample_programs/invalid/syntaxErr/function/functionLateDefine.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/function/functionLateDefine.wacc
+-- Test: functionLateDefine.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# attempted function definition after body begun
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  int f() is
+    return 0 
+  end 
+  int x = call f();
+  println x ;
+  int g() is
+    return 1
+  end
+  int y = call g();
+  println y
+end
+	
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 17:7 -- missing '=' at '('
+Syntactic Error at 17:8 -- no viable alternative at input ')'
+Syntactic Error at 17:10 -- mismatched input 'is' expecting {'-', '*', '/', '%', '+', '<', '<=', '>=', '>', '==', '!=', '&&', '||', 'end', ';'}
+Syntactic Error at 20:2 -- mismatched input 'int' expecting <EOF>
+4 parser error(s) detected, no further compilation attempted.

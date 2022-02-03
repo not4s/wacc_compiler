@@ -1,0 +1,29 @@
+sample_programs/invalid/syntaxErr/if/ifNoelse.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/if/ifNoelse.wacc
+-- Test: ifNoelse.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# if missing else clause
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  if true 
+  then
+    skip
+  fi
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 15:2 -- mismatched input 'fi' expecting {'else', ';'}
+1 parser error(s) detected, no further compilation attempted.

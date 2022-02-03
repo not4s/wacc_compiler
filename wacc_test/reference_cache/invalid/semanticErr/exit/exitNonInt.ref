@@ -1,0 +1,26 @@
+sample_programs/invalid/semanticErr/exit/exitNonInt.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/exit/exitNonInt.wacc
+-- Test: exitNonInt.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# exit with non-int - this should be an invalid program! 
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  char x = 'f' ;
+  exit x
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 13:7 -- Incompatible type at x (expected: INT, actual: CHAR)

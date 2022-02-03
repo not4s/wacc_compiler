@@ -1,0 +1,25 @@
+sample_programs/invalid/semanticErr/variables/basicTypeErr05.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/variables/basicTypeErr05.wacc
+-- Test: basicTypeErr05.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# type mismatch: bool <- char
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  bool b = 't'
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 12:11 -- Incompatible type at 't' (expected: BOOL, actual: CHAR)

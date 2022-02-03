@@ -1,0 +1,28 @@
+sample_programs/invalid/semanticErr/pairs/freeNonPair.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/pairs/freeNonPair.wacc
+-- Test: freeNonPair.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# call free on a non-pair type 
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int x = 5;
+  println x;
+  free 9 ; 
+  println x
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 14:2 -- Incompatible type INT

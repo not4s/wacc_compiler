@@ -1,0 +1,22 @@
+sample_programs/valid/array/arrayLength.wacc
+calling the reference compiler on sample_programs/valid/array/arrayLength.wacc
+-- Test: arrayLength.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# check length of array
+
+# Output:
+# 4
+
+# Program:
+
+begin
+  int[] a = [43, 2, 18, 1] ;
+  println len a
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

@@ -1,0 +1,26 @@
+sample_programs/valid/sequence/intAssignment.wacc
+calling the reference compiler on sample_programs/valid/sequence/intAssignment.wacc
+-- Test: intAssignment.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple integer variable declaration and assignment
+
+# Output:
+# #empty#
+
+# Exit:
+# 20
+
+# Program:
+
+begin
+  int x = 10 ;
+  x = 20 ;
+  exit x
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

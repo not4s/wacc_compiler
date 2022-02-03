@@ -1,0 +1,25 @@
+sample_programs/valid/runtimeErr/nullDereference/setNull2.wacc
+calling the reference compiler on sample_programs/valid/runtimeErr/nullDereference/setNull2.wacc
+-- Test: setNull2.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# attempt dereference of a null pair by setting an element of it
+
+# Output:
+# #runtime_error#
+
+# Exit:
+# 255
+
+# Program:
+
+begin
+	pair(int, int) p = null ;
+	snd p = 1
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

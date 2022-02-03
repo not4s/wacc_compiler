@@ -1,0 +1,27 @@
+sample_programs/invalid/syntaxErr/while/whileNodone.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/while/whileNodone.wacc
+-- Test: whileNodone.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# while missing closing done
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  while false do
+    skip
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 14:0 -- mismatched input 'end' expecting {'done', ';'}
+1 parser error(s) detected, no further compilation attempted.

@@ -1,0 +1,31 @@
+sample_programs/invalid/syntaxErr/function/functionNoReturn.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/function/functionNoReturn.wacc
+-- Test: functionNoReturn.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# function body missing return or exit statement
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  int f() is
+    bool b = true 
+  end
+
+  int x = call f();
+  println x
+end
+	
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 11:2 -- Function f is not ended with a return or an exit statement.
+1 parser error(s) detected, no further compilation attempted.

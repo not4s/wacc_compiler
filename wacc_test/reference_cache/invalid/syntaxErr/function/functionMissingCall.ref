@@ -1,0 +1,30 @@
+sample_programs/invalid/syntaxErr/function/functionMissingCall.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/function/functionMissingCall.wacc
+-- Test: functionMissingCall.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# program missing call token at function use
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  int f() is
+    return 0 
+  end
+  int x = f()
+end
+
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 15:11 -- mismatched input '(' expecting {'-', '*', '/', '%', '+', '<', '<=', '>=', '>', '==', '!=', '&&', '||', 'end', '[', ';'}
+1 parser error(s) detected, no further compilation attempted.

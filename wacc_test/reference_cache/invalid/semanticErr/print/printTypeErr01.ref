@@ -1,0 +1,27 @@
+sample_programs/invalid/semanticErr/print/printTypeErr01.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/print/printTypeErr01.wacc
+-- Test: printTypeErr01.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# type mismatch: int <- char
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int x = 4 ;
+  char y = 'a' ;
+  println x + y
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 14:14 -- Incompatible type at y (expected: INT, actual: CHAR)

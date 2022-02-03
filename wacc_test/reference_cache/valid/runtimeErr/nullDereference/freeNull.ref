@@ -1,0 +1,26 @@
+sample_programs/valid/runtimeErr/nullDereference/freeNull.wacc
+calling the reference compiler on sample_programs/valid/runtimeErr/nullDereference/freeNull.wacc
+-- Test: freeNull.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# Create and free a null pair
+
+# Output:
+# #runtime_error#
+
+# Exit:
+# 255
+
+# Program:
+
+begin
+  pair(pair, pair) a = null ;
+  free a
+end
+
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

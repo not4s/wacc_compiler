@@ -1,0 +1,30 @@
+sample_programs/invalid/semanticErr/function/functionBadCall.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/function/functionBadCall.wacc
+-- Test: functionBadCall.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# function call type mismatch
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+	int f() is
+		return 0 
+	end
+	bool b = call f() ;
+	println b 
+end
+	
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 15:10 -- Incompatible type at callf() (expected: BOOL, actual: INT)

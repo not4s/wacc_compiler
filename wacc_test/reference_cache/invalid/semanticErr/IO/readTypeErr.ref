@@ -1,0 +1,27 @@
+sample_programs/invalid/semanticErr/IO/readTypeErr.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/IO/readTypeErr.wacc
+-- Test: readTypeErr.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# attempt to read into a boolan variable
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  bool b = true ;
+  read b ; 
+  println b 
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 13:2 -- Incompatible type BOOL
