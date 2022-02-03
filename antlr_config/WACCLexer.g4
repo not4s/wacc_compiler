@@ -66,6 +66,9 @@ SYM_RBRACKET: ')';
 INTEGER: DIGIT+;
 fragment DIGIT: [0-9];
 
+SYM_SQ_LBRACKET: '[';
+SYM_SQ_RBRACKET: ']';
+SYM_COMMA: ',';
 fragment WS: [ \t\r\n];
 
 /* Ignore comments and white space */
