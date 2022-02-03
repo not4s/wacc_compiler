@@ -1,7 +1,6 @@
 #ignore generated binary files and auto-generated ANTLR code
 bin
 src/main/kotlin/antlr
-antlr_config/BasicLexer.tokens
 gen
 
 #ignore Java class files
@@ -9,6 +8,9 @@ gen
 
 #ignore other junk files
 *~
+
+#ignore VSCode Antlr extension junk
+antlr_config/.antlr
 
 #ignore test result directory
 wacc_test/results
