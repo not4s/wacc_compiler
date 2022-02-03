@@ -1,0 +1,22 @@
+sample_programs/valid/basic/skip/comment.wacc
+calling the reference compiler on sample_programs/valid/basic/skip/comment.wacc
+-- Test: comment.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple skip program with comment line
+
+# Output:
+# #empty#
+
+# Program:
+
+begin 
+  # I can write stuff on a comment line
+  skip 
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

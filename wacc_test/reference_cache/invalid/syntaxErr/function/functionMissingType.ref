@@ -1,0 +1,31 @@
+sample_programs/invalid/syntaxErr/function/functionMissingType.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/function/functionMissingType.wacc
+-- Test: functionMissingType.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# program missing return type of function
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  f() is
+    return 0 
+  end
+  int x = call f()
+end
+
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 12:3 -- mismatched input '(' expecting {'[', '='}
+Syntactic Error at 15:2 -- mismatched input 'int' expecting <EOF>
+2 parser error(s) detected, no further compilation attempted.

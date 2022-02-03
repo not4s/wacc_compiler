@@ -1,0 +1,23 @@
+sample_programs/valid/expressions/divExpr.wacc
+calling the reference compiler on sample_programs/valid/expressions/divExpr.wacc
+-- Test: divExpr.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# evaluating integer division
+
+# Output:
+# 1
+
+# Program:
+
+begin
+  int x = 5 ;
+  int y = 3 ;
+  println x / y
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

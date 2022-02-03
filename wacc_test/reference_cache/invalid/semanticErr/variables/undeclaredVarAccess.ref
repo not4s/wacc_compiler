@@ -1,0 +1,26 @@
+sample_programs/invalid/semanticErr/variables/undeclaredVarAccess.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/variables/undeclaredVarAccess.wacc
+-- Test: undeclaredVarAccess.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# access attempt on undeclared variable
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int x = 10 ;
+  x = x + y
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 13:10 -- Variable y is not defined in this scope

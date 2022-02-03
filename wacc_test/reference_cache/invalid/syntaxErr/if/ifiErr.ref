@@ -1,0 +1,31 @@
+sample_programs/invalid/syntaxErr/if/ifiErr.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/if/ifiErr.wacc
+-- Test: ifiErr.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# if typo
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  ifi true 
+  then
+    skip
+  else
+    skip
+  fi
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 12:6 -- mismatched input 'true' expecting {'[', '='}
+1 parser error(s) detected, no further compilation attempted.

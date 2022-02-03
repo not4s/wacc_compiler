@@ -1,0 +1,32 @@
+sample_programs/invalid/semanticErr/multiple/multiCaseSensitivity.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/multiple/multiCaseSensitivity.wacc
+-- Test: multiCaseSensitivity.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# variable names are case sensitive in all possible ways
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int number = 42 ;
+  println NUMBER ;
+
+  int INDEX = 0 ;
+  println index ;
+
+  int miXed = 3 ;
+  println MIxED
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 13:10 -- Variable NUMBER is not defined in this scope

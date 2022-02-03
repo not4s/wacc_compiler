@@ -1,0 +1,21 @@
+sample_programs/valid/variables/zeroIntDeclaration.wacc
+calling the reference compiler on sample_programs/valid/variables/zeroIntDeclaration.wacc
+-- Test: zeroIntDeclaration.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple zero integer variable declaration
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int x = 0
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

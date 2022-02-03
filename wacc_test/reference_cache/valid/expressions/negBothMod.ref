@@ -1,0 +1,23 @@
+sample_programs/valid/expressions/negBothMod.wacc
+calling the reference compiler on sample_programs/valid/expressions/negBothMod.wacc
+-- Test: negBothMod.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# modulus of a negative number by a negative number
+
+# Output:
+# -2
+
+# Program:
+
+begin
+  int x = -5 ;
+  int y = -3 ;
+  println x % y
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

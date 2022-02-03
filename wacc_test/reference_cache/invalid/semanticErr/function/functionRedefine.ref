@@ -1,0 +1,33 @@
+sample_programs/invalid/semanticErr/function/functionRedefine.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/function/functionRedefine.wacc
+-- Test: functionRedefine.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# attempted redefinition of function
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+	int f() is
+		return 0 
+	end 
+  int f() is
+    return 1
+  end
+  int x = call f();
+  println x
+end
+	
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 11:0 -- "f" is already defined in this scope

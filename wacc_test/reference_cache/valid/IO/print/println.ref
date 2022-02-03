@@ -1,0 +1,21 @@
+sample_programs/valid/IO/print/println.wacc
+calling the reference compiler on sample_programs/valid/IO/print/println.wacc
+-- Test: println.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple println statement
+
+# Output:
+# Hello World!
+
+# Program:
+
+begin
+  println "Hello World!"
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

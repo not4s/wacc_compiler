@@ -1,0 +1,29 @@
+sample_programs/valid/pairs/printPair.wacc
+calling the reference compiler on sample_programs/valid/pairs/printPair.wacc
+-- Test: printPair.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# print pair program
+
+# Output:
+# #addrs# = (10, a)
+
+# Program:
+
+begin
+  pair(int, char) p = newpair(10, 'a') ;
+  print p ; 
+  print " = (" ;
+  int x = fst p ;
+  print x ;
+  print ", " ;
+  char c = snd p ;
+  print c ;
+  println ')' 
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

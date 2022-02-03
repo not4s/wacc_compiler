@@ -1,0 +1,25 @@
+sample_programs/valid/sequence/intLeadingZeros.wacc
+calling the reference compiler on sample_programs/valid/sequence/intLeadingZeros.wacc
+-- Test: intLeadingZeros.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# integer variable declaration with leading zeroes
+
+# Output:
+# 42
+# 0
+
+# Program:
+
+begin
+  int x = 0000000000000000000000000000000000000042 ;
+  int y = 0000000000000000000000000000000000000000 ;
+  println x ;
+  println y
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

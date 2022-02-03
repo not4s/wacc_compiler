@@ -1,0 +1,21 @@
+sample_programs/valid/pairs/createPair02.wacc
+calling the reference compiler on sample_programs/valid/pairs/createPair02.wacc
+-- Test: createPair02.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# create a pair (char, char)
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  pair(char, char) p = newpair('a', 'b')
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

@@ -1,0 +1,25 @@
+sample_programs/invalid/semanticErr/variables/basicTypeErr01.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/variables/basicTypeErr01.wacc
+-- Test: basicTypeErr01.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# type mismatch: int <- bool
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int i = true
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 12:10 -- Incompatible type at true (expected: INT, actual: BOOL)

@@ -1,0 +1,21 @@
+sample_programs/valid/variables/capCharDeclaration.wacc
+calling the reference compiler on sample_programs/valid/variables/capCharDeclaration.wacc
+-- Test: capCharDeclaration.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple capital character variable declaration
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  char c = 'M'
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

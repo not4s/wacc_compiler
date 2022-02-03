@@ -1,0 +1,23 @@
+sample_programs/valid/expressions/plusExpr.wacc
+calling the reference compiler on sample_programs/valid/expressions/plusExpr.wacc
+-- Test: plusExpr.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# evaluating addition
+
+# Output:
+# 35
+
+# Program:
+
+begin
+  int x = 15 ;
+  int y = 20 ;
+  println x + y
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

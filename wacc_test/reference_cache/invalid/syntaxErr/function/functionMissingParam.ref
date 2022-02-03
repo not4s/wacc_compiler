@@ -1,0 +1,30 @@
+sample_programs/invalid/syntaxErr/function/functionMissingParam.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/function/functionMissingParam.wacc
+-- Test: functionMissingParam.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# program extra missing parameter in function definition
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  int f(int x, int y,) is
+    return 0 
+  end
+  int x = call f(1,2,3)
+end
+
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 12:21 -- no viable alternative at input ')'
+1 parser error(s) detected, no further compilation attempted.

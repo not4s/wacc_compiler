@@ -1,0 +1,21 @@
+sample_programs/valid/variables/negIntDeclaration.wacc
+calling the reference compiler on sample_programs/valid/variables/negIntDeclaration.wacc
+-- Test: negIntDeclaration.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple negative integer variable declaration
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int x = -1
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

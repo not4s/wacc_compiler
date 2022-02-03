@@ -1,0 +1,25 @@
+sample_programs/invalid/semanticErr/expressions/boolOpTypeErr.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/expressions/boolOpTypeErr.wacc
+-- Test: boolOpTypeErr.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# expresission type mismatch int->bool
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  bool b = 1 || 1
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 12:16 -- Incompatible type at 1 (expected: BOOL, actual: INT)

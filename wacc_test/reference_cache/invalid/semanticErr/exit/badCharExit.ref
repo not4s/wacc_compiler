@@ -1,0 +1,25 @@
+sample_programs/invalid/semanticErr/exit/badCharExit.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/exit/badCharExit.wacc
+-- Test: badCharExit.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# tries to exit using a character
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  exit 'a'
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 12:7 -- Incompatible type at 'a' (expected: INT, actual: CHAR)

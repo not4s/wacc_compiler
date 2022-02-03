@@ -1,0 +1,26 @@
+sample_programs/invalid/semanticErr/variables/doubleDeclare.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/variables/doubleDeclare.wacc
+-- Test: doubleDeclare.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# redeclaration of variable
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int x = 10 ;
+  int x = 20
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 13:2 -- "x" is already defined in this scope

@@ -1,0 +1,21 @@
+sample_programs/valid/pairs/printNull.wacc
+calling the reference compiler on sample_programs/valid/pairs/printNull.wacc
+-- Test: printNull.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# print the null reference
+
+# Output:
+# (nil)
+
+# Program:
+
+begin
+  println null
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

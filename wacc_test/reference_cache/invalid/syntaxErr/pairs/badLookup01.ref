@@ -1,0 +1,27 @@
+sample_programs/invalid/syntaxErr/pairs/badLookup01.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/pairs/badLookup01.wacc
+-- Test: badLookup01.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# try to directly print pair's first element
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+	pair(int, char) p = newpair(10, 'a') ;
+  println fst p
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 13:10 -- no viable alternative at input 'fst'
+1 parser error(s) detected, no further compilation attempted.

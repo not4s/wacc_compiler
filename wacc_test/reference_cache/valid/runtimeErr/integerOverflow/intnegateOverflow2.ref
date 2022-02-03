@@ -1,0 +1,28 @@
+sample_programs/valid/runtimeErr/integerOverflow/intnegateOverflow2.wacc
+calling the reference compiler on sample_programs/valid/runtimeErr/integerOverflow/intnegateOverflow2.wacc
+-- Test: intnegateOverflow2.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# multiplying the biggest possible negative integer
+
+# Output:
+# -2147483648
+# #runtime_error#
+
+# Exit:
+# 255
+
+# Program:
+
+begin
+  int x = -2147483648 ;
+  println x ;
+  x = x*10; #err here?
+  println x 
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

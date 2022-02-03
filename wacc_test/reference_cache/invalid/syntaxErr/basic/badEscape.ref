@@ -1,0 +1,27 @@
+sample_programs/invalid/syntaxErr/basic/badEscape.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/basic/badEscape.wacc
+-- Test: badEscape.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# program has unacceptable escape character
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  char a = '\H'
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 12:12 -- token recognition error at: '\H'
+Syntactic Error at 12:14 -- missing CHARACTER at '''
+1 parser error(s) detected, no further compilation attempted.

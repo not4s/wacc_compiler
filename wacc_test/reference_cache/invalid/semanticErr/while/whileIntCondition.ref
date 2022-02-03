@@ -1,0 +1,27 @@
+sample_programs/invalid/semanticErr/while/whileIntCondition.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/while/whileIntCondition.wacc
+-- Test: whileIntCondition.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# while condition type mismatch
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  while 15 + 6 do
+    skip
+  done
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 12:8 -- Incompatible type at 15+6 (expected: BOOL, actual: INT)
