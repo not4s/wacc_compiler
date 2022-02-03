@@ -16,6 +16,9 @@ KW_IF: 'if';
 KW_THEN: 'then';
 KW_ELSE: 'else';
 KW_FI: 'fi';
+KW_WHILE: 'while';
+KW_DO: 'do';
+KW_DONE: 'done';
 
 /* Boolean */
 BOOLEAN: 'true' | 'false' ;
