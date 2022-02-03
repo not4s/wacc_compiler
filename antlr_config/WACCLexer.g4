@@ -24,20 +24,6 @@ KW_DONE: 'done';
 /* Boolean */
 BOOLEAN: 'true' | 'false' ;
 
-/* Identifier */
-IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
-fragment ID_CHAR: '_' | 'a'..'z' | 'A'..'Z';
-
-/* Integer */
-INTEGER: ('+'|'-')? DIGIT+;
-fragment DIGIT: [0-9];
-
-/* Characters and Strings */
-CHARACTER: '\'' ASCII '\'';
-STRING: '"' ASCII* '"';
-
-fragment ASCII: ~('\\'|'\''|'"') | '\\' ESCAPED_CHAR;
-fragment ESCAPED_CHAR: '0'|'b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\';
 
 /* Operators */
 OP_ADD: '+';
@@ -58,12 +44,28 @@ OP_ORD: 'ord';
 OP_CHR: 'chr';
 OP_LEN: 'len';
 
+/* Identifier */
+IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
+fragment ID_CHAR: '_' | 'a'..'z' | 'A'..'Z';
+
+
+/* Characters and Strings */
+CHARACTER: '\'' ASCII '\'';
+STRING: '"' ASCII* '"';
+
+fragment ASCII: ~('\\'|'\''|'"') | '\\' ESCAPED_CHAR;
+fragment ESCAPED_CHAR: '0'|'b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\';
 
 /* Symbols */
 SYM_SEMICOLON: ';';
 SYM_EQUALS: '=';
 SYM_LBRACKET: '(';
 SYM_RBRACKET: ')';
+
+/* Integer */
+INTEGER: DIGIT+;
+fragment DIGIT: [0-9];
+
 fragment WS: [ \t\r\n];
 
 /* Ignore comments and white space */

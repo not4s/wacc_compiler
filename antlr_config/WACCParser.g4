@@ -20,7 +20,7 @@ baseType
   ;
 
 literal
-  : INTEGER   #integerLiteral
+  : (OP_ADD|OP_SUBT)? INTEGER   #integerLiteral
   | BOOLEAN   #booleanLiteral
   | CHARACTER #charLiteral
   | STRING    #stringLiteral
@@ -36,17 +36,17 @@ unaryOperator
   ;
 
 expr
-  : literal                                   #literalExpr
-  | IDENTIFIER                                #identExpr
-  | unaryOperator expr                        #unaryExpr
+  : unaryOperator expr                        #unaryExpr
+  | SYM_LBRACKET expr SYM_RBRACKET            #bracketExpr
   | expr (OP_MULT | OP_DIV | OP_MODULO) expr  #binaryExprFirstPrecedence
-  | expr (OP_ADD | OP_SUBT) expr               #binaryExprSecondPrecedence
-  | expr (OP_GREATER | OP_GREATER_OR_EQUAL | 
+  | expr (OP_ADD | OP_SUBT) expr              #binaryExprSecondPrecedence
+  | expr (OP_GREATER | OP_GREATER_OR_EQUAL |
              OP_LESS | OP_LESS_OR_EQUAL) expr #logicalExprFirstPrecedence
   | expr (OP_EQUAL | OP_NOT_EQUAL) expr       #logicalExprSecondPrecedence
   | expr OP_AND expr                          #logicalExprThirdPrecedence
   | expr OP_OR expr                           #logicalExprFourthPrecedence
-  | SYM_LBRACKET expr SYM_RBRACKET            #bracketExpr
+  | literal                                   #literalExpr
+  | IDENTIFIER                                #identExpr
   ;
 
 assignLhs
@@ -64,7 +64,6 @@ stat
   | KW_PRINTLN expr                               #printlnStat
   | KW_READ expr                                  #readStat
   | KW_IF expr KW_THEN stat KW_ELSE stat KW_FI    #ifThenElseStat
-  | KW_IF expr KW_THEN stat KW_FI                 #ifThenStat
   | KW_WHILE expr KW_DO stat KW_DONE              #whileDoDoneStat
   | type IDENTIFIER SYM_EQUALS assignRhs          #assignRhsStat
   | assignLhs SYM_EQUALS assignRhs                #assignLhsStat
