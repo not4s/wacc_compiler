@@ -9,28 +9,35 @@ program
   ;
 
 type
-  : baseType #typeBaseType
+  : baseType  #typeBaseType
   ;
 
 baseType
-  : KW_INT #baseTypeInt
-  | KW_BOOL #baseTypeBool
-  | KW_CHAR #baseTypeChar
+  : KW_INT    #baseTypeInt
+  | KW_BOOL   #baseTypeBool
+  | KW_CHAR   #baseTypeChar
   | KW_STRING #baseTypeString
   ;
 
 literal
-  : INTEGER #integerLiteral
-  | BOOLEAN #booleanLiteral
+  : INTEGER   #integerLiteral
+  | BOOLEAN   #booleanLiteral
   | CHARACTER #charLiteral
-  | STRING #stringLiteral
-  | KW_NULL #pairLiteral
+  | STRING    #stringLiteral
+  | KW_NULL   #pairLiteral
+  ;
+
+unaryOperator
+  : OP_NOT    #unaryNotOperator
+  | OP_ORD    #unaryOrdOperator
+  | OP_CHR    #unaryChrOperator
+  | OP_LEN    #unaryLenOperator
   ;
 
 expr
   : literal #literalExpr
   | IDENTIFIER                                #identExpr
-  | OP_NOT expr                               #unaryNotExpr
+  | unaryOperator expr                        #unaryExpr
   | expr (OP_MULT | OP_DIV | OP_MODULO) expr  #binaryExprFirstPrecedence
   | expr (OP_ADD | OP_DIV) expr               #binaryExprSecondPrecedence
   | expr (OP_GREATER | OP_GREATER_OR_EQUAL | 
@@ -50,13 +57,13 @@ assignRhs
   ;
 
 stat
-  : KW_SKIP #skipStat
-  | KW_EXIT expr #exitStat
-  | KW_PRINT expr #printStat
-  | KW_PRINTLN expr #printlnStat
+  : KW_SKIP                              #skipStat
+  | KW_EXIT expr                         #exitStat
+  | KW_PRINT expr                        #printStat
+  | KW_PRINTLN expr                      #printlnStat
   | type IDENTIFIER SYM_EQUALS assignRhs #assignRhsStat
-  | assignLhs SYM_EQUALS assignRhs #assignLhsStat
-  | stat SYM_SEMICOLON stat #joinStat
+  | assignLhs SYM_EQUALS assignRhs       #assignLhsStat
+  | stat SYM_SEMICOLON stat              #joinStat
   ;
 
 func: KW_BEGIN KW_BEGIN KW_BEGIN;
