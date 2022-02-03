@@ -48,7 +48,7 @@ stat
   : KW_SKIP #skipStat
   | KW_EXIT expr #exitStat
   | KW_PRINT expr #printStat
-  | KW_PRINT expr #printlnStat
+  | KW_PRINTLN expr #printlnStat
   | type IDENTIFIER SYM_EQUALS assignRhs #assignRhsStat
   | stat SYM_SEMICOLON stat #joinStat
   ;
