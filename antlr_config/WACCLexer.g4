@@ -12,6 +12,7 @@ KW_STRING: 'string';
 KW_NULL: 'null';
 KW_PRINT: 'print';
 KW_PRINTLN: 'println';
+KW_READ: 'read';
 KW_IF: 'if';
 KW_THEN: 'then';
 KW_ELSE: 'else';
