@@ -100,7 +100,7 @@ main-test:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/while/*.wacc"
 
-.invalid/syntaxErr/array:
+invalid/syntaxErr/array:
   stage: wacc-test
   interruptible: true
   script:
@@ -149,7 +149,7 @@ invalid/syntaxErr/print:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/syntaxErr/print/*.wacc"
 
-.invalid/syntaxErr/sequence:
+invalid/syntaxErr/sequence:
   stage: wacc-test
   interruptible: true
   script:
@@ -177,7 +177,7 @@ invalid/syntaxErr/while:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/advanced/*.wacc"
 
-.valid/array:
+valid/array:
   stage: wacc-test
   interruptible: true
   script:
@@ -275,14 +275,14 @@ valid/IO/read:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/runtimeErr/nullDereference/*.wacc"
 
-.valid/scope:
+valid/scope:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/scope/*.wacc"
 
-.valid/sequence:
+valid/sequence:
   stage: wacc-test
   interruptible: true
   script:
