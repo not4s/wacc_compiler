@@ -62,6 +62,7 @@ stat
   | KW_EXIT expr                                  #exitStat
   | KW_PRINT expr                                 #printStat
   | KW_PRINTLN expr                               #printlnStat
+  | KW_READ expr                                  #readStat
   | KW_IF expr KW_THEN stat KW_ELSE stat KW_FI    #ifThenElseStat
   | KW_IF expr KW_THEN stat KW_FI                 #ifThenStat
   | KW_WHILE expr KW_DO stat KW_DONE              #whileDoDoneStat
