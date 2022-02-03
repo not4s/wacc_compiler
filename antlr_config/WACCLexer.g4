@@ -28,9 +28,6 @@ BOOLEAN: 'true' | 'false' ;
 IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
 fragment ID_CHAR: '_' | 'a'..'z' | 'A'..'Z';
 
-/* Integer */
-INTEGER: ('+'|'-')? DIGIT+;
-fragment DIGIT: [0-9];
 
 /* Characters and Strings */
 CHARACTER: '\'' ASCII '\'';
@@ -64,6 +61,11 @@ SYM_SEMICOLON: ';';
 SYM_EQUALS: '=';
 SYM_LBRACKET: '(';
 SYM_RBRACKET: ')';
+
+/* Integer */
+INTEGER: DIGIT+;
+fragment DIGIT: [0-9];
+
 fragment WS: [ \t\r\n];
 
 /* Ignore comments and white space */
