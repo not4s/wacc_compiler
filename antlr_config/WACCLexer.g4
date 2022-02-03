@@ -24,17 +24,6 @@ KW_DONE: 'done';
 /* Boolean */
 BOOLEAN: 'true' | 'false' ;
 
-/* Identifier */
-IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
-fragment ID_CHAR: '_' | 'a'..'z' | 'A'..'Z';
-
-
-/* Characters and Strings */
-CHARACTER: '\'' ASCII '\'';
-STRING: '"' ASCII* '"';
-
-fragment ASCII: ~('\\'|'\''|'"') | '\\' ESCAPED_CHAR;
-fragment ESCAPED_CHAR: '0'|'b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\';
 
 /* Operators */
 OP_ADD: '+';
@@ -55,6 +44,17 @@ OP_ORD: 'ord';
 OP_CHR: 'chr';
 OP_LEN: 'len';
 
+/* Identifier */
+IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
+fragment ID_CHAR: '_' | 'a'..'z' | 'A'..'Z';
+
+
+/* Characters and Strings */
+CHARACTER: '\'' ASCII '\'';
+STRING: '"' ASCII* '"';
+
+fragment ASCII: ~('\\'|'\''|'"') | '\\' ESCAPED_CHAR;
+fragment ESCAPED_CHAR: '0'|'b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\';
 
 /* Symbols */
 SYM_SEMICOLON: ';';
