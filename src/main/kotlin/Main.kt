@@ -2,6 +2,7 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.*
+import utils.ExitCode
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -30,7 +31,7 @@ fun main(args: Array<String>) {
             e: RecognitionException?
         ) {
             println(msg)
-            exitProcess(100)
+            exitProcess(ExitCode.SYNTAX_ERROR)
         }
     })
 
@@ -46,7 +47,7 @@ fun main(args: Array<String>) {
 class TerminateOnErrorStrategy : DefaultErrorStrategy() {
     override fun reportError(recognizer: Parser?, e: RecognitionException?) {
         println(e)
-        exitProcess(100)
+        exitProcess(ExitCode.SYNTAX_ERROR)
     }
 }
 
@@ -56,7 +57,7 @@ class CustomVisitor : WACCParserBaseVisitor<Void>() {
         try {
             val integer: Int = Integer.parseInt(ctx?.text)
         } catch (e: java.lang.NumberFormatException) {
-            exitProcess(100)
+            exitProcess(ExitCode.SYNTAX_ERROR)
         }
         return null
     }

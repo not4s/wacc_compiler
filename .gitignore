@@ -1,7 +1,7 @@
 #ignore generated binary files and auto-generated ANTLR code
 bin
 src/main/kotlin/antlr
-antlr_config/BasicLexer.tokens
+antlr_config/WACCLexer.tokens
 gen
 
 #ignore Java class files
