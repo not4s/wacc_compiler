@@ -10,7 +10,41 @@ program
 
 type
   : baseType  #typeBaseType
-  | type SYM_SQ_LBRACKET SYM_SQ_RBRACKET #typeArrayType
+  | arrayType #typeArrayType
+  | pairType #typePairType
+  ;
+
+/* Need to expand to avoid mutual left-recursion */
+arrayType
+  : baseType SYM_SQ_LBRACKET SYM_SQ_RBRACKET #arrayTypeBaseType
+  | arrayType SYM_SQ_LBRACKET SYM_SQ_RBRACKET #arrayTypeArrayType
+  | pairType SYM_SQ_LBRACKET SYM_SQ_RBRACKET #arrayTypePairType
+  ;
+
+arrayElem
+  : IDENTIFIER (SYM_SQ_LBRACKET expr SYM_SQ_RBRACKET)+
+  ;
+
+arrayLiter
+  : SYM_SQ_LBRACKET (expr (SYM_COMMA expr)*)? SYM_SQ_RBRACKET # arrayLiterAssignRhs
+  ;
+
+pairLiter
+  : KW_NULL
+  ;
+
+pairElem
+  : KW_FST expr #pairElemFst
+  | KW_SND expr #pairElemSnd
+  ;
+pairType
+  : KW_PAIR SYM_LBRACKET left=pairElemType SYM_COMMA right=pairElemType SYM_RBRACKET
+  ;
+
+pairElemType
+  : baseType #pairElemTypeBaseType
+  | arrayType #pairElemTypeArrayType
+  | KW_PAIR   #pairElemTypeKwPair
   ;
 
 baseType
@@ -53,11 +87,14 @@ expr
 assignLhs
   : IDENTIFIER #assignLhsExpr
   | arrayElem #assignLhsArrayElem
+  | pairElem #assignLhsPairElem
   ;
 
 assignRhs
   : expr       #assignRhsExpr
   | arrayLiter #assignRhsArrayLiter
+  | KW_NEWPAIR SYM_LBRACKET left=expr SYM_COMMA right=expr SYM_RBRACKET #assignRhsNewPair
+  | pairElem  #assignRhsPairElem
   ;
 
 stat
@@ -77,11 +114,3 @@ stat
   ;
 
 func: KW_BEGIN KW_BEGIN KW_BEGIN;
-
-arrayElem
-  : IDENTIFIER (SYM_SQ_LBRACKET expr SYM_SQ_RBRACKET)+
-  ;
-
-arrayLiter
-  : SYM_SQ_LBRACKET (expr (SYM_COMMA expr)*)? SYM_SQ_RBRACKET # arrayLiterAssignRhs
-  ;
