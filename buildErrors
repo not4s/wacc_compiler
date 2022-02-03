@@ -1,0 +1,7 @@
+<Error>
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.1:compile 
+(default-compile) on project WACC_06: Fatal error compiling: error: invalid target release: 16 -> [Help 1]
+
+<Solution>
+Get rid of the apache files in the .m2 directory
+Command: rm -rf rm -rf ~/.m2/repository/org/apache/
