@@ -42,7 +42,7 @@ expr
   ;
 
 assignLhs
-  : ident #assignLhsExpr
+  : IDENTIFIER #assignLhsExpr
   ;
 
 assignRhs
