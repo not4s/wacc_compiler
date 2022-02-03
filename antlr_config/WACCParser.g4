@@ -35,11 +35,11 @@ unaryOperator
   ;
 
 expr
-  : literal #literalExpr
+  : literal                                   #literalExpr
   | IDENTIFIER                                #identExpr
   | unaryOperator expr                        #unaryExpr
   | expr (OP_MULT | OP_DIV | OP_MODULO) expr  #binaryExprFirstPrecedence
-  | expr (OP_ADD | OP_DIV) expr               #binaryExprSecondPrecedence
+  | expr (OP_ADD | OP_SUBT) expr               #binaryExprSecondPrecedence
   | expr (OP_GREATER | OP_GREATER_OR_EQUAL | 
              OP_LESS | OP_LESS_OR_EQUAL) expr #logicalExprFirstPrecedence
   | expr (OP_EQUAL | OP_NOT_EQUAL) expr       #logicalExprSecondPrecedence
