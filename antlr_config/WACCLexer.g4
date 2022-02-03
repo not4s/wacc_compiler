@@ -15,6 +15,7 @@ KW_PRINTLN: 'println';
 KW_IF: 'if';
 KW_THEN: 'then';
 KW_ELSE: 'else';
+KW_FI: 'fi';
 
 /* Boolean */
 BOOLEAN: 'true' | 'false' ;
