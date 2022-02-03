@@ -64,6 +64,9 @@ SYM_SEMICOLON: ';';
 SYM_EQUALS: '=';
 SYM_LBRACKET: '(';
 SYM_RBRACKET: ')';
+SYM_SQ_LBRACKET: '[';
+SYM_SQ_RBRACKET: ']';
+SYM_COMMA: ',';
 fragment WS: [ \t\r\n];
 
 /* Ignore comments and white space */

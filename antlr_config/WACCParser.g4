@@ -10,6 +10,7 @@ program
 
 type
   : baseType  #typeBaseType
+  | type SYM_SQ_LBRACKET SYM_SQ_RBRACKET #typeArrayType
   ;
 
 baseType
@@ -54,7 +55,8 @@ assignLhs
   ;
 
 assignRhs
-  : expr #assignRhsExpr
+  : expr       #assignRhsExpr
+  | arrayLiter #assignRhsArrayLiter
   ;
 
 stat
@@ -72,3 +74,7 @@ stat
   ;
 
 func: KW_BEGIN KW_BEGIN KW_BEGIN;
+
+arrayLiter
+  : SYM_SQ_LBRACKET (expr (SYM_COMMA expr)*)? SYM_SQ_RBRACKET # arrayLiterAssignRhs
+  ;
