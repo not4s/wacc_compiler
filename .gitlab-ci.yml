@@ -116,7 +116,7 @@ invalid/syntaxErr/basic:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/syntaxErr/basic/*.wacc"
 
-.invalid/syntaxErr/expressions:
+invalid/syntaxErr/expressions:
   stage: wacc-test-invalid-syntax
   interruptible: true
   script:
@@ -200,7 +200,7 @@ valid/basic/skip:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/basic/skip/*.wacc"
 
-.valid/expressions:
+valid/expressions:
   stage: wacc-test-valid
   interruptible: true
   script:
