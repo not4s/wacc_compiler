@@ -10,6 +10,8 @@ KW_BOOL: 'bool';
 KW_CHAR: 'char';
 KW_STRING: 'string';
 KW_NULL: 'null';
+KW_PRINT: 'print';
+KW_PRINTLN: 'println';
 
 /* Boolean */
 BOOLEAN: 'true' | 'false' ;
