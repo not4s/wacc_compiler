@@ -21,7 +21,7 @@ then
   # Make sure file contains actual wacc source code (ie. wacc has not been modified)
   if [[ "$b" == *"$a"* ]]
   then
-    expectedStd=$(<$1)
+    expectedStd=$b
   else
     expectedStd=$(./refCompile -s $1)
   fi
