@@ -2,6 +2,17 @@ class SymbolTable(initialTable: Map<String, SymbolTableEntry<Any>>? = null) {
     val table = mutableMapOf<String, SymbolTableEntry<Any>>()
     val parentTable = initialTable
 
+
+    fun createChildScope() : SymbolTable {
+        val childInitialTable = mutableMapOf<String, SymbolTableEntry<Any>>()
+        // Add all the grandparent entries
+        parentTable?.forEach { (k , v) -> childInitialTable[k] = v }
+        // Add all parent entries, these will overwrite grandparent entries.
+        table.forEach { (k , v) -> childInitialTable[k] = v }
+        // Convert to immutable map to make sure no entries are being added.
+        return SymbolTable(childInitialTable.toMap())
+    }
+
     // Attempt to reassign the value of this variable.
     // Order:
     // - Try to reassign variable in own scope
@@ -88,7 +99,6 @@ class SymbolTableEntry<T : Any>(var value: T) {
     override fun toString(): String {
         return "(${value::class.simpleName})$value"
     }
-
 }
 
 class SemanticException(private val reason: String) : Exception() {
