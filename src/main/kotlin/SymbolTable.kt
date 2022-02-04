@@ -1,38 +1,85 @@
-class SymbolTable() {
-    private constructor(initialTable : MutableMap<String, SymbolTableEntry<Any>>) : this() {
-        table.putAll(initialTable)
-    }
-
+class SymbolTable(initialTable: Map<String, SymbolTableEntry<Any>>? = null) {
     val table = mutableMapOf<String, SymbolTableEntry<Any>>()
+    val parentTable = initialTable
 
-    // Attempt to add this variable to the symbol table.
-    // Throws relevant syntax error if this variable is of different type.
-    inline fun <reified T : Any> put(symbol: String, value: T) {
-        // Symbol already exists: overwrite or throw error
+    // Attempt to reassign the value of this variable.
+    // Order:
+    // - Try to reassign variable in own scope
+    //     - Declared as correct type -> reassign
+    //     - Declared as wrong type -> semantic error
+    //     - Undeclared -> try parent scope
+    //         - Declared as correct type -> reassign in parent
+    //         - Declared as wrong type -> semantic error
+    //         - Undeclared -> semantic error
+    inline fun <reified T : Any> reassign(symbol: String, value: T) {
         if (symbol in table) {
             val prev = table[symbol]!!.value
-            // If the type is being changed, throw semantic error.
-            if (prev !is T) {
-                throw SemanticException("Attempted to mutate variable (${prev::class.simpleName})$symbol to (${T::class.simpleName})$symbol")
-            } else {
-                // Types match, update value
+            if (prev is T) {
                 table[symbol]!!.value = value
+                return
+            } else {
+                throw SemanticException("Attempted to mutate variable type (${prev::class.simpleName})$symbol=$prev to (${T::class.simpleName})$symbol=$value")
             }
         } else {
-            table[symbol] = SymbolTableEntry(value)
+            if (parentTable != null) {
+                if (symbol in parentTable) {
+                    val prev = parentTable[symbol]!!.value
+                    if (prev is T) {
+                        parentTable[symbol]!!.value = value
+                        return
+                    } else {
+                        throw SemanticException("Attempted to mutate outer-scope variable type (${prev::class.simpleName})$symbol=$prev to (${T::class.simpleName})$symbol=$value")
+                    }
+                }
+            } else {
+                throw SemanticException("Attempted to assign (${T::class.simpleName})$symbol=$value to undeclared variable $symbol")
+            }
         }
     }
 
-    inline fun <reified T: Any> get(symbol: String) : T {
+    // Attempt to declare a new variable
+    // Order:
+    // - Try to declare variable in own scope
+    //     - Undeclared -> declare
+    //     - Declared -> semantic error
+    inline fun <reified T : Any> declare(symbol: String, value: T) {
         if (symbol !in table) {
-            throw SemanticException("Attempted to refer to uninitialized variable $symbol")
+            table[symbol] = SymbolTableEntry(value)
         } else {
-            val value = table[symbol]!!.value
-            if (value is T) {
-                return value
+            val prev = table[symbol]!!.value
+            throw SemanticException("Attempted to redeclare variable (${prev::class.simpleName})$symbol=$prev to (${T::class.simpleName})$symbol=$value")
+        }
+    }
+
+    // Attempt to get the value T of a variable
+    // Order:
+    // - Try to get variable in own scope
+    //     - Declared as correct type -> return it
+    //     - Declared as wrong type -> semantic error
+    //     - Undeclared -> try parent scope
+    //         - Declared as correct type -> return it
+    //         - Declared as wrong type -> semantic error
+    //         - Undeclared -> semantic error
+    inline fun <reified T : Any> get(symbol: String): T {
+        if (symbol in table) {
+            val prev = table[symbol]!!.value
+            if (prev is T) {
+                return prev
             } else {
-                throw SemanticException("Attempted to cast variable (${value::class.simpleName})$symbol to ${T::class.simpleName}")
+                throw SemanticException("Attempted to cast variable (${prev::class.simpleName})$symbol=$prev to ${T::class.simpleName}")
             }
+        } else {
+            if (parentTable != null) {
+                if (symbol in parentTable) {
+                    val prev = parentTable[symbol]!!.value
+                    if (prev is T) {
+                        return prev
+                    } else {
+                        throw SemanticException("Attempted to cast outer-scope variable (${prev::class.simpleName})$symbol=$prev to ${T::class.simpleName}")
+                    }
+                }
+            }
+            throw SemanticException("Attempted to access undeclared variable $symbol")
         }
     }
 }
@@ -47,18 +94,4 @@ class SymbolTableEntry<T : Any>(var value: T) {
 class SemanticException(private val reason: String) : Exception() {
     override val message: String
         get() = "Semantic error!\n$reason"
-}
-
-fun main() {
-    val test = SymbolTable()
-    println(test.table)
-    test.put("x", 2)
-    println(test.table)
-    test.put("y", 3)
-    println(test.table)
-    test.put("y", 4)
-    println(test.table)
-
-    println("Get y as int: ${test.get<Int>("y")}")
-    println("Get y as string: ${test.get<String>("y")}")
 }
