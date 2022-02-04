@@ -65,6 +65,7 @@ literal
 expr
   : SYM_LBRACKET expr SYM_RBRACKET                             #exprBracket
   | arrayElem                                                  #exprArrayElem
+  | literal                                                    #exprLiteral
 
   | unOp=OP_NOT expr                                           #exprBoolUnary
   | unOp=OP_ORD expr                                           #exprIntUnary
@@ -80,7 +81,6 @@ expr
   | left=expr binOp=OP_AND right=expr                          #exprBoolBinary
   | left=expr binOp=OP_OR right=expr                           #exprBoolBinary
 
-  | literal                                                    #exprLiteral
   | IDENTIFIER                                                 #exprIdentifier
   ;
 
@@ -95,6 +95,11 @@ assignRhs
   | arrayLiter #assignRhsArrayLiter
   | KW_NEWPAIR SYM_LBRACKET left=expr SYM_COMMA right=expr SYM_RBRACKET #assignRhsNewPair
   | pairElem  #assignRhsPairElem
+  | KW_CALL IDENTIFIER SYM_LBRACKET argList? SYM_RBRACKET #assignRhsCall
+  ;
+
+argList
+  : expr (SYM_COMMA expr)*
   ;
 
 stat
@@ -104,7 +109,7 @@ stat
   | KW_RETURN expr                                #statReturn
   | KW_PRINT expr                                 #statPrint
   | KW_PRINTLN expr                               #statPrintln
-  | KW_READ expr                                  #statRead
+  | KW_READ assignLhs                              #statRead
   | KW_IF ifCond=expr KW_THEN thenBlock=stat KW_ELSE doBlock=stat KW_FI    #statIfThenElse
   | KW_WHILE whileCond=expr KW_DO doBlock=stat KW_DONE                     #statWhileDo
   | KW_BEGIN stat KW_END                          #statBeginEnd
@@ -113,4 +118,13 @@ stat
   | left=stat SYM_SEMICOLON right=stat            #statJoin
   ;
 
-func: KW_BEGIN KW_BEGIN KW_BEGIN;
+param
+  : type IDENTIFIER
+  ;
+
+paramList
+  : param (SYM_COMMA param)*
+  ;
+
+func
+  : type IDENTIFIER SYM_LBRACKET paramList? SYM_RBRACKET KW_IS stat KW_END;

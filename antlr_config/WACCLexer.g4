@@ -42,6 +42,11 @@ KW_WHILE: 'while';
 KW_DO: 'do';
 KW_DONE: 'done';
 
+/* Functions */
+KW_IS: 'is';
+KW_CALL: 'call';
+
+
 /* Operators */
 OP_ORD: 'ord';
 OP_CHR: 'chr';
@@ -71,8 +76,8 @@ SYM_RBRACKET: ')';
 SYM_SQ_LBRACKET: '[';
 SYM_SQ_RBRACKET: ']';
 SYM_COMMA: ',';
-SYM_DOUBLEQUOTE: '"' -> more, mode(IN_STRING);
-SYM_SINGLEQUOTE: '\'' -> more, mode(IN_CHAR);
+SYM_DOUBLEQUOTE: '"' ;
+SYM_SINGLEQUOTE: '\'';
 
 /* Identifier */
 IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
@@ -82,6 +87,10 @@ fragment ID_CHAR: '_' | 'a'..'z' | 'A'..'Z';
 INTEGER: DIGIT+;
 fragment DIGIT: [0-9];
 
+STRING: SYM_DOUBLEQUOTE ASCII* SYM_DOUBLEQUOTE;
+CHAR: SYM_SINGLEQUOTE ASCII SYM_SINGLEQUOTE;
+
+fragment ASCII: (~('\\'|'\''|'"') | '\\' ESCAPED_CHAR);
 fragment ESCAPED_CHAR: '0'|'b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\';
 
 /* Ignore comments and white space */
@@ -91,9 +100,4 @@ WS: [ \t\r\n]+ -> channel(HIDDEN);
 /* Match anything */
 ANY_IGNORE: . ;
 
-mode IN_STRING;
-STRING: '"' -> mode(DEFAULT_MODE);
-ASCII: (~('\\'|'\''|'"') | '\\' ESCAPED_CHAR) -> more;
 
-mode IN_CHAR;
-CHAR: (~('\\'|'\''|'"') | '\\' ESCAPED_CHAR) '\'' -> mode(DEFAULT_MODE);
