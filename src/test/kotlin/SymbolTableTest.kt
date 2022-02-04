@@ -12,21 +12,21 @@ class SymbolTableTest {
     }
 
     @Test
-    fun canAddInts() {
+    fun canDeclareInts() {
         val symbolTable = SymbolTable()
-        symbolTable.put("x", 1337)
+        symbolTable.declare("x", 1337)
     }
 
     @Test
-    fun canAddStrings() {
+    fun canDeclareStrings() {
         val symbolTable = SymbolTable()
-        symbolTable.put("s", "Hello world!")
+        symbolTable.declare("s", "Hello world!")
     }
 
     @Test
     fun canGetInts() {
         val symbolTable = SymbolTable()
-        symbolTable.put("x", 1337)
+        symbolTable.declare("x", 1337)
         assertEquals(symbolTable.get("x"), 1337)
 
     }
@@ -34,36 +34,36 @@ class SymbolTableTest {
     @Test
     fun canGetStrings() {
         val symbolTable = SymbolTable()
-        symbolTable.put("s", "Hello world!")
+        symbolTable.declare("s", "Hello world!")
         assertEquals(symbolTable.get("s"), "Hello world!")
     }
 
     @Test
-    fun canOverwriteInt() {
+    fun canReassignInt() {
         val symbolTable = SymbolTable()
-        symbolTable.put("x", 1337)
-        symbolTable.put("x", 42)
+        symbolTable.declare("x", 1337)
+        symbolTable.reassign("x", 42)
         assertEquals(symbolTable.get("x"), 42)
 
     }
 
     @Test
-    fun canOverwriteString() {
+    fun canReassignString() {
         val symbolTable = SymbolTable()
-        symbolTable.put("s", "Hello world!")
-        symbolTable.put("s", "Goodbye world.")
+        symbolTable.declare("s", "Hello world!")
+        symbolTable.reassign("s", "Goodbye world.")
         assertEquals(symbolTable.get("s"), "Goodbye world.")
     }
 
     @Test
-    fun overwritingIntWithStringThrowsSemanticException() {
+    fun reassigningIntWithStringThrowsSemanticException() {
         val symbolTable = SymbolTable()
-        symbolTable.put("x", 1337)
+        symbolTable.declare("x", 1337)
         try {
-            symbolTable.put("x", "This is not an int")
+            symbolTable.reassign("x", "This is not an int")
             fail() // Should not get here
-        } catch (_: SemanticException) {
-
+        } catch (e: SemanticException) {
+            println(e)
         } catch (e: Exception) {
             fail()
         }
@@ -72,12 +72,12 @@ class SymbolTableTest {
     @Test
     fun gettingIntAsStringThrowsSemanticException() {
         val symbolTable = SymbolTable()
-        symbolTable.put("x", 1337)
+        symbolTable.declare("x", 1337)
         try {
             val s : String = symbolTable.get("x")
             fail() // Should not get here
-        } catch (_: SemanticException) {
-
+        } catch (e: SemanticException) {
+            println(e)
         } catch (e: Exception) {
             fail()
         }
@@ -89,8 +89,21 @@ class SymbolTableTest {
         try {
             val x : String = symbolTable.get("x")
             fail() // Should not get here
-        } catch (_: SemanticException) {
+        } catch (e: SemanticException) {
+            println(e)
+        } catch (e: Exception) {
+            fail()
+        }
+    }
 
+    @Test
+    fun reassigningUndeclaredVariableThrowsSemanticException() {
+        val symbolTable = SymbolTable()
+        try {
+            symbolTable.reassign("x", 1337)
+            fail() // Should not get here
+        } catch (e: SemanticException) {
+            println(e)
         } catch (e: Exception) {
             fail()
         }
