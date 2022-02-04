@@ -109,8 +109,8 @@ stat
   | KW_RETURN expr                                #statReturn
   | KW_PRINT expr                                 #statPrint
   | KW_PRINTLN expr                               #statPrintln
-  | KW_READ assignLhs                              #statRead
-  | KW_IF ifCond=expr KW_THEN thenBlock=stat KW_ELSE doBlock=stat KW_FI    #statIfThenElse
+  | KW_READ assignLhs                             #statRead
+  | KW_IF ifCond=expr KW_THEN thenBlock=stat KW_ELSE elseBlock=stat KW_FI  #statIfThenElse
   | KW_WHILE whileCond=expr KW_DO doBlock=stat KW_DONE                     #statWhileDo
   | KW_BEGIN stat KW_END                          #statBeginEnd
   | type IDENTIFIER SYM_EQUALS assignRhs          #statInit
