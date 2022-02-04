@@ -1,0 +1,25 @@
+sample_programs/valid/runtimeErr/divideByZero/divZero.wacc
+calling the reference compiler on sample_programs/valid/runtimeErr/divideByZero/divZero.wacc
+-- Test: divZero.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# division by zero
+
+# Output:
+# #runtime_error#
+
+# Exit:
+# 255
+
+# Program:
+
+begin
+  int x = 10 / 0 ;
+  println "should not reach here"
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

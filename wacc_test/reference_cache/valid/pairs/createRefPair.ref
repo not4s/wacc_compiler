@@ -1,0 +1,22 @@
+sample_programs/valid/pairs/createRefPair.wacc
+calling the reference compiler on sample_programs/valid/pairs/createRefPair.wacc
+-- Test: createRefPair.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# create a pair(int, char) with a second reference to it
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  pair(int, char) p = newpair(10, 'a') ;
+  pair(int, char) q = p
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

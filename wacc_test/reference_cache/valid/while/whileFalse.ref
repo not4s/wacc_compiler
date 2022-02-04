@@ -1,0 +1,24 @@
+sample_programs/valid/while/whileFalse.wacc
+calling the reference compiler on sample_programs/valid/while/whileFalse.wacc
+-- Test: whileFalse.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple unentered while loop
+
+# Output:
+# end of loop
+
+# Program:
+
+begin
+  while false do
+    println "looping..."
+  done ;
+  println "end of loop"
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

@@ -1,0 +1,24 @@
+sample_programs/valid/basic/exit/exitBasic2.wacc
+calling the reference compiler on sample_programs/valid/basic/exit/exitBasic2.wacc
+-- Test: exitBasic2.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# basic exit statement
+
+# Output:
+# #empty#
+
+# Exit:
+# 42
+
+# Program:
+
+begin
+  exit 42
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

@@ -1,0 +1,31 @@
+sample_programs/invalid/semanticErr/scope/badScopeRedefine.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/scope/badScopeRedefine.wacc
+-- Test: badScopeRedefine.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# variable scoping test that uses a redefined variable incorrectly
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int x = 12 ;
+  begin
+    bool x = true ;
+    x = 5
+  end ;
+  exit x 
+end
+
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 15:8 -- Incompatible type at 5 (expected: BOOL, actual: INT)

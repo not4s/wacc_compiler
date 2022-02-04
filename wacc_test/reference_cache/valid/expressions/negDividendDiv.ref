@@ -1,0 +1,23 @@
+sample_programs/valid/expressions/negDividendDiv.wacc
+calling the reference compiler on sample_programs/valid/expressions/negDividendDiv.wacc
+-- Test: negDividendDiv.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# division of a negative number
+
+# Output:
+# -2
+
+# Program:
+
+begin
+  int x = -4 ;
+  int y = 2 ;
+  println x / y
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

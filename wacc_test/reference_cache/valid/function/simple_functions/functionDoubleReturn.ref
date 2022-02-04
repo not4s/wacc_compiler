@@ -1,0 +1,26 @@
+sample_programs/valid/function/simple_functions/functionDoubleReturn.wacc
+calling the reference compiler on sample_programs/valid/function/simple_functions/functionDoubleReturn.wacc
+-- Test: functionDoubleReturn.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# a simple function with two back-to-back returns at the end.
+
+# Output:
+# 3
+
+# Program:
+
+begin
+    int f() is 
+        return 3;
+        return 5
+    end
+    int ret = call f();
+    println ret
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

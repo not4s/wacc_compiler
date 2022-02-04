@@ -1,0 +1,27 @@
+sample_programs/valid/if/ifFalse.wacc
+calling the reference compiler on sample_programs/valid/if/ifFalse.wacc
+-- Test: ifFalse.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple false if statement 
+
+# Output:
+# here
+
+# Program:
+
+begin
+  if false
+  then
+    println "not here"
+  else
+    println "here"
+  fi
+end
+
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

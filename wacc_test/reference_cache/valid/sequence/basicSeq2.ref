@@ -1,0 +1,23 @@
+sample_programs/valid/sequence/basicSeq2.wacc
+calling the reference compiler on sample_programs/valid/sequence/basicSeq2.wacc
+-- Test: basicSeq2.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# basic sequential composition
+
+# Output:
+# #empty#
+
+# Program:
+
+begin 
+  skip;
+  skip;
+  skip 
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

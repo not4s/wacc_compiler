@@ -1,0 +1,28 @@
+sample_programs/invalid/syntaxErr/while/dooErr.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/while/dooErr.wacc
+-- Test: dooErr.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# do typo
+
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  while false doo
+    skip
+  done
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 12:14 -- mismatched input 'doo' expecting {'-', '*', '/', '%', '+', '<', '<=', '>=', '>', '==', '!=', '&&', '||', 'do'}
+1 parser error(s) detected, no further compilation attempted.

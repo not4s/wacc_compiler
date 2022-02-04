@@ -1,0 +1,22 @@
+sample_programs/valid/array/arrayEmpty.wacc
+calling the reference compiler on sample_programs/valid/array/arrayEmpty.wacc
+-- Test: arrayEmpty.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# empty array declaration (seems to error currently)
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int[] a = []
+end
+
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

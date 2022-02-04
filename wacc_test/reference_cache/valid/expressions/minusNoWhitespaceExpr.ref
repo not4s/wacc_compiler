@@ -1,0 +1,21 @@
+sample_programs/valid/expressions/minusNoWhitespaceExpr.wacc
+calling the reference compiler on sample_programs/valid/expressions/minusNoWhitespaceExpr.wacc
+-- Test: minusNoWhitespaceExpr.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# subtraction expressions should not be whitespace sensitive
+
+# Output:
+# -1
+
+# Program:
+
+begin
+  println 1-2
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

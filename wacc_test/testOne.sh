@@ -6,8 +6,29 @@ actualStd=$(./compile wacc_test/$1)
 actualErr=$?
 cd wacc_test
 
-# Run reference compiler
-expectedStd=$(./refCompile -s $1)
+# Workaround to rename root folder "example_wacc" to "results"
+oldDir=$(dirname $1)
+dir=${oldDir/sample_programs/results}
+dircache=${oldDir/sample_programs/reference_cache}
+name=$(basename $1 .wacc)
+
+a=`cat $1`
+b=`cat "$dircache/$name.ref"`
+
+# Check if the output of this file has been pre-cached.
+if test -f "$dircache/$name.ref"
+then
+  # Make sure file contains actual wacc source code (ie. wacc has not been modified)
+  if [[ "$b" == *"$a"* ]]
+  then
+    expectedStd=$b
+  else
+    expectedStd=$(./refCompile -s $1)
+  fi
+else
+  # Run reference compiler if not
+  expectedStd=$(./refCompile -s $1)
+fi
 expectedErr="0"
 
 # This regex captures the exit code. Must be a separate variable to allow whitespace capture.
@@ -17,11 +38,6 @@ then
     # Save captured error code to expectedErr
     expectedErr="${BASH_REMATCH[1]}"
 fi
-
-# Workaround to rename root folder "example_wacc" to "results"
-oldDir=$(dirname $1)
-dir=${oldDir/sample_programs/results}
-name=$(basename $1 .wacc)
 
 # Make directory and any intermediates, save test output to it
 mkdir -p $dir

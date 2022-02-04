@@ -1,0 +1,41 @@
+sample_programs/invalid/syntaxErr/function/functionConditionalNoReturn.wacc
+calling the reference compiler on sample_programs/invalid/syntaxErr/function/functionConditionalNoReturn.wacc
+-- Test: functionConditionalNoReturn.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# function body missing return or exit statement on a path
+# Output:
+# #syntax_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  bool f ( bool b ) is
+    if ( b ) then
+      return b
+    else
+      skip
+    fi
+  end
+  bool g ( bool b ) is
+    if ( b ) then
+      skip
+    else
+      return b
+    fi
+  end
+  bool c = call f ( false ) ;
+  bool d = call g ( true )
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 100 returned.
+Syntactic Error at 11:2 -- Function f is not ended with a return or an exit statement.
+Syntactic Error at 18:2 -- Function g is not ended with a return or an exit statement.
+2 parser error(s) detected, no further compilation attempted.

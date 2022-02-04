@@ -1,0 +1,35 @@
+sample_programs/invalid/semanticErr/multiple/funcMess.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/multiple/funcMess.wacc
+-- Test: funcMess.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# a complete mess of function definition and use
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int f(bool b) is
+    x = -1 ;
+    return "done"
+  end
+  
+  int x = 5 ;
+  int y = call f(x) ;
+  println y ;
+  println x
+  
+end
+	
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 13:4 -- Variable x is not defined in this scope

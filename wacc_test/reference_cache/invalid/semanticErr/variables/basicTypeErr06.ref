@@ -1,0 +1,25 @@
+sample_programs/invalid/semanticErr/variables/basicTypeErr06.wacc
+calling the reference compiler on sample_programs/invalid/semanticErr/variables/basicTypeErr06.wacc
+-- Test: basicTypeErr06.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# type mismatch: bool <- string
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  bool b = "true"
+end
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+Errors detected during compilation! Exit code 200 returned.
+Semantic Error at 12:11 -- Incompatible type at "true" (expected: BOOL, actual: STRING)

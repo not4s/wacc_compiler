@@ -1,0 +1,24 @@
+sample_programs/valid/array/arraySimple.wacc
+calling the reference compiler on sample_programs/valid/array/arraySimple.wacc
+-- Test: arraySimple.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# simple array assignment and lookup
+
+# Output:
+# 42
+
+# Program:
+
+begin
+  int[] a = [0] ;
+  a[0] = 42 ;
+  println a[0]
+end
+
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished

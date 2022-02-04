@@ -1,0 +1,25 @@
+sample_programs/valid/scope/scopeBasic.wacc
+calling the reference compiler on sample_programs/valid/scope/scopeBasic.wacc
+-- Test: scopeBasic.wacc
+
+-- Uploaded file: 
+---------------------------------------------------------------
+# very simple scoping test
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  skip;
+  begin
+    skip
+  end
+end
+
+---------------------------------------------------------------
+
+-- Compiler Output:
+-- Compiling...
+-- Finished
