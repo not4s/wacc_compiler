@@ -63,15 +63,15 @@ literal
   ;
 
 expr
-  : SYM_LBRACKET expr SYM_RBRACKET                             #exprBracket
+  : SYM_LBRACKET innerExpr=expr SYM_RBRACKET                   #exprBracket
   | arrayElem                                                  #exprArrayElem
   | literal                                                    #exprLiteral
 
-  | unOp=OP_NOT expr                                           #exprBoolUnary
-  | unOp=OP_ORD expr                                           #exprIntUnary
-  | unOp=OP_CHR expr                                           #exprCharUnary
-  | unOp=OP_LEN expr                                           #exprIntUnary
-  | unOp=OP_SUBT expr                                          #exprIntUnary
+  | unOp=OP_NOT operand=expr                                   #exprBoolUnary
+  | unOp=OP_ORD operand=expr                                   #exprIntUnary
+  | unOp=OP_CHR operand=expr                                   #exprCharUnary
+  | unOp=OP_LEN operand=expr                                   #exprIntUnary
+  | unOp=OP_SUBT operand=expr                                  #exprIntUnary
 
   | left=expr binOp=(OP_MULT | OP_DIV | OP_MOD) right=expr     #exprIntBinary
   | left=expr binOp=(OP_ADD | OP_SUBT) right=expr              #exprIntBinary
