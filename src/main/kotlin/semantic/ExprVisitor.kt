@@ -19,19 +19,29 @@ enum class ExprType {
     INVALID_TYPE;
 }
 
-class ExprVisitor : WACCParserBaseVisitor<Any?>() {
+class ExprVisitor(
+    val symbolTable: SymbolTable<IdentifierData> = EmptySymbolTable()
+) : WACCParserBaseVisitor<Any?>() {
 
     private val typeMap: MutableMap<ParserRuleContext?, ExprType> = mutableMapOf()
 
+    /**
+     * Checks the matching of expected and actual values of ExprType.
+     * Exits process via raiseTypeErrorAndExit() function if the types are not equal
+     */
     private fun checkType(ctx: ParserRuleContext?, expectedType: ExprType) {
         Debug.infoLog("${ctx?.javaClass} '${ctx?.text}' of type ${typeMap[ctx]} provided, expected type is $expectedType")
+        // TODO: Remove NOT_A_TYPE from acceptable types of ExprType
         if (typeMap[ctx] != expectedType && typeMap[ctx] != ExprType.NOT_A_TYPE) {
             raiseTypeErrorAndExit(ctx, expectedType, typeMap[ctx])
         }
     }
 
+    /**
+     * Checks that the integer is withing the 32-bit signed range
+     * Sets the type of the context as Int
+     */
     override fun visitLiteralInteger(ctx: LiteralIntegerContext?): Any? {
-        // Check if int is within limits
         try {
             Integer.parseInt(ctx?.text)
         } catch (e: java.lang.NumberFormatException) {
@@ -106,9 +116,12 @@ class ExprVisitor : WACCParserBaseVisitor<Any?>() {
 
     // TODO: Extract identifier type from Symbol Table
     override fun visitExprIdentifier(ctx: ExprIdentifierContext?): Any? {
-//        typeMap[ctx] = typeMap[exprType(ctx.IDENTIFIER())] ?: ExprType.NOT_A_TYPE
+        val res = visitChildren(ctx)
+        ctx ?: return res
+        val identifierType = symbolTable.get(ctx.IDENTIFIER().text)?.returnType
+        typeMap[ctx] = identifierType ?: ExprType.INVALID_TYPE
         typeMap[ctx] = ExprType.NOT_A_TYPE
-        return visitChildren(ctx)
+        return res
     }
     
     override fun visitExprLiteral(ctx: ExprLiteralContext?): Any? {
@@ -128,5 +141,16 @@ class ExprVisitor : WACCParserBaseVisitor<Any?>() {
         }
         typeMap[ctx] = ExprType.INT
         return res
+    }
+
+    /**
+    * Default implementation of Symbol Table for ExprVisitor
+    * @returns null and does nothing
+    * */
+    class EmptySymbolTable : SymbolTable<IdentifierData> {
+        override fun get(symbol: String): IdentifierData? = null
+        override fun declare(symbol: String, value: IdentifierData) {}
+        override fun reassign(symbol: String, value: IdentifierData) {}
+        override fun createChildScope(): SymbolTable<IdentifierData> = EmptySymbolTable()
     }
 }

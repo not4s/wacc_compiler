@@ -2,7 +2,7 @@ package semantic
 
 interface SymbolTable<T> {
 
-    fun get(symbol: String): T
+    fun get(symbol: String): T?
 
     fun declare(symbol: String, value: T)
 
