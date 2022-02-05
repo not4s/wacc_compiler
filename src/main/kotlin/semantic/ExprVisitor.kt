@@ -4,7 +4,9 @@ import antlr.WACCParser.*
 import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.ParserRuleContext
 import utils.Debug
+import utils.ExitCode
 import utils.raiseTypeErrorAndExit
+import kotlin.system.exitProcess
 
 enum class ExprType {
     INT,

@@ -22,3 +22,8 @@ fun raiseSemanticErrorAndExit() {
     println("Semantic error!")
     exitProcess(ExitCode.SEMANTIC_ERROR)
 }
+
+class SemanticException(private val reason: String) : Exception() {
+    override val message: String
+        get() = "Semantic error!\n$reason"
+}
