@@ -22,7 +22,7 @@ class ExprVisitor : WACCParserBaseVisitor<Any?>() {
     private val typeMap: MutableMap<ParserRuleContext?, ExprType> = mutableMapOf()
 
     private fun checkType(ctx: ParserRuleContext?, expectedType: ExprType) {
-        Debug.infoLog("Context is $ctx of type ${typeMap[ctx]} provided, expected type is $expectedType")
+        Debug.infoLog("${ctx?.javaClass} '${ctx?.text}' of type ${typeMap[ctx]} provided, expected type is $expectedType")
         if (typeMap[ctx] != expectedType && typeMap[ctx] != ExprType.NOT_A_TYPE) {
             raiseTypeErrorAndExit(ctx, expectedType, typeMap[ctx])
         }
@@ -70,8 +70,13 @@ class ExprVisitor : WACCParserBaseVisitor<Any?>() {
     override fun visitExprBoolBinary(ctx: ExprBoolBinaryContext?): Any? {
         val res = visitChildren(ctx)
         ctx ?: return res
-        checkType(ctx.left, ExprType.BOOL)
-        checkType(ctx.right, ExprType.BOOL)
+        val operandsExpectedType: ExprType = when(ctx.binOp.type) {
+            OP_GT, OP_GEQ, OP_LT, OP_LEQ -> ExprType.INT
+            else -> ExprType.BOOL
+        }
+        checkType(ctx.left, operandsExpectedType)
+        checkType(ctx.right, operandsExpectedType)
+        typeMap[ctx] = ExprType.BOOL
         return res
     }
     
@@ -87,6 +92,7 @@ class ExprVisitor : WACCParserBaseVisitor<Any?>() {
         ctx ?: return res
         checkType(ctx.left, ExprType.INT)
         checkType(ctx.right, ExprType.INT)
+        typeMap[ctx] = ExprType.INT
         return res
     }
 

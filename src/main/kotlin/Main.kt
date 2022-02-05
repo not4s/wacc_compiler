@@ -7,6 +7,7 @@ import semantic.ExprVisitor
 import utils.Debug
 import utils.ExitCode
 import java.io.File
+import javax.swing.DebugGraphics
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -15,7 +16,7 @@ fun main(args: Array<String>) {
     if (args.contains(Debug.FLAG_ARG)) {
         Debug.isInDebugMode = true
     }
-
+    Debug.infoLog("Debug mode is on!")
     println("You have passed in: ${args.joinToString()}")
     val file = File(args[0])
     println("Opening file: $file\n")
@@ -63,6 +64,16 @@ class CustomVisitor : WACCParserBaseVisitor<Void?>() {
 
     override fun visitAssignRhsExpr(ctx: AssignRhsExprContext?): Void? {
         ExprVisitor().visit(ctx)
+        return null
+    }
+
+    override fun visitStatPrintln(ctx: WACCParser.StatPrintlnContext?): Void? {
+        ctx?.apply { ExprVisitor().visit(expr()) }
+        return null
+    }
+
+    override fun visitStatPrint(ctx: WACCParser.StatPrintContext?): Void? {
+        ctx?.apply { ExprVisitor().visit(expr()) }
         return null
     }
 
