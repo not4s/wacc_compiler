@@ -20,7 +20,7 @@ enum class ExprType {
 }
 
 class ExprVisitor(
-    val symbolTable: SymbolTable<IdentifierData> = EmptySymbolTable()
+    private val symbolTable: SymbolTable<IdentifierData> = EmptySymbolTable()
 ) : WACCParserBaseVisitor<Any?>() {
 
     private val typeMap: MutableMap<ParserRuleContext?, ExprType> = mutableMapOf()
