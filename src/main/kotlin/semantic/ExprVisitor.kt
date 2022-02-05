@@ -31,6 +31,12 @@ class ExprVisitor : WACCParserBaseVisitor<Any?>() {
     }
 
     override fun visitLiteralInteger(ctx: LiteralIntegerContext?): Any? {
+        // Check if int is within limits
+        try {
+            Integer.parseInt(ctx?.text)
+        } catch (e: java.lang.NumberFormatException) {
+            exitProcess(ExitCode.SYNTAX_ERROR)
+        }
         typeMap[ctx] = ExprType.INT
         return visitChildren(ctx)
     }
