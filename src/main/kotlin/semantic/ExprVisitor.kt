@@ -16,7 +16,7 @@ enum class ExprType {
     INVALID_TYPE;
 }
 
-class ExprVisitor() : WACCParserBaseVisitor<Any?>() {
+class ExprVisitor : WACCParserBaseVisitor<Any?>() {
 
     private val typeMap: MutableMap<ParserRuleContext?, ExprType> = mutableMapOf()
 
@@ -69,7 +69,7 @@ class ExprVisitor() : WACCParserBaseVisitor<Any?>() {
         val res = visitChildren(ctx)
         ctx ?: return res
         checkType(ctx.left, ExprType.BOOL)
-        checkType(ctx.left, ExprType.BOOL)
+        checkType(ctx.right, ExprType.BOOL)
         return res
     }
     
@@ -81,8 +81,11 @@ class ExprVisitor() : WACCParserBaseVisitor<Any?>() {
     }
     
     override fun visitExprIntBinary(ctx: ExprIntBinaryContext?): Any? {
-        typeMap[ctx] = ExprType.NOT_A_TYPE
-        return visitChildren(ctx)
+        val res = visitChildren(ctx)
+        ctx ?: return res
+        checkType(ctx.left, ExprType.INT)
+        checkType(ctx.right, ExprType.INT)
+        return res
     }
 
     // TODO: Extract identifier type from Symbol Table
