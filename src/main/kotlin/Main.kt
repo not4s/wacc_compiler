@@ -1,7 +1,9 @@
 import antlr.WACCLexer
 import antlr.WACCParser
+import antlr.WACCParser.AssignRhsExprContext
 import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.*
+import semantic.ExprVisitor
 import utils.ExitCode
 import java.io.File
 import kotlin.system.exitProcess
@@ -51,11 +53,17 @@ class TerminateOnErrorStrategy : DefaultErrorStrategy() {
     }
 }
 
-class CustomVisitor : WACCParserBaseVisitor<Void>() {
+class CustomVisitor : WACCParserBaseVisitor<Void?>() {
+
+    override fun visitAssignRhsExpr(ctx: AssignRhsExprContext?): Void? {
+        ExprVisitor().visit(ctx)
+        return null
+    }
+
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext?): Void? {
         // Check if int is within limits
         try {
-            val integer: Int = Integer.parseInt(ctx?.text)
+            Integer.parseInt(ctx?.text)
         } catch (e: java.lang.NumberFormatException) {
             exitProcess(ExitCode.SYNTAX_ERROR)
         }
