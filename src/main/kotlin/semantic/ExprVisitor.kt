@@ -3,6 +3,7 @@ package semantic
 import antlr.WACCParser.*
 import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.ParserRuleContext
+import utils.Debug
 import utils.raiseTypeErrorAndExit
 
 enum class ExprType {
@@ -21,7 +22,8 @@ class ExprVisitor : WACCParserBaseVisitor<Any?>() {
     private val typeMap: MutableMap<ParserRuleContext?, ExprType> = mutableMapOf()
 
     private fun checkType(ctx: ParserRuleContext?, expectedType: ExprType) {
-        if (typeMap[ctx] != ExprType.BOOL && typeMap[ctx] != ExprType.NOT_A_TYPE) {
+        Debug.infoLog("Context is $ctx of type ${typeMap[ctx]} provided, expected type is $expectedType")
+        if (typeMap[ctx] != expectedType && typeMap[ctx] != ExprType.NOT_A_TYPE) {
             raiseTypeErrorAndExit(ctx, expectedType, typeMap[ctx])
         }
     }
