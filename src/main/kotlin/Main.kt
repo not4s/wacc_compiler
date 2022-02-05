@@ -4,11 +4,17 @@ import antlr.WACCParser.AssignRhsExprContext
 import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.*
 import semantic.ExprVisitor
+import utils.Debug
 import utils.ExitCode
 import java.io.File
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
+
+    // Setting debug mode for future logs
+    if (args.contains(Debug.FLAG_ARG)) {
+        Debug.isInDebugMode = true
+    }
 
     println("You have passed in: ${args.joinToString()}")
     val file = File(args[0])
