@@ -1,4 +1,5 @@
 import org.junit.Test
+import utils.SemanticException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
