@@ -2,6 +2,7 @@ package symbolTable
 
 import waccType.WAny
 import utils.SemanticException
+import waccType.typesAreEqual
 
 class PointerSymbolTable private constructor(private val inheritedEntries: Map<String, SymbolTableEntry>?) :
     SymbolTable() {
@@ -37,7 +38,7 @@ class PointerSymbolTable private constructor(private val inheritedEntries: Map<S
         // If own entry is found, check if the types match.
         val ownEntry = table[symbol]
         if (ownEntry != null) {
-            if (value.sameTypeAs(ownEntry.value)) {
+            if (typesAreEqual(value, ownEntry.value)) {
                 // Reassign
                 ownEntry.value = value
                 return
@@ -48,7 +49,7 @@ class PointerSymbolTable private constructor(private val inheritedEntries: Map<S
         // If not found, look this up in inherited entries.
         val parentEntry = inheritedEntries?.get(symbol)
         if (parentEntry != null) {
-            if (value.sameTypeAs(parentEntry.value)) {
+            if (typesAreEqual(value, parentEntry.value)) {
                 // Reassign
                 parentEntry.value = value
                 return
