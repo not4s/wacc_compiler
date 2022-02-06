@@ -19,7 +19,7 @@ symbol-table-test:
   stage: test
   script:
     - mvn test -Dtest=PointerSymbolTableTest
-    -
+    
 expr-visitor-test:
   stage: test
   script:
