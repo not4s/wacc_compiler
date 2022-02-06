@@ -1,7 +1,7 @@
 package semantic
 
-import SymbolTable.SymbolTable
-import WACCType.*
+import symbolTable.SymbolTable
+import waccType.*
 import antlr.WACCParser.*
 import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.ParserRuleContext

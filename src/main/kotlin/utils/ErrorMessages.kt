@@ -1,8 +1,7 @@
 package utils
 
-import WACCType.WAny
+import waccType.WAny
 import org.antlr.v4.runtime.ParserRuleContext
-import semantic.ExprType
 import kotlin.system.exitProcess
 
 fun raiseTypeErrorAndExit(ctx: ParserRuleContext?, expectedType: WAny?, actualType: WAny?) {

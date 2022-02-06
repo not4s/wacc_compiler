@@ -1,6 +1,6 @@
-package SymbolTable
+package symbolTable
 
-import WACCType.WAny
+import waccType.WAny
 import utils.SemanticException
 
 class PointerSymbolTable private constructor(private val inheritedEntries: Map<String, SymbolTableEntry>?) :

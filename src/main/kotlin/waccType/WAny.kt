@@ -1,4 +1,4 @@
-package WACCType
+package waccType
 
 abstract class WAny {
     abstract val value : Any?

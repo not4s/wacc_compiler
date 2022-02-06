@@ -1,4 +1,4 @@
-package WACCType
+package waccType
 
 class WInt(override val value: Int?) : WAny() {
     constructor() : this(null)

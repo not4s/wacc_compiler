@@ -1,7 +1,7 @@
-package SymbolTable
+package symbolTable
 
-import WACCType.WInt
-import WACCType.WStr
+import waccType.WInt
+import waccType.WStr
 import org.junit.Test
 import utils.SemanticException
 import kotlin.test.assertEquals
