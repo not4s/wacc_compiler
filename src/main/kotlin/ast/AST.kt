@@ -55,6 +55,29 @@ class Literal(
     }
 }
 
+class ArrayLiteral(
+    override val st: SymbolTable,
+    val values: Array<WAny>,
+    override val type: WArray,
+) : Expr, RHS {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "ArrayLiteral\n  (scope:$st)\n${
+            ("type: $type\nelems: [${
+                values.map { e -> e.toString() }.reduceOrNull { a, b -> "$a $b" }
+                    ?: ""
+            }]").prependIndent(INDENT)
+        }"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+}
+
 class WACCType(override val st: SymbolTable, override val type: WAny) : Typed {
     override fun check() {
 
@@ -76,26 +99,6 @@ class PairLiteral(
     override fun toString(): String {
         TODO("Not yet implemented")
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-}
-
-class ArrayElem(
-    override val st: SymbolTable,
-    val ident: Identifer,
-) : Expr, LHS {
-    override fun check() {
-        TODO("Not yet implemented")
-    }
-
-    override fun toString(): String {
-        TODO("Not yet implemented")
-    }
-
-    override val type: WAny
-        get() = st.getAndCast<WArray>(ident.ident).elemType
 
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
@@ -124,8 +127,7 @@ class BinaryOperation(
     }
 
     override fun toString(): String {
-        return "$op\n" +
-                "  (scope:$st)\n${left.toString().prependIndent(INDENT)}\n${
+        return "$op\n" + "  (scope:$st)\n${left.toString().prependIndent(INDENT)}\n${
             right.toString().prependIndent(INDENT)
         }"
     }
@@ -135,13 +137,12 @@ class BinaryOperation(
     }
 
     override val type: WAny
-        get() =
-            when (op) {
-                MUL, DIV, MOD, ADD, BinOperator.SUB -> WInt()
-                GT, GEQ, LT, LEQ -> WBool()
-                EQ, NEQ -> WBool()
-                AND, OR -> WBool()
-            }
+        get() = when (op) {
+            MUL, DIV, MOD, ADD, BinOperator.SUB -> WInt()
+            GT, GEQ, LT, LEQ -> WBool()
+            EQ, NEQ -> WBool()
+            AND, OR -> WBool()
+        }
 
 }
 
@@ -168,8 +169,7 @@ class UnaryOperation(
     }
 
     override fun toString(): String {
-        return "$op\n" +
-                "  (scope:$st)\n${operand.toString().prependIndent(INDENT)}"
+        return "$op\n" + "  (scope:$st)\n${operand.toString().prependIndent(INDENT)}"
     }
 
     override fun evaluate(): WAny {
@@ -177,14 +177,13 @@ class UnaryOperation(
     }
 
     override val type: WAny
-        get() =
-            when (op) {
-                NOT -> WInt()
-                ORD -> WInt()
-                CHR -> WChar()
-                LEN -> WInt()
-                UnOperator.SUB -> WInt()
-            }
+        get() = when (op) {
+            NOT -> WInt()
+            ORD -> WInt()
+            CHR -> WChar()
+            LEN -> WInt()
+            UnOperator.SUB -> WInt()
+        }
 }
 
 
@@ -200,8 +199,7 @@ class Declaration(
     }
 
     override fun toString(): String {
-        return "Declaration:\n" +
-                "  (scope:$st)\n${("of: $ident").prependIndent(INDENT)}\n${
+        return "Declaration:\n" + "  (scope:$st)\n${("of: $ident").prependIndent(INDENT)}\n${
             ("to: $rhs").toString().prependIndent(INDENT)
         }"
     }
@@ -222,8 +220,7 @@ class Assignment(
     }
 
     override fun toString(): String {
-        return "Assingment:\n" +
-                "  (scope:$st)\n${lhs.toString().prependIndent(INDENT)}\n${
+        return "Assingment:\n" + "  (scope:$st)\n${lhs.toString().prependIndent(INDENT)}\n${
             rhs.toString().prependIndent(INDENT)
         }"
     }
@@ -244,8 +241,7 @@ class Identifer(
     }
 
     override fun toString(): String {
-        return "Identifier:\n" +
-                "  (scope:$st)\n${("ident: $ident").prependIndent(INDENT)}\n${
+        return "Identifier:\n" + "  (scope:$st)\n${("ident: $ident").prependIndent(INDENT)}\n${
             ("type: $type").prependIndent(INDENT)
         }"
     }
@@ -253,6 +249,34 @@ class Identifer(
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
+}
+
+class ArrayElement(
+    override val st: SymbolTable,
+    val ident: String, // name of array
+    val indices: Array<Expr>, // List of indices
+    override val type: WAny, // type of element referring to
+) : LHS, Expr {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        // This string also summons Cthulhu
+        return "ArrayElem:\n" + "  (scope:$st)\n${
+            ("array ident: $ident\nindex/ices:\n${
+                (indices.map { e -> e.toString() }.reduceOrNull { a, b -> "$a\n$b" }
+                    ?: "").prependIndent("  ")
+            }").prependIndent(INDENT)
+        }\n${
+            ("type: $type").prependIndent(INDENT)
+        }"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
 }
 
 class IfThenStat(
@@ -285,7 +309,7 @@ class IfThenStat(
 class WhileStat(
     override val st: SymbolTable,
     val condition: Expr,
-    val doBlock: Stat
+    val doBlock: Stat,
 ) : Stat {
 
     override fun check() {
@@ -298,7 +322,8 @@ class WhileStat(
                 condition.toString().prependIndent("   ")
             }").prependIndent(INDENT)
         }\n${
-            ("do:\n${doBlock.toString().prependIndent("   ")}").prependIndent(INDENT)}"
+            ("do:\n${doBlock.toString().prependIndent("   ")}").prependIndent(INDENT)
+        }"
     }
 
     override fun evaluate(): WAny {
@@ -312,8 +337,7 @@ class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val exp
     }
 
     override fun toString(): String {
-        return "Print:\n" +
-                "  (scope:$st)\n${("withNewline: $newlineAfter").prependIndent(INDENT)}\n${
+        return "Print:\n" + "  (scope:$st)\n${("withNewline: $newlineAfter").prependIndent(INDENT)}\n${
             ("Expr: $expr").prependIndent(INDENT)
         }"
     }
@@ -335,8 +359,7 @@ class ExitStat(
     }
 
     override fun toString(): String {
-        return "Exit:\n" +
-                "  (scope:$st)\n${exp.toString().prependIndent(INDENT)}"
+        return "Exit:\n" + "  (scope:$st)\n${exp.toString().prependIndent(INDENT)}"
     }
 
     override fun evaluate(): WAny {
@@ -370,8 +393,7 @@ class ReturnStat(
     }
 
     override fun toString(): String {
-        return "Return:\n" +
-                "  (scope:$st)\n${exp.toString().prependIndent(INDENT)}"
+        return "Return:\n" + "  (scope:$st)\n${exp.toString().prependIndent(INDENT)}"
     }
 
     override fun evaluate(): WAny {
