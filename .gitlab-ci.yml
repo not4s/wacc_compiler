@@ -15,6 +15,16 @@ main-test:
   script:
     - mvn test -Dtest=MainTest
 
+symbol-table-test:
+  stage: test
+  script:
+    - mvn test -Dtest=PointerSymbolTableTest
+
+.expr-visitor-test:
+  stage: test
+  script:
+    - mvn test -Dtest=ExprVisitorTest
+
 
 .invalid/semanticErr/exit:
   stage: wacc-test
