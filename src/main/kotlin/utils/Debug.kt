@@ -1,6 +1,5 @@
 package utils
 
-
 class Debug {
     companion object {
         const val FLAG_ARG = "--debug_mode"
