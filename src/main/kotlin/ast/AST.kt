@@ -1,148 +1,392 @@
 package ast
 
-interface WAny
+import ast.BinOperator.*
+import ast.UnOperator.*
+import symbolTable.PointerSymbolTable
+import symbolTable.SymbolTable
+import utils.SemanticException
+import waccType.*
 
-interface AbstractSyntaxTree {
-//    fun getScope() : SymbolTable
+val INDENT = "|  "
+
+interface AST {
+    val st: SymbolTable
+    fun check() // must throw exceptions if semantic errors are found
+    override fun toString(): String
 }
 
-class ProgramAST(
-    val functions: Array<FunctionAST>,
-    val body: StatAST
-) : AbstractSyntaxTree {
-//    val baseSymbolTable: SymbolTable = initializeSymbolTable()
-//    private fun initializeSymbolTable(): SymbolTable {}
-
+interface Evaluable : AST {
+    fun evaluate(): WAny
 }
 
-class FunctionAST(
-    val type: WAny,
-    val identifier: String,
-    val params: Array<ParamAst>,
-    val body: StatAST
-) : AbstractSyntaxTree
+interface Typed : AST {
+    val type: WAny
+}
 
-class ParamAst(
-    val type: WAny,
-    val identifier: String
-) : AbstractSyntaxTree
+interface RHS : AST, Evaluable, Typed
 
-interface StatAST : AbstractSyntaxTree
+interface LHS : AST, Typed
 
-class SkipAST : StatAST
+interface Expr : AST, Evaluable, Typed, RHS
 
-class ExitAST(
-    val expr: ExprAST
-) : StatAST
+interface Stat : AST, Evaluable
 
-class FreeAST(
-    val expr: ExprAST
-) : StatAST
 
-class ReturnAST(
-    val expr: ExprAST
-) : StatAST
+enum class BinOperator {
+    MUL, DIV, MOD, ADD, SUB, GT, GEQ, LT, LEQ, EQ, NEQ, AND, OR;
+}
 
-/**
- * @property lineBreak refers to println keyword
- */
-class PrintAST(
-    val lineBreak: Boolean,
-    val expr: ExprAST
-) : StatAST
+enum class UnOperator {
+    NOT, ORD, CHR, LEN, SUB;
+}
 
-class ReadAST(
-    val destination: AssignLhsAST
-) : StatAST
+class Literal(
+    override val st: SymbolTable,
+    override val type: WBase,
+) : Expr, RHS {
+    override fun check() {}
 
-class IfAST(
-    val cond: ExprAST,
-    val thenBlock: StatAST,
-    val elseBlock: StatAST
-)
+    override fun toString(): String {
+        return "Literal\n${("type: $type").prependIndent(INDENT)}"
+    }
 
-class WhileAST(
-    val cond: ExprAST,
-    val body: StatAST
-)
-
-/**
- * Combining statement composition into a scope
- */
-class ScopeAST(
-    val body: Array<StatAST>
-) : StatAST
-
-class DeclarationAST(
-    val type: WAny,
-    val lhs: AssignLhsAST,
-    val rhs: AssignRhsAST
-)
-
-class AssignmentAST(
-    val lhs: AssignLhsAST,
-    val rhs: AssignRhsAST
-)
-
-interface AssignLhsAST
-
-class IdentifierLhsAST(
-    val identifier: String
-) : AssignLhsAST
-
-class ArrayElemAST(
-    val identifier: String,
-    val index: ExprAST
-) : AssignLhsAST, ExprAST
-
-/**
- * @property first is used to determine whether the first(true) or second(false)
- * pair element is accessed/assigned
- */
-class PairElemAST(
-    val first: Boolean,
-    val identifier: String
-) : AssignLhsAST, AssignRhsAST
-
-interface AssignRhsAST
-
-class ArrayLiterAST(
-    val elements: Array<ExprAST>
-) : AssignRhsAST
-
-class NewPairAST(
-    val first: ExprAST,
-    val second: ExprAST
-) : AssignRhsAST
-
-class FunctionCallAst(
-    val identifier: String,
-    val arguments: List<ExprAST>
-)
-
-interface ExprAST : AssignRhsAST
-
-class LiteralAST(
-    val value: WAny
-) : ExprAST
-
-class NullAst : ExprAST
-
-class UnOpAST(
-    val operation: UnOperator,
-    val operand: ExprAST
-) : ExprAST {
-    enum class UnOperator {
-        NOT, ORD, CHR, LEN, SUB;
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
     }
 }
 
-class BinOpAST(
-    val left: ExprAST,
-    val operation: BinOperator,
-    val right: ExprAST,
-) : ExprAST {
-    enum class BinOperator {
-        MUL, DIV, MOD, ADD, SUB, GT, GEQ, LT, LEQ, EQ, NEQ, AND, OR;
+class WACCType(override val st: SymbolTable, override val type: WAny) : Typed {
+    override fun check() {
+
+    }
+
+    override fun toString(): String {
+        return "WACCType: $type"
     }
 }
+
+class PairLiteral(
+    override val st: SymbolTable,
+    override val type: WAny,
+) : Expr {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+}
+
+class ArrayElem(
+    override val st: SymbolTable,
+    val ident: Identifer,
+) : Expr, LHS {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        TODO("Not yet implemented")
+    }
+
+    override val type: WAny
+        get() = st.getAndCast<WArray>(ident.ident).elemType
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+}
+
+class BinaryOperation(
+    override val st: SymbolTable,
+    val left: Expr,
+    val right: Expr,
+    val op: BinOperator,
+) : Expr {
+    override fun check() {
+        when (op) {
+            MUL, DIV, MOD, ADD, BinOperator.SUB -> {
+                assertEqualTypes(left.type, right.type); assertEqualTypes(left.type, WInt())
+            }
+            GT, GEQ, LT, LEQ -> {
+                assertEqualTypes(left.type, right.type); assertEqualTypes(left.type, WInt())
+            }
+            EQ, NEQ -> assertEqualTypes(left.type, right.type)
+            AND, OR -> {
+                assertEqualTypes(left.type, right.type); assertEqualTypes(left.type, WBool())
+            }
+        }
+    }
+
+    override fun toString(): String {
+        return "$op\n${left.toString().prependIndent(INDENT)}\n${
+            right.toString().prependIndent(INDENT)
+        }"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+    override val type: WAny
+        get() =
+            when (op) {
+                MUL, DIV, MOD, ADD, BinOperator.SUB -> WInt()
+                GT, GEQ, LT, LEQ -> WBool()
+                EQ, NEQ -> WBool()
+                AND, OR -> WBool()
+            }
+
+}
+
+class UnaryOperation(
+    override val st: SymbolTable,
+    val operand: Expr,
+    val op: UnOperator,
+) : Expr {
+    override fun check() {
+        when (op) {
+            NOT -> if (operand.type !is WBool) {
+                throw SemanticException("")
+            }
+            ORD -> if (operand.type !is WChar) {
+                throw SemanticException("")
+            }
+            CHR, UnOperator.SUB -> if (operand.type !is WInt) {
+                throw SemanticException("")
+            }
+            LEN -> if (operand.type !is WArray) {
+                throw SemanticException("")
+            }
+        }
+    }
+
+    override fun toString(): String {
+        return "$op\n${operand.toString().prependIndent(INDENT)}"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+    override val type: WAny
+        get() =
+            when (op) {
+                NOT -> WInt()
+                ORD -> WInt()
+                CHR -> WChar()
+                LEN -> WInt()
+                UnOperator.SUB -> WInt()
+            }
+}
+
+
+class Declaration(
+    override val st: SymbolTable,
+    val decType: WAny,
+    val ident: String,
+    val rhs: RHS,
+) : Stat {
+
+    override fun check() {
+        assertEqualTypes(decType, rhs.type)
+    }
+
+    override fun toString(): String {
+        return "Declaration:\n${("of: $ident").prependIndent(INDENT)}\n${
+            ("to: $rhs").toString().prependIndent(INDENT)
+        }"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+}
+
+class Assignment(
+    override val st: SymbolTable,
+    val lhs: LHS,
+    val rhs: RHS,
+) : Stat {
+    override fun check() {
+        assertEqualTypes(lhs.type, lhs.type)
+        st.reassign(TODO(), rhs.type)
+    }
+
+    override fun toString(): String {
+        return "Assingment:\n${lhs.toString().prependIndent(INDENT)}\n${
+            rhs.toString().prependIndent(INDENT)
+        }"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class Identifer(
+    override val st: SymbolTable,
+    val ident: String,
+    override val type: WAny,
+) : LHS, Expr {
+    override fun check() {
+        // Always valid.
+    }
+
+    override fun toString(): String {
+        return "Identifier:\n${("ident: $ident").prependIndent(INDENT)}\n${
+            ("type: $type").prependIndent(INDENT)
+        }"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+}
+
+class IfThenStat(
+    override val st: SymbolTable,
+    val condition: Expr,
+    val thenStat: Stat,
+    val elseStat: Stat,
+) : Stat {
+
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "If-Then-Else:\n${("if: $condition").prependIndent(INDENT)}\n${
+            ("then: $thenStat").prependIndent(INDENT)
+        }\n${("else: $elseStat").prependIndent(INDENT)}"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val expr: Expr) : Stat {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "Print:\n${("withNewline: $newlineAfter").prependIndent(INDENT)}\n${
+            ("Expr: $expr").prependIndent(INDENT)
+        }"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class ExitStat(
+    override val st: SymbolTable,
+    val exp: Expr,
+) : Stat {
+    override fun check() {
+        if (exp.type !is WInt) {
+            throw SemanticException("")
+        }
+    }
+
+    override fun toString(): String {
+        return "Exit:\n${exp.toString().prependIndent(INDENT)}"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+}
+
+class SkipStat(override val st: SymbolTable) : Stat {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "Skip"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class ReturnStat(
+    override val st: SymbolTable,
+    val exp: Expr,
+) : Stat {
+    override fun check() {
+        if (exp.type !is WInt) {
+            throw SemanticException("")
+        }
+    }
+
+    override fun toString(): String {
+        return "Return:\n${exp.toString().prependIndent(INDENT)}"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+}
+
+class JoinStat(
+    override val st: SymbolTable,
+    val first: Stat,
+    val second: Stat,
+) : Stat {
+    override fun check() {
+        first.check()
+        second.check()
+    }
+
+    override fun toString(): String {
+        return "$first\n$second"
+    }
+
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+}
+
+
+fun main() {
+    val st = PointerSymbolTable()
+    st.declare("x", WInt())
+    val temp = Declaration(st, WInt(), "x", Literal(st, WInt()))
+    temp.check()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

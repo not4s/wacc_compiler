@@ -67,19 +67,19 @@ expr
   | arrayElem                                                  #exprArrayElem
   | literal                                                    #exprLiteral
 
-  | unOp=OP_NOT operand=expr                                   #exprBoolUnary
-  | unOp=OP_ORD operand=expr                                   #exprIntUnary
-  | unOp=OP_CHR operand=expr                                   #exprCharUnary
-  | unOp=OP_LEN operand=expr                                   #exprIntUnary
-  | unOp=OP_SUBT operand=expr                                  #exprIntUnary
+  | unOp=OP_NOT operand=expr                                   #exprUnary
+  | unOp=OP_ORD operand=expr                                   #exprUnary
+  | unOp=OP_CHR operand=expr                                   #exprUnary
+  | unOp=OP_LEN operand=expr                                   #exprUnary
+  | unOp=OP_SUBT operand=expr                                  #exprUnary
 
-  | left=expr binOp=(OP_MULT | OP_DIV | OP_MOD) right=expr     #exprIntBinary
-  | left=expr binOp=(OP_ADD | OP_SUBT) right=expr              #exprIntBinary
+  | left=expr binOp=(OP_MULT | OP_DIV | OP_MOD) right=expr     #exprBinary
+  | left=expr binOp=(OP_ADD | OP_SUBT) right=expr              #exprBinary
   | left=expr binOp=(OP_GT | OP_GEQ |
-             OP_LT | OP_LEQ) right=expr                        #exprBoolBinary
-  | left=expr binOp=(OP_EQ | OP_NEQ) right=expr                #exprBoolBinary
-  | left=expr binOp=OP_AND right=expr                          #exprBoolBinary
-  | left=expr binOp=OP_OR right=expr                           #exprBoolBinary
+             OP_LT | OP_LEQ) right=expr                        #exprBinary
+  | left=expr binOp=(OP_EQ | OP_NEQ) right=expr                #exprBinary
+  | left=expr binOp=OP_AND right=expr                          #exprBinary
+  | left=expr binOp=OP_OR right=expr                           #exprBinary
 
   | IDENTIFIER                                                 #exprIdentifier
   ;

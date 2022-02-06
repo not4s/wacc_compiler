@@ -1,22 +1,68 @@
 package waccType
 
+import utils.SemanticException
 
 
 interface WAny
 
-class WInt : WAny
-class WStr : WAny
-class WBool : WAny
-class WChar : WAny
+interface WBase : WAny
 
-class WArray(val elemType : WAny) : WAny
+class WUnknown : WAny {
+    override fun toString(): String {
+        return "Unknown"
+    }
+}
 
-class WPair(val leftType : WAny, rightType : WAny) : WAny
+class WInt : WBase {
+    override fun toString(): String {
+        return "Int"
+    }
+}
 
-class WFunc(val params: Array<WAny>, val returnType : WAny) : WAny
+class WStr : WBase {
+    override fun toString(): String {
+        return "String"
+    }
+}
 
-fun typesAreEqual(x : WAny, y : WAny) : Boolean {
+class WBool : WBase {
+    override fun toString(): String {
+        return "Bool"
+    }
+}
+
+class WChar : WBase {
+    override fun toString(): String {
+        return "Char"
+    }
+}
+
+class WArray(val elemType: WAny) : WAny {
+    override fun toString(): String {
+        return "$elemType[]"
+    }
+}
+
+class WPair(val leftType: WAny, val rightType: WAny) : WAny {
+    override fun toString(): String {
+        return "Pair($leftType, $rightType)"
+    }
+}
+
+class WFunc(val params: Array<WAny>, val returnType: WAny) : WAny {
+    override fun toString(): String {
+        return "$returnType func($params)"
+    }
+}
+
+fun typesAreEqual(x: WAny, y: WAny): Boolean {
     return (x::class == y::class)
+}
+
+fun assertEqualTypes(x: WAny, y: WAny) {
+    if (!typesAreEqual(x, y)) {
+        throw SemanticException("")
+    }
 }
 
 

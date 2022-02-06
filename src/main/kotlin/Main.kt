@@ -2,6 +2,8 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.*
+import semantic.ASTVisitor
+import symbolTable.PointerSymbolTable
 import utils.ExitCode
 import java.io.File
 import kotlin.system.exitProcess
@@ -13,6 +15,14 @@ fun main(args: Array<String>) {
     println("Opening file: $file\n")
 
     val input = CharStreams.fromFileName(file.absolutePath)
+//    val input = CharStreams.fromString("""
+//        begin
+//            int x = 5;
+//            int x = 6;
+//            exit 2
+//        end
+//
+//    """.trimIndent())
 
     val lexer = WACCLexer(input)
 
@@ -38,9 +48,8 @@ fun main(args: Array<String>) {
     parser.errorHandler = TerminateOnErrorStrategy()
 
     val tree = parser.program()
-    CustomVisitor().visit(tree)
-
-    println("Parsed: ${tree.toStringTree(parser)}")
+    val res = ASTVisitor(PointerSymbolTable()).visit(tree)
+    println(res)
 
 }
 
