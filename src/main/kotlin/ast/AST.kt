@@ -128,37 +128,21 @@ class LiteralAST(
 
 class NullAst : ExprAST
 
-/**
- * Unary operations ASTs are used for pattern matching
- */
-abstract class UnOpAST(
+class UnOpAST(
+    val operation: UnOperator,
     val operand: ExprAST
-) : ExprAST
+) : ExprAST {
+    enum class UnOperator {
+        NOT, ORD, CHR, LEN, SUB;
+    }
+}
 
-class NotAST(operand: ExprAST) : UnOpAST(operand)
-class MinusAST(operand: ExprAST) : UnOpAST(operand)
-class OrdAST(operand: ExprAST) : UnOpAST(operand)
-class ChrAST(operand: ExprAST) : UnOpAST(operand)
-class LenAST(operand: ExprAST) : UnOpAST(operand)
-
-/**
- * Binary operators ASTs are used for pattern matching
- */
-abstract class BinOpAST(
+class BinOpAST(
     val left: ExprAST,
+    val operation: BinOperator,
     val right: ExprAST,
-) : ExprAST
-
-class MultiplicationAST(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class DivisionAst(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class ModuloAst(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class AdditionAst(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class SubtractionAST(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class GreaterAst(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class LessAST(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class GreaterOrEqualsAst(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class LessOrEqualAST(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class EqualsAst(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class NotEqualsAst(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class ConjunctionAst(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
-class DisjunctionAst(left: ExprAST, right: ExprAST) : BinOpAST(left, right)
+) : ExprAST {
+    enum class BinOperator {
+        MUL, DIV, MOD, ADD, SUB, GT, GEQ, LT, LEQ, EQ, NEQ, AND, OR;
+    }
+}
