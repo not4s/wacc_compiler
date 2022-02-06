@@ -1,10 +1,11 @@
 package utils
 
+import WACCType.WAny
 import org.antlr.v4.runtime.ParserRuleContext
 import semantic.ExprType
 import kotlin.system.exitProcess
 
-fun raiseTypeErrorAndExit(ctx: ParserRuleContext?, expectedType: ExprType?, actualType: ExprType?) {
+fun raiseTypeErrorAndExit(ctx: ParserRuleContext?, expectedType: WAny?, actualType: WAny?) {
     ctx?.run {
         println("Line ${ctx.start.line}: Invalid operand expression type\n" +
                 "Expected: $expectedType, got: $actualType\"")
