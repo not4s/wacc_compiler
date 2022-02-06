@@ -206,8 +206,10 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
             this.visit(ctx.assignRhs()) as RHS)
     }
 
-    override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): AST {
-        TODO()
+    override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): WhileStat {
+        return WhileStat(st,
+            this.visit(ctx.whileCond) as Expr,
+            ASTVisitor(st.createChildScope()).visit(ctx.doBlock) as Stat)
     }
 
     override fun visitStatRead(ctx: WACCParser.StatReadContext): AST {
@@ -215,7 +217,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
-        TODO()
+        return ASTVisitor(st.createChildScope()).visit(ctx.stat())
     }
 
     override fun visitStatFree(ctx: WACCParser.StatFreeContext): AST {

@@ -3,6 +3,7 @@ import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.*
 import semantic.ASTVisitor
+import symbolTable.ParentRefSymbolTable
 import symbolTable.PointerSymbolTable
 import utils.ExitCode
 import java.io.File
@@ -48,7 +49,7 @@ fun main(args: Array<String>) {
     parser.errorHandler = TerminateOnErrorStrategy()
 
     val tree = parser.program()
-    val res = ASTVisitor(PointerSymbolTable()).visit(tree)
+    val res = ASTVisitor(ParentRefSymbolTable()).visit(tree)
     println(res)
 
 }
