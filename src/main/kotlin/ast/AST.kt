@@ -1,6 +1,6 @@
 package ast
 
-interface WAny
+import waccType.WAny
 
 interface AbstractSyntaxTree {
 //    fun getScope() : SymbolTable
