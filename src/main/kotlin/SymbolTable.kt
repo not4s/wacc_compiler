@@ -1,3 +1,5 @@
+import utils.SemanticException
+
 class SymbolTable(initialTable: Map<String, SymbolTableEntry<Any>>? = null) {
     val table = mutableMapOf<String, SymbolTableEntry<Any>>()
     val parentTable = initialTable
@@ -93,15 +95,10 @@ class SymbolTable(initialTable: Map<String, SymbolTableEntry<Any>>? = null) {
             throw SemanticException("Attempted to access undeclared variable $symbol")
         }
     }
-}
 
-class SymbolTableEntry<T : Any>(var value: T) {
-    override fun toString(): String {
-        return "(${value::class.simpleName})$value"
+    class SymbolTableEntry<T : Any>(var value: T) {
+        override fun toString(): String {
+            return "(${value::class.simpleName})$value"
+        }
     }
-}
-
-class SemanticException(private val reason: String) : Exception() {
-    override val message: String
-        get() = "Semantic error!\n$reason"
 }

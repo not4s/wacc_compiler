@@ -2,6 +2,7 @@
 bin
 src/main/kotlin/antlr
 gen
+antlr_config/WACCLexer.tokens
 
 #ignore Java class files
 *.class
