@@ -49,12 +49,6 @@ class WPair(val leftType: WAny, val rightType: WAny) : WAny {
     }
 }
 
-class WFunc(val params: Array<WAny>, val returnType: WAny) : WAny {
-    override fun toString(): String {
-        return "$returnType func($params)"
-    }
-}
-
 fun typesAreEqual(x: WAny, y: WAny): Boolean {
     return (x::class == y::class)
 }

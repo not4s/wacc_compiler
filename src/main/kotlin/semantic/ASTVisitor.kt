@@ -3,14 +3,20 @@ package semantic
 import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import ast.*
+import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
+import utils.ExitCode
 import waccType.*
+import kotlin.system.exitProcess
 
 class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
-    override fun visitProgram(ctx: WACCParser.ProgramContext): Stat {
-        /* TODO: Visit funcs */
-        return this.visit(ctx.stat()) as Stat
+    override fun visitProgram(ctx: WACCParser.ProgramContext): Program {
+        return Program(st,
+            ctx.func()
+                .map { f -> (ASTVisitor(ParentRefSymbolTable()).visit(f) as WACCFunction) }
+                .toTypedArray(),
+            this.visit(ctx.stat()) as Stat)
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {
@@ -37,8 +43,10 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         return WACCType(st, WArray(elemType.type))
     }
 
+    // pair[]
     override fun visitArrayTypePairType(ctx: WACCParser.ArrayTypePairTypeContext): AST {
-        TODO()
+        val elemType: WACCType = this.visit(ctx.pairType()) as WACCType
+        return WACCType(st, WArray(elemType.type))
     }
 
     override fun visitArrayElem(ctx: WACCParser.ArrayElemContext): ArrayElement {
@@ -100,6 +108,13 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext): Literal {
+        // make sure int is within bounds immediately
+        try {
+            Integer.parseInt(ctx.text)
+        } catch (e: java.lang.NumberFormatException) {
+            println("Attempted to parse a very big int!")
+            exitProcess(ExitCode.SYNTAX_ERROR)
+        }
         return Literal(st, WInt())
     }
 
@@ -202,12 +217,20 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         return this.visit(ctx.pairElem()) as RHS
     }
 
-    override fun visitAssignRhsCall(ctx: WACCParser.AssignRhsCallContext): AST {
-        TODO()
+    override fun visitAssignRhsCall(ctx: WACCParser.AssignRhsCallContext): FunctionCall {
+        val params: Array<Expr> = if (ctx.argList() == null) {
+            arrayOf()
+        } else {
+            ctx.argList().expr().map { arg -> this.visit(arg) as Expr }.toTypedArray()
+        }
+        return FunctionCall(st,
+            ctx.IDENTIFIER().text,
+            params,
+            WUnknown())
     }
 
     override fun visitArgList(ctx: WACCParser.ArgListContext): AST {
-        TODO()
+        throw Exception("Don't call me!")
     }
 
     override fun visitStatInit(ctx: WACCParser.StatInitContext): Declaration {
@@ -274,14 +297,24 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitParam(ctx: WACCParser.ParamContext): AST {
-        TODO()
+        throw Exception("Don't call me!")
     }
 
     override fun visitParamList(ctx: WACCParser.ParamListContext): AST {
-        TODO()
+        throw Exception("Don't call me!")
     }
 
-    override fun visitFunc(ctx: WACCParser.FuncContext): AST {
-        TODO()
+    override fun visitFunc(ctx: WACCParser.FuncContext): WACCFunction {
+        val params: MutableMap<String, WAny> = mutableMapOf()
+        if (ctx.paramList() != null) {
+            for (p in ctx.paramList().param()) {
+                params[p.IDENTIFIER().text] = (this.visit(p.type()) as WACCType).type
+            }
+        }
+        return WACCFunction(st,
+            ctx.IDENTIFIER().text,
+            params.toMap(),
+            this.visit(ctx.stat()) as Stat,
+            (this.visit(ctx.type()) as WACCType).type)
     }
 }

@@ -40,6 +40,68 @@ enum class UnOperator {
     NOT, ORD, CHR, LEN, SUB;
 }
 
+class Program(
+    override val st: SymbolTable,
+    val funcs: Array<WACCFunction>,
+    val stat: Stat,
+) : AST {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "DEFINED FUNCTIONS:\n${"-".repeat(20)}\n${
+            funcs.map { f -> f.toString() }.reduceOrNull { a, b -> "$a\n$b" } ?: "\n"
+        }\n${"-".repeat(20)}\nGLOBAL PROGRAM BLOCK:\n${"-".repeat(20)}\n$stat"
+    }
+
+}
+
+class WACCFunction(
+    override val st: SymbolTable,
+    val ident: String,
+    val params: Map<String, WAny>,
+    val body: Stat,
+    override val type: WAny, // return type
+) : AST, Typed {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "Function($type) $ident(${
+            params.map { (id, t) -> "($t)$id" }.reduceOrNull { a, b -> "$a, $b" } ?: ""
+        }):\n${body.toString().prependIndent(INDENT)}"
+    }
+}
+
+class FunctionCall(
+    override val st: SymbolTable,
+    val ident: String,
+    val params: Array<Expr>,
+    override val type: WAny,
+) : RHS {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "Calling $ident\n${
+            params.mapIndexed { i, e ->
+                "Parameter $i:\n${
+                    e.toString().prependIndent(
+                        INDENT)
+                }".prependIndent("  ")
+            }.reduceOrNull { a, b -> "$a\n$b" } ?: ""
+        })"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+}
+
 class Literal(
     override val st: SymbolTable,
     override val type: WBase,
@@ -354,8 +416,10 @@ class WhileStat(
     }
 }
 
-class ReadStat(override val st: SymbolTable,
-val lhs: LHS) : Stat {
+class ReadStat(
+    override val st: SymbolTable,
+    val lhs: LHS,
+) : Stat {
     override fun check() {
         TODO("Not yet implemented")
     }
