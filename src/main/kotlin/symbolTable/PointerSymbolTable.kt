@@ -2,6 +2,7 @@ package symbolTable
 
 import waccType.WAny
 import utils.SemanticException
+import waccType.WInt
 import waccType.typesAreEqual
 
 class PointerSymbolTable private constructor(private val inheritedEntries: Map<String, SymbolTableEntry>?) :
@@ -58,6 +59,14 @@ class PointerSymbolTable private constructor(private val inheritedEntries: Map<S
             }
         }
         throw SemanticException("Attempted to reassign undeclared variable $symbol")
+    }
+
+    override fun reassign(arrSym: String, indices: Array<WInt>, value: WAny) {
+        TODO("Not yet implemented")
+    }
+
+    override fun isGlobal(): Boolean {
+        TODO("Not yet implemented")
     }
 
     override fun createChildScope(): PointerSymbolTable {

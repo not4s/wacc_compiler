@@ -2,6 +2,8 @@ package symbolTable
 
 import utils.SemanticException
 import waccType.WAny
+import waccType.WArray
+import waccType.WInt
 import waccType.typesAreEqual
 
 class ParentRefSymbolTable private constructor(private val parentTable: ParentRefSymbolTable?) :
@@ -41,6 +43,29 @@ class ParentRefSymbolTable private constructor(private val parentTable: ParentRe
                 parentTable.reassign(symbol, value)
             }
         }
+    }
+
+    override fun reassign(arrSym: String, indices: Array<WInt>, value: WAny) {
+        val prev = dict[arrSym]
+        // Make sure this is array.
+        if (prev != null) {
+            if (prev !is WArray) {
+                throw SemanticException("Cannot access elements of non-array type: $prev")
+            } else {
+                TODO("Implement this")
+            }
+        } else {
+            if (parentTable == null) {
+                throw SemanticException("Attempted to reassign undeclared variable.")
+            } else {
+                parentTable.reassign(arrSym, indices, value)
+            }
+        }
+
+    }
+
+    override fun isGlobal(): Boolean {
+        return parentTable == null
     }
 
     override fun createChildScope(): SymbolTable {

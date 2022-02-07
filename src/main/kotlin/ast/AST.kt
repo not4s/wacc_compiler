@@ -64,8 +64,13 @@ class WACCFunction(
     val body: Stat,
     override val type: WAny, // return type
 ) : AST, Typed {
+    init {
+        check()
+    }
     override fun check() {
-        TODO("Not yet implemented")
+        // TODO: Param checking?
+        body.check()
+
     }
 
     override fun toString(): String {
@@ -193,17 +198,40 @@ class BinaryOperation(
     val right: Expr,
     val op: BinOperator,
 ) : Expr {
+    init {
+        check()
+    }
+
     override fun check() {
         when (op) {
             MUL, DIV, MOD, ADD, BinOperator.SUB -> {
-                assertEqualTypes(left.type, right.type); assertEqualTypes(left.type, WInt())
+                if (!typesAreEqual(left.type, right.type)) {
+                    throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
+                }
+                if (!typesAreEqual(left.type, WInt())) {
+                    throw SemanticException("Attempted to call binary operation $op on non-int types: ${left.type} ")
+                }
             }
             GT, GEQ, LT, LEQ -> {
-                assertEqualTypes(left.type, right.type); assertEqualTypes(left.type, WInt())
+                if (!typesAreEqual(left.type, right.type)) {
+                    throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
+                }
+                if (!typesAreEqual(left.type, WInt()) && !typesAreEqual(left.type, WChar())) {
+                    throw SemanticException("Attempted to call binary operation $op on weird (non-int, non-char) types: ${left.type} ")
+                }
             }
-            EQ, NEQ -> assertEqualTypes(left.type, right.type)
+            EQ, NEQ -> {
+                if (!typesAreEqual(left.type, right.type)) {
+                    throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
+                }
+            }
             AND, OR -> {
-                assertEqualTypes(left.type, right.type); assertEqualTypes(left.type, WBool())
+                if (!typesAreEqual(left.type, right.type)) {
+                    throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
+                }
+                if (!typesAreEqual(left.type, WBool())) {
+                    throw SemanticException("Attempted to call binary operation $op on non-bool types: ${left.type} ")
+                }
             }
         }
     }
@@ -236,16 +264,16 @@ class UnaryOperation(
     override fun check() {
         when (op) {
             NOT -> if (operand.type !is WBool) {
-                throw SemanticException("")
+                throw SemanticException("Attempted to call $op on non-bool type: ${operand.type}")
             }
             ORD -> if (operand.type !is WChar) {
-                throw SemanticException("")
+                throw SemanticException("Attempted to call $op on non-char type: ${operand.type}")
             }
             CHR, UnOperator.SUB -> if (operand.type !is WInt) {
-                throw SemanticException("")
+                throw SemanticException("Attempted to call $op on non-int type: ${operand.type}")
             }
             LEN -> if (operand.type !is WArray) {
-                throw SemanticException("")
+                throw SemanticException("Attempted to call $op on non-array type: ${operand.type}")
             }
         }
     }
@@ -260,7 +288,7 @@ class UnaryOperation(
 
     override val type: WAny
         get() = when (op) {
-            NOT -> WInt()
+            NOT -> WBool()
             ORD -> WInt()
             CHR -> WChar()
             LEN -> WInt()
@@ -309,8 +337,18 @@ class Assignment(
     override fun check() {
         assertEqualTypes(lhs.type, rhs.type)
         when (lhs) {
-            is IdentiferSet -> st.reassign(lhs.ident, rhs.type)
-            is ArrayElement -> TODO("NYI")
+            is IdentifierSet -> st.reassign(lhs.ident, rhs.type)
+            is ArrayElement -> {
+                // Make sure Exprs are of type int.
+                val indices: Array<WInt> = lhs.indices.map { e ->
+                    if (e.type is WInt) {
+                        e.type as WInt
+                    } else {
+                        throw SemanticException("Non-int index in array ${lhs.ident}")
+                    }
+                }.toTypedArray()
+                st.reassign(lhs.ident, indices, rhs.type)
+            }
             is PairElement -> TODO("NYI")
         }
     }
@@ -327,10 +365,9 @@ class Assignment(
 
 }
 
-class IdentiferSet(
+class IdentifierSet(
     override val st: SymbolTable,
     val ident: String,
-    override val type: WAny,
 ) : LHS {
     override fun check() {
         // Always valid.
@@ -341,10 +378,13 @@ class IdentiferSet(
             ("type: $type").prependIndent(INDENT)
         }"
     }
+
+    override val type: WAny
+        get() = st.get(ident)
 }
 
 
-class IdentiferGet(
+class IdentifierGet(
     override val st: SymbolTable,
     val ident: String,
 ) : Expr {
@@ -456,8 +496,14 @@ class ReadStat(
     override val st: SymbolTable,
     val lhs: LHS,
 ) : Stat {
+    init {
+        check()
+    }
+
     override fun check() {
-        TODO("Not yet implemented")
+        if (lhs.type !is WChar && lhs.type !is WInt) {
+            throw SemanticException("Cannot read into non-char or non-int variable, actual: ${lhs.type}")
+        }
     }
 
     override fun toString(): String {
@@ -543,9 +589,13 @@ class ExitStat(
     override val st: SymbolTable,
     val exp: Expr,
 ) : Stat {
+    init {
+        check()
+    }
+
     override fun check() {
         if (exp.type !is WInt) {
-            throw SemanticException("")
+            throw SemanticException("Cannot exit with non-int expression. Actual: ${exp.type}")
         }
     }
 
@@ -577,9 +627,17 @@ class ReturnStat(
     override val st: SymbolTable,
     val exp: Expr,
 ) : Stat {
+    init {
+        check()
+    }
+
     override fun check() {
         if (exp.type !is WInt) {
-            throw SemanticException("")
+            throw SemanticException("Cannot return with non-int expression, actual : ${exp.type}")
+        }
+        // Check scope
+        if (st.isGlobal()) {
+            throw SemanticException("Cannot return out of global scope.")
         }
     }
 

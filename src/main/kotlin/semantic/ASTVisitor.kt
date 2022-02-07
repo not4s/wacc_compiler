@@ -178,16 +178,16 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
 
-    override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): IdentiferGet {
-        return IdentiferGet(st, ctx.IDENTIFIER().text)
+    override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): IdentifierGet {
+        return IdentifierGet(st, ctx.IDENTIFIER().text)
     }
 
     override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Expr {
         return this.visit(ctx.literal()) as Expr
     }
 
-    override fun visitAssignLhsExpr(ctx: WACCParser.AssignLhsExprContext): IdentiferSet {
-        return IdentiferSet(st, ctx.IDENTIFIER().text, WUnknown())
+    override fun visitAssignLhsExpr(ctx: WACCParser.AssignLhsExprContext): IdentifierSet {
+        return IdentifierSet(st, ctx.IDENTIFIER().text)
     }
 
     override fun visitAssignLhsArrayElem(ctx: WACCParser.AssignLhsArrayElemContext): ArrayElement {
@@ -308,13 +308,17 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         val params: MutableMap<String, WAny> = mutableMapOf()
         if (ctx.paramList() != null) {
             for (p in ctx.paramList().param()) {
-                params[p.IDENTIFIER().text] = (this.visit(p.type()) as WACCType).type
+                val id = p.IDENTIFIER().text
+                val ty = (this.visit(p.type()) as WACCType).type
+                params[id] = ty
+                st.declare(id, ty)
             }
         }
-        return WACCFunction(st,
+        val funScope = st.createChildScope()
+        return WACCFunction(funScope,
             ctx.IDENTIFIER().text,
             params.toMap(),
-            this.visit(ctx.stat()) as Stat,
+            ASTVisitor(st.createChildScope()).visit(ctx.stat()) as Stat,
             (this.visit(ctx.type()) as WACCType).type)
     }
 }
