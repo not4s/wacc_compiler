@@ -68,15 +68,3 @@ class TerminateOnErrorStrategy : DefaultErrorStrategy() {
         exitProcess(ExitCode.SYNTAX_ERROR)
     }
 }
-
-class CustomVisitor : WACCParserBaseVisitor<Void>() {
-    override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext?): Void? {
-        // Check if int is within limits
-        try {
-            val integer: Int = Integer.parseInt(ctx?.text)
-        } catch (e: java.lang.NumberFormatException) {
-            exitProcess(ExitCode.SYNTAX_ERROR)
-        }
-        return null
-    }
-}
