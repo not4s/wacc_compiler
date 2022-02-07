@@ -275,9 +275,15 @@ class Declaration(
     val ident: String,
     val rhs: RHS,
 ) : Stat {
+    init {
+        check()
+        st.declare(ident, decType)
+    }
 
     override fun check() {
-        assertEqualTypes(decType, rhs.type)
+        if (!typesAreEqual(decType, rhs.type)) {
+            throw SemanticException("Attempted to declare variable $decType $ident to ${rhs.type}")
+        }
     }
 
     override fun toString(): String {
@@ -296,9 +302,17 @@ class Assignment(
     val lhs: LHS,
     val rhs: RHS,
 ) : Stat {
+    init {
+        check()
+    }
+
     override fun check() {
-        assertEqualTypes(lhs.type, lhs.type)
-        st.reassign(TODO(), rhs.type)
+        assertEqualTypes(lhs.type, rhs.type)
+        when (lhs) {
+            is IdentiferSet -> st.reassign(lhs.ident, rhs.type)
+            is ArrayElement -> TODO("NYI")
+            is PairElement -> TODO("NYI")
+        }
     }
 
     override fun toString(): String {
@@ -313,17 +327,39 @@ class Assignment(
 
 }
 
-class Identifer(
+class IdentiferSet(
     override val st: SymbolTable,
     val ident: String,
     override val type: WAny,
-) : LHS, Expr {
+) : LHS {
     override fun check() {
         // Always valid.
     }
 
     override fun toString(): String {
-        return "Identifier:\n" + "  (scope:$st)\n${("ident: $ident").prependIndent(INDENT)}\n${
+        return "IdentifierSet:\n" + "  (scope:$st)\n${("ident: $ident").prependIndent(INDENT)}\n${
+            ("type: $type").prependIndent(INDENT)
+        }"
+    }
+}
+
+
+class IdentiferGet(
+    override val st: SymbolTable,
+    val ident: String,
+) : Expr {
+    init {
+        check()
+    }
+
+    override fun check() {
+        if (!typesAreEqual(st.get(ident), type)) {
+            throw SemanticException("Attempted to use variable of type ${st.get(ident)} as $type")
+        }
+    }
+
+    override fun toString(): String {
+        return "IdentifierGet:\n" + "  (scope:$st)\n${("ident: $ident").prependIndent(INDENT)}\n${
             ("type: $type").prependIndent(INDENT)
         }"
     }
@@ -331,6 +367,9 @@ class Identifer(
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
+
+    override val type: WAny
+        get() = st.get(ident)
 }
 
 class ArrayElement(
@@ -432,8 +471,12 @@ class ReadStat(
 }
 
 class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val expr: Expr) : Stat {
+    init {
+        check()
+    }
+
     override fun check() {
-        TODO("Not yet implemented")
+        expr.check()
     }
 
     override fun toString(): String {

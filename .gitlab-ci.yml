@@ -96,7 +96,7 @@ symbol-table-test:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/scope/*.wacc"
 
-.invalid/semanticErr/variables:
+invalid/semanticErr/variables:
   stage: wacc-test
   interruptible: true
   script:

@@ -178,16 +178,16 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
 
-    override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): Identifer {
-        return Identifer(st, ctx.IDENTIFIER().text, WUnknown())
+    override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): IdentiferGet {
+        return IdentiferGet(st, ctx.IDENTIFIER().text)
     }
 
     override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Expr {
         return this.visit(ctx.literal()) as Expr
     }
 
-    override fun visitAssignLhsExpr(ctx: WACCParser.AssignLhsExprContext): Identifer {
-        return Identifer(st, ctx.IDENTIFIER().text, WUnknown())
+    override fun visitAssignLhsExpr(ctx: WACCParser.AssignLhsExprContext): IdentiferSet {
+        return IdentiferSet(st, ctx.IDENTIFIER().text, WUnknown())
     }
 
     override fun visitAssignLhsArrayElem(ctx: WACCParser.AssignLhsArrayElemContext): ArrayElement {

@@ -50,7 +50,7 @@ class WPair(val leftType: WAny, val rightType: WAny) : WAny {
 }
 
 fun typesAreEqual(x: WAny, y: WAny): Boolean {
-    return (x::class == y::class)
+    return (x::class == y::class || x is WUnknown || y is WUnknown)
 }
 
 fun assertEqualTypes(x: WAny, y: WAny) {

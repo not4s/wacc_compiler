@@ -48,7 +48,7 @@ class ParentRefSymbolTable private constructor(private val parentTable: ParentRe
     }
 
     override fun toString(): String {
-        return "${this.hashCode().toString(16)}, parent:${parentTable?.hashCode()?.toString(16)}"
+        return "${this.hashCode().toString(16)}, $dict, parent:${parentTable?.hashCode()?.toString(16)}"
     }
 
 }
