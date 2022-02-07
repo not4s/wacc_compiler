@@ -1,13 +1,16 @@
 package symbolTable
 
-import waccType.WAny
 import utils.SemanticException
+import waccType.WAny
 import waccType.WInt
 import waccType.typesAreEqual
 
-class PointerSymbolTable private constructor(private val inheritedEntries: Map<String, SymbolTableEntry>?) :
-    SymbolTable() {
-    constructor() : this(null)
+class PointerSymbolTable private constructor(
+    private val inheritedEntries: Map<String, SymbolTableEntry>?,
+    isGlobal: Boolean
+) :
+    SymbolTable(isGlobal) {
+    constructor() : this(null, true)
 
     private val table = mutableMapOf<String, SymbolTableEntry>()
 
@@ -65,9 +68,6 @@ class PointerSymbolTable private constructor(private val inheritedEntries: Map<S
         TODO("Not yet implemented")
     }
 
-    override fun isGlobal(): Boolean {
-        TODO("Not yet implemented")
-    }
 
     override fun createChildScope(): PointerSymbolTable {
         val childInitialTable = mutableMapOf<String, SymbolTableEntry>()
@@ -76,7 +76,7 @@ class PointerSymbolTable private constructor(private val inheritedEntries: Map<S
         // Add all parent entries, these will overwrite grandparent entries.
         table.forEach { (k, v) -> childInitialTable[k] = v }
         // Convert to immutable map to make sure no entries are being added.
-        return PointerSymbolTable(childInitialTable.toMap())
+        return PointerSymbolTable(childInitialTable.toMap(), false)
     }
 
     override fun toString(): String {

@@ -6,9 +6,9 @@ import waccType.WArray
 import waccType.WInt
 import waccType.typesAreEqual
 
-class ParentRefSymbolTable private constructor(private val parentTable: ParentRefSymbolTable?) :
-    SymbolTable() {
-    constructor() : this(null)
+class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlobal: Boolean) :
+    SymbolTable(isGlobal) {
+    constructor() : this(null, true)
 
     val dict = mutableMapOf<String, WAny>()
 
@@ -52,7 +52,7 @@ class ParentRefSymbolTable private constructor(private val parentTable: ParentRe
             if (prev !is WArray) {
                 throw SemanticException("Cannot access elements of non-array type: $prev")
             } else {
-                TODO("Implement this")
+                //TODO("Implement this")
             }
         } else {
             if (parentTable == null) {
@@ -64,16 +64,14 @@ class ParentRefSymbolTable private constructor(private val parentTable: ParentRe
 
     }
 
-    override fun isGlobal(): Boolean {
-        return parentTable == null
-    }
-
     override fun createChildScope(): SymbolTable {
-        return ParentRefSymbolTable(this)
+        return ParentRefSymbolTable(this, false)
     }
 
     override fun toString(): String {
-        return "${this.hashCode().toString(16)}, $dict, parent:${parentTable?.hashCode()?.toString(16)}"
+        return "${this.hashCode().toString(16)}, $dict, parent:${
+            parentTable?.hashCode()?.toString(16)
+        }, ${parentTable.toString()}"
     }
 
 }

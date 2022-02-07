@@ -4,7 +4,7 @@ import waccType.WAny
 import utils.SemanticException
 import waccType.WInt
 
-abstract class SymbolTable() {
+abstract class SymbolTable(var isGlobal : Boolean) {
 
     abstract fun get(symbol: String): WAny
 
@@ -21,6 +21,5 @@ abstract class SymbolTable() {
 
     abstract fun reassign(symbol: String, value: WAny)
     abstract fun reassign(arrSym: String, indices: Array<WInt>, value: WAny)
-    abstract fun isGlobal() : Boolean
     abstract fun createChildScope(): SymbolTable
 }

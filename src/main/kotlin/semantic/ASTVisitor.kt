@@ -6,17 +6,35 @@ import ast.*
 import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
 import utils.ExitCode
+import utils.SemanticException
 import waccType.*
 import kotlin.system.exitProcess
 
 class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
-    override fun visitProgram(ctx: WACCParser.ProgramContext): Program {
-        return Program(st,
-            ctx.func()
-                .map { f -> (ASTVisitor(ParentRefSymbolTable()).visit(f) as WACCFunction) }
-                .toTypedArray(),
-            this.visit(ctx.stat()) as Stat)
+    override fun visitProgram(ctx: WACCParser.ProgramContext): Stat {
+        st as ParentRefSymbolTable
+        // This adds functions to st
+        for (f in ctx.func()) {
+            val id = f.IDENTIFIER().text
+            if (id in st.dict) {
+                throw SemanticException("Cannot redefine function $id")
+            }
+            st.dict[id] = WACCFunction(st, id, mapOf(), SkipStat(st), WUnknown())
+
+        }
+
+        ctx.func()
+            .map { f -> (this.visit(f) as WACCFunction) }.forEach {
+                st.dict[it.ident] = it
+            }
+        // Explicitly call checks after defining all funcs
+        st.dict.forEach { (_, f) -> (f as WACCFunction).check() }
+        // Create a subscope, functions are now stored in parent table.
+        // This scope is still 'global'
+        val subscope = st.createChildScope()
+        subscope.isGlobal = true
+        return ASTVisitor(subscope).visit(ctx.stat()) as Stat
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {
@@ -143,7 +161,8 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitExprBinary(ctx: WACCParser.ExprBinaryContext): BinaryOperation {
-        return BinaryOperation(st,
+        return BinaryOperation(
+            st,
             this.visit(ctx.left) as Expr,
             this.visit(ctx.right) as Expr,
             when (ctx.binOp.text) {
@@ -162,19 +181,22 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
                 "&&" -> BinOperator.AND
                 "||" -> BinOperator.OR
                 else -> throw Exception("What.")
-            })
+            }
+        )
     }
 
     override fun visitExprUnary(ctx: WACCParser.ExprUnaryContext): UnaryOperation {
-        return UnaryOperation(st, this.visit(ctx.operand) as Expr, when (ctx.unOp.text) {
-            // Oh no again
-            "!" -> UnOperator.NOT
-            "ord" -> UnOperator.ORD
-            "chr" -> UnOperator.CHR
-            "len" -> UnOperator.LEN
-            "-" -> UnOperator.SUB
-            else -> throw Exception("What.")
-        })
+        return UnaryOperation(
+            st, this.visit(ctx.operand) as Expr, when (ctx.unOp.text) {
+                // Oh no again
+                "!" -> UnOperator.NOT
+                "ord" -> UnOperator.ORD
+                "chr" -> UnOperator.CHR
+                "len" -> UnOperator.LEN
+                "-" -> UnOperator.SUB
+                else -> throw Exception("What.")
+            }
+        )
     }
 
 
@@ -207,10 +229,12 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitAssignRhsNewPair(ctx: WACCParser.AssignRhsNewPairContext): NewPairRHS {
-        return NewPairRHS(st,
+        return NewPairRHS(
+            st,
             this.visit(ctx.left) as Expr,
             this.visit(ctx.right) as Expr,
-            WPair(WUnknown(), WUnknown()))
+            WPair(WUnknown(), WUnknown())
+        )
     }
 
     override fun visitAssignRhsPairElem(ctx: WACCParser.AssignRhsPairElemContext): RHS {
@@ -223,10 +247,11 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         } else {
             ctx.argList().expr().map { arg -> this.visit(arg) as Expr }.toTypedArray()
         }
-        return FunctionCall(st,
+        return FunctionCall(
+            st,
             ctx.IDENTIFIER().text,
-            params,
-            WUnknown())
+            params
+        )
     }
 
     override fun visitArgList(ctx: WACCParser.ArgListContext): AST {
@@ -234,16 +259,20 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitStatInit(ctx: WACCParser.StatInitContext): Declaration {
-        return Declaration(st,
+        return Declaration(
+            st,
             (this.visit(ctx.type()) as Typed).type,
             ctx.IDENTIFIER().text,
-            this.visit(ctx.assignRhs()) as RHS)
+            this.visit(ctx.assignRhs()) as RHS
+        )
     }
 
     override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): WhileStat {
-        return WhileStat(st,
+        return WhileStat(
+            st,
             this.visit(ctx.whileCond) as Expr,
-            ASTVisitor(st.createChildScope()).visit(ctx.doBlock) as Stat)
+            ASTVisitor(st.createChildScope()).visit(ctx.doBlock) as Stat
+        )
     }
 
     override fun visitStatRead(ctx: WACCParser.StatReadContext): ReadStat {
@@ -271,9 +300,11 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitStatStore(ctx: WACCParser.StatStoreContext): Assignment {
-        return Assignment(st,
+        return Assignment(
+            st,
             this.visit(ctx.assignLhs()) as LHS,
-            this.visit(ctx.assignRhs()) as RHS)
+            this.visit(ctx.assignRhs()) as RHS
+        )
     }
 
     override fun visitStatJoin(ctx: WACCParser.StatJoinContext): JoinStat {
@@ -289,11 +320,13 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitStatIfThenElse(ctx: WACCParser.StatIfThenElseContext): IfThenStat {
-        return IfThenStat(st,
+        return IfThenStat(
+            st,
             this.visit(ctx.ifCond) as Expr,
             // Create child scopes for the if-then-else blocks
             ASTVisitor(st.createChildScope()).visit(ctx.thenBlock) as Stat,
-            ASTVisitor(st.createChildScope()).visit(ctx.elseBlock) as Stat)
+            ASTVisitor(st.createChildScope()).visit(ctx.elseBlock) as Stat
+        )
     }
 
     override fun visitParam(ctx: WACCParser.ParamContext): AST {
@@ -306,19 +339,21 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
     override fun visitFunc(ctx: WACCParser.FuncContext): WACCFunction {
         val params: MutableMap<String, WAny> = mutableMapOf()
+        val funScope = st.createChildScope()
         if (ctx.paramList() != null) {
             for (p in ctx.paramList().param()) {
                 val id = p.IDENTIFIER().text
                 val ty = (this.visit(p.type()) as WACCType).type
                 params[id] = ty
-                st.declare(id, ty)
+                funScope.declare(id, ty)
             }
         }
-        val funScope = st.createChildScope()
-        return WACCFunction(funScope,
+        return WACCFunction(
+            funScope,
             ctx.IDENTIFIER().text,
             params.toMap(),
-            ASTVisitor(st.createChildScope()).visit(ctx.stat()) as Stat,
-            (this.visit(ctx.type()) as WACCType).type)
+            ASTVisitor(funScope).visit(ctx.stat()) as Stat,
+            (this.visit(ctx.type()) as WACCType).type
+        )
     }
 }

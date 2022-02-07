@@ -12,7 +12,8 @@ import kotlin.system.exitProcess
 fun main(args: Array<String>) {
 
     println("You have passed in: ${args.joinToString()}")
-    val file = File(args[0])
+    val file =
+        File(args.getOrNull(0) ?: "wacc_test/sample_programs/invalid/semanticErr/function/functionBadReturn.wacc")
     println("Opening file: $file\n")
 
     val input = CharStreams.fromFileName(file.absolutePath)
@@ -57,6 +58,7 @@ fun main(args: Array<String>) {
     } catch (e: SemanticException) {
         println("-----------SEMANTIC ERROR-----------")
         println(e.message)
+        e.printStackTrace(System.out)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
 

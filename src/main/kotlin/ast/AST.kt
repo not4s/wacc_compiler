@@ -4,8 +4,10 @@ import ast.BinOperator.*
 import ast.UnOperator.*
 import symbolTable.PointerSymbolTable
 import symbolTable.SymbolTable
+import utils.ExitCode
 import utils.SemanticException
 import waccType.*
+import kotlin.system.exitProcess
 
 val INDENT = "  | "
 
@@ -40,43 +42,28 @@ enum class UnOperator {
     NOT, ORD, CHR, LEN, SUB;
 }
 
-class Program(
-    override val st: SymbolTable,
-    val funcs: Array<WACCFunction>,
-    val stat: Stat,
-) : AST {
-    override fun check() {
-        TODO("Not yet implemented")
-    }
-
-    override fun toString(): String {
-        return "DEFINED FUNCTIONS:\n${"-".repeat(20)}\n${
-            funcs.map { f -> f.toString() }.reduceOrNull { a, b -> "$a\n$b" } ?: "\n"
-        }\n${"-".repeat(20)}\nGLOBAL PROGRAM BLOCK:\n${"-".repeat(20)}\n$stat"
-    }
-
-}
-
 class WACCFunction(
     override val st: SymbolTable,
     val ident: String,
     val params: Map<String, WAny>,
     val body: Stat,
     override val type: WAny, // return type
-) : AST, Typed {
-    init {
-        check()
-    }
+) : AST, Typed, WAny {
     override fun check() {
         // TODO: Param checking?
         body.check()
+        if (!hasReturn(body, true)) {
+            println("Function $ident does not return on every branch.")
+            exitProcess(ExitCode.SYNTAX_ERROR)
+        }
+        checkReturnType(body, type)
 
     }
 
     override fun toString(): String {
         return "Function($type) $ident(${
             params.map { (id, t) -> "($t)$id" }.reduceOrNull { a, b -> "$a, $b" } ?: ""
-        }):\n${body.toString().prependIndent(INDENT)}"
+        }):\n${"   ".toString().prependIndent(INDENT)}"
     }
 }
 
@@ -84,10 +71,26 @@ class FunctionCall(
     override val st: SymbolTable,
     val ident: String,
     val params: Array<Expr>,
-    override val type: WAny,
 ) : RHS {
+    init {
+        check()
+    }
+
     override fun check() {
-        TODO("Not yet implemented")
+        // Check params against st
+        val func = st.get(ident) as WACCFunction
+        // If function is not yet defined, just return
+        if (func.body is SkipStat && func.params.isEmpty() && func.type is WUnknown) {
+            return
+        }
+        if (func.params.size != params.size) {
+            throw SemanticException("Argument count does not match up with expected count for function $ident")
+        }
+        func.params.onEachIndexed { i, (_, v) ->
+            if (!typesAreEqual(v, params[i].type)) {
+                throw SemanticException("Mismatching types for function $ident call: expected $v, got ${params[i].type}")
+            }
+        }
     }
 
     override fun toString(): String {
@@ -103,6 +106,9 @@ class FunctionCall(
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
+
+    override val type: WAny
+        get() = (st.get(ident) as WACCFunction).type
 }
 
 class Literal(
@@ -335,7 +341,9 @@ class Assignment(
     }
 
     override fun check() {
-        assertEqualTypes(lhs.type, rhs.type)
+        if (!typesAreEqual(lhs.type, rhs.type)) {
+            throw SemanticException("Cannot assign ${rhs.type} to ${lhs.type}")
+        }
         when (lhs) {
             is IdentifierSet -> st.reassign(lhs.ident, rhs.type)
             is ArrayElement -> {
@@ -446,9 +454,16 @@ class IfThenStat(
     val thenStat: Stat,
     val elseStat: Stat,
 ) : Stat {
+    init {
+        check()
+    }
 
     override fun check() {
-        TODO("Not yet implemented")
+        if (condition.type !is WBool) {
+            throw SemanticException("If statement has non-bool condition, actual: ${condition.type}")
+        }
+        thenStat.check()
+        elseStat.check()
     }
 
     override fun toString(): String {
@@ -472,9 +487,15 @@ class WhileStat(
     val condition: Expr,
     val doBlock: Stat,
 ) : Stat {
+    init {
+        check()
+    }
 
     override fun check() {
-        TODO("Not yet implemented")
+        if (condition.type !is WBool) {
+            throw SemanticException("While loop has non-bool condition, actual: ${condition.type}")
+        }
+        doBlock.check()
     }
 
     override fun toString(): String {
@@ -610,7 +631,7 @@ class ExitStat(
 
 class SkipStat(override val st: SymbolTable) : Stat {
     override fun check() {
-        TODO("Not yet implemented")
+        // Always succeeds
     }
 
     override fun toString(): String {
@@ -626,17 +647,17 @@ class SkipStat(override val st: SymbolTable) : Stat {
 class ReturnStat(
     override val st: SymbolTable,
     val exp: Expr,
-) : Stat {
+) : Stat, Typed {
     init {
         check()
     }
 
+    override val type: WAny
+        get() = exp.type
+
     override fun check() {
-        if (exp.type !is WInt) {
-            throw SemanticException("Cannot return with non-int expression, actual : ${exp.type}")
-        }
         // Check scope
-        if (st.isGlobal()) {
+        if (st.isGlobal) {
             throw SemanticException("Cannot return out of global scope.")
         }
     }
@@ -670,6 +691,36 @@ class JoinStat(
     }
 }
 
+fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
+    return when (stat) {
+        is ReturnStat -> true
+        is ExitStat -> true
+        is JoinStat -> if (hasReturn(stat.first, true) && !hasReturn(stat.second, false) && inOuterFuncScope) {
+            println("Should not have return before another non-return statement."); exitProcess(ExitCode.SYNTAX_ERROR)
+        } else {
+            hasReturn(stat.second, true)
+        }
+        is IfThenStat -> hasReturn(stat.thenStat, false) && hasReturn(stat.elseStat, false)
+        is WhileStat -> hasReturn(stat.doBlock, false)
+        else -> false
+    }
+}
+
+fun checkReturnType(stat: Stat, expected: WAny) {
+    when (stat) {
+        is ReturnStat -> if (!typesAreEqual(stat.type, expected)) {
+            throw SemanticException("Mismatching return type for function, expected: $expected, got: ${stat.type} ")
+        }
+        is JoinStat -> {
+            checkReturnType(stat.first, expected); checkReturnType(stat.second, expected)
+        }
+        is IfThenStat -> {
+            checkReturnType(stat.thenStat, expected); checkReturnType(stat.elseStat, expected)
+        }
+        is WhileStat -> checkReturnType(stat.doBlock, expected)
+    }
+
+}
 
 fun main() {
     val st = PointerSymbolTable()
