@@ -8,6 +8,8 @@ abstract class SymbolTable(var isGlobal : Boolean) {
 
     abstract fun get(symbol: String): WAny
 
+    abstract fun get(arrSym: String, indices: Array<WInt>): WAny
+
     inline fun <reified T : WAny> getAndCast(symbol: String) : T {
         val value = this.get(symbol)
         if (value is T) {

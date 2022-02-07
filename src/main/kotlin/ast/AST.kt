@@ -2,7 +2,6 @@ package ast
 
 import ast.BinOperator.*
 import ast.UnOperator.*
-import symbolTable.PointerSymbolTable
 import symbolTable.SymbolTable
 import utils.ExitCode
 import utils.SemanticException
@@ -356,7 +355,13 @@ class Assignment(
                 }.toTypedArray()
                 st.reassign(lhs.ident, indices, rhs.type)
             }
-            is PairElement -> TODO("NYI")
+            is PairElement -> {
+                // Make sure this is: fst <ident> = blah. Otherwise invalid.
+                if (lhs.expr !is IdentifierGet) {
+                    throw SemanticException("Cannot refer to ${lhs.type} with fst/snd")
+                }
+                st.reassign(lhs.expr.ident, lhs.first, rhs.type)
+            }
         }
     }
 
@@ -423,10 +428,19 @@ class ArrayElement(
     override val st: SymbolTable,
     val ident: String, // name of array
     val indices: Array<Expr>, // List of indices
-    override val type: WAny, // type of element referring to
 ) : LHS, Expr {
+    init {
+        check()
+    }
+
     override fun check() {
-        TODO("Not yet implemented")
+        st.get(ident, indices.map { e ->
+            if (e.type !is WInt) {
+                throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
+            } else {
+                e.type as WInt
+            }
+        }.toTypedArray())
     }
 
     override fun toString(): String {
@@ -444,6 +458,15 @@ class ArrayElement(
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
+
+    override val type: WAny
+        get() = st.get(ident, indices.map { e ->
+            if (e.type !is WInt) {
+                throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
+            } else {
+                e.type as WInt
+            }
+        }.toTypedArray())
 
 }
 
@@ -563,10 +586,18 @@ class PairElement(
     override val st: SymbolTable,
     val first: Boolean, // true = fst, false = snd
     val expr: Expr,
-    override val type: WAny,
 ) : LHS, RHS {
+    init {
+        check()
+    }
     override fun check() {
-        TODO("Not yet implemented")
+        if (expr.type !is WPair) {
+            throw SemanticException("Cannot call fst/snd on non-pair type: ${expr.type}")
+        }
+        // Check null
+        if (expr is PairLiteral) {
+            throw SemanticException("NULL POINTER EXCEPTION! Can't deref null.")
+        }
     }
 
     override fun toString(): String {
@@ -584,6 +615,15 @@ class PairElement(
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
+
+    override val type: WAny
+        get() =
+            if (first) {
+                (expr.type as WPair).leftType
+            } else {
+                (expr.type as WPair).rightType
+            }
+
 
 }
 
@@ -727,30 +767,3 @@ fun checkReturnType(stat: Stat, expected: WAny) {
     }
 
 }
-
-fun main() {
-    val st = PointerSymbolTable()
-    st.declare("x", WInt())
-    val temp = Declaration(st, WInt(), "x", Literal(st, WInt()))
-    temp.check()
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

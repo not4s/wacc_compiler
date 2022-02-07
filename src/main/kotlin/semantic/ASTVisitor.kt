@@ -69,7 +69,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
     override fun visitArrayElem(ctx: WACCParser.ArrayElemContext): ArrayElement {
         val indices: Array<Expr> = ctx.expr().map { e -> this.visit(e) as Expr }.toTypedArray()
-        return ArrayElement(st, ctx.IDENTIFIER().text, indices, WUnknown())
+        return ArrayElement(st, ctx.IDENTIFIER().text, indices)
     }
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
@@ -83,12 +83,12 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
     override fun visitPairElemFst(ctx: WACCParser.PairElemFstContext): AST {
         val expr = this.visit(ctx.expr()) as Expr
-        return PairElement(st, true, expr, expr.type)
+        return PairElement(st, true, expr)
     }
 
     override fun visitPairElemSnd(ctx: WACCParser.PairElemSndContext): AST {
         val expr = this.visit(ctx.expr()) as Expr
-        return PairElement(st, false, expr, expr.type)
+        return PairElement(st, false, expr)
     }
 
     override fun visitPairType(ctx: WACCParser.PairTypeContext): WACCType {

@@ -13,7 +13,7 @@ fun main(args: Array<String>) {
 
     println("You have passed in: ${args.joinToString()}")
     val file =
-        File(args.getOrNull(0) ?: "wacc_test/sample_programs/invalid/semanticErr/function/functionBadReturn.wacc")
+        File(args.getOrNull(0) ?: "wacc_test/sample_programs/valid/pairs/writeFst.wacc")
     println("Opening file: $file\n")
 
     val input = CharStreams.fromFileName(file.absolutePath)

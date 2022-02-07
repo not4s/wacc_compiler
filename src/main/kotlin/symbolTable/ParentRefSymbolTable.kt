@@ -15,6 +15,34 @@ class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlo
         ?: throw SemanticException("Attempted to get undeclared variable $symbol")
     }
 
+    override fun get(arrSym: String, indices: Array<WInt>): WAny {
+        val prev = dict[arrSym]
+        // Make sure this is array.
+        if (prev != null) {
+            if (prev !is WArray) {
+                throw SemanticException("Cannot access index elements of non-array type: $prev")
+            } else {
+                // 'Peel off' one layer of array per index.
+                var curr: WAny = prev
+                for (idx in indices) {
+                    if (curr !is WArray) {
+                        // Not array, but another index is requested?
+                        throw SemanticException("Type $curr is not indexable.")
+                    } else {
+                        curr = curr.elemType
+                    }
+                }
+                return curr
+            }
+        } else {
+            if (parentTable == null) {
+                throw SemanticException("Attempted to reassign undeclared variable.")
+            } else {
+                return parentTable.get(arrSym, indices)
+            }
+        }
+    }
+
     override fun declare(symbol: String, value: WAny) {
         if (dict.putIfAbsent(symbol, value) != null) {
             throw SemanticException("Attempted to redeclare variable $symbol")
