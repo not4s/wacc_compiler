@@ -18,7 +18,7 @@ main-test:
 symbol-table-test:
   stage: test
   script:
-    - mvn test -Dtest=PointerSymbolTableTest
+    - mvn test -Dtest=ParentRefSymbolTableTest
 
 .expr-visitor-test:
   stage: test
