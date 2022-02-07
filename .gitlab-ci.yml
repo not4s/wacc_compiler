@@ -31,7 +31,7 @@ invalid/sematicErr/array:
   interruptible: true
   script:
     - cd wacc_test
-    - ./testDir.sh "sample_sprograms/invalid/semanticErr/array/*.wacc"
+    - ./testDir.sh "sample_programs/invalid/semanticErr/array/*.wacc"
 
 .invalid/semanticErr/exit:
   stage: wacc-test
