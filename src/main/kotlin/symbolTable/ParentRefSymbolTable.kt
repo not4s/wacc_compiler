@@ -1,10 +1,7 @@
 package symbolTable
 
 import utils.SemanticException
-import waccType.WAny
-import waccType.WArray
-import waccType.WInt
-import waccType.typesAreEqual
+import waccType.*
 
 class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlobal: Boolean) :
     SymbolTable(isGlobal) {
@@ -52,7 +49,23 @@ class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlo
             if (prev !is WArray) {
                 throw SemanticException("Cannot access elements of non-array type: $prev")
             } else {
-                //TODO("Implement this")
+                // 'Peel off' one layer of array per index.
+                var curr: WAny = prev
+                for (idx in indices) {
+                    if (curr !is WArray) {
+                        // Not array, but another index is requested?
+                        throw SemanticException("Type $curr is not indexable.")
+                    } else {
+                        curr = curr.elemType
+                    }
+                }
+                // Then make sure it's the same type.
+                if (typesAreEqual(curr, value)) {
+                    // TODO: BACK-END: Reassign value
+                    return
+                } else {
+                    throw SemanticException("Attempted to reassign type of declared $prev to $value")
+                }
             }
         } else {
             if (parentTable == null) {
@@ -61,7 +74,36 @@ class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlo
                 parentTable.reassign(arrSym, indices, value)
             }
         }
+    }
 
+    override fun reassign(pairSym: String, fst: Boolean, value: WAny) {
+        val prev = dict[pairSym]
+        // Make sure this is a pair.
+        if (prev != null) {
+            if (prev !is WPair) {
+                throw SemanticException("Cannot destructure(fst/snd) type: $prev")
+            } else {
+                // Extract correct element
+                val elemT: WAny = if (fst) {
+                    prev.leftType
+                } else {
+                    prev.rightType
+                }
+                // Make sure matching type
+                if (typesAreEqual(elemT, value)) {
+                    // TODO: BACK-END: Reassign value
+                    return
+                } else {
+                    throw SemanticException("Attempted to reassign type of declared $prev to $value")
+                }
+            }
+        } else {
+            if (parentTable == null) {
+                throw SemanticException("Attempted to reassign undeclared variable.")
+            } else {
+                parentTable.reassign(pairSym, fst, value)
+            }
+        }
     }
 
     override fun createChildScope(): SymbolTable {

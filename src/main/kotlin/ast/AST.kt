@@ -163,7 +163,6 @@ class PairLiteral(
     override val type: WPair,
 ) : Expr {
     override fun check() {
-        TODO("Not yet implemented")
     }
 
     override fun toString(): String {
@@ -592,8 +591,15 @@ class FreeStat(
     override val st: SymbolTable,
     val expr: Expr,
 ) : Stat {
+    init {
+        check()
+    }
+
     override fun check() {
-        TODO("Not yet implemented")
+        // Make sure expr is Pair
+        if (expr.type !is WPair) {
+            throw SemanticException("This isn't C, you can't free a $expr")
+        }
     }
 
     override fun toString(): String {
