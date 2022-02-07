@@ -21,8 +21,8 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         return this.visit(ctx.arrayType()) as WACCType
     }
 
-    override fun visitTypePairType(ctx: WACCParser.TypePairTypeContext): AST {
-        TODO()
+    override fun visitTypePairType(ctx: WACCParser.TypePairTypeContext): WACCType {
+        return this.visit(ctx.pairType()) as WACCType
     }
 
     // <something[]>[]
@@ -47,37 +47,40 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
-        val elems: Array<WAny> =
-            ctx.expr().map { e -> (this.visit(e) as Expr).type }.toTypedArray()
+        val elems: Array<WAny> = ctx.expr().map { e -> (this.visit(e) as Expr).type }.toTypedArray()
         return ArrayLiteral(st, elems, WArray(WUnknown()))
     }
 
     override fun visitPairLiter(ctx: WACCParser.PairLiterContext): PairLiteral {
-        TODO()
+        return PairLiteral(st, WPair(WUnknown(), WUnknown()))
     }
 
     override fun visitPairElemFst(ctx: WACCParser.PairElemFstContext): AST {
-        TODO()
+        val expr = this.visit(ctx.expr()) as Expr
+        return PairElement(st, true, expr, expr.type)
     }
 
     override fun visitPairElemSnd(ctx: WACCParser.PairElemSndContext): AST {
-        TODO()
+        val expr = this.visit(ctx.expr()) as Expr
+        return PairElement(st, false, expr, expr.type)
     }
 
-    override fun visitPairType(ctx: WACCParser.PairTypeContext): AST {
-        TODO()
+    override fun visitPairType(ctx: WACCParser.PairTypeContext): WACCType {
+        val left = this.visit(ctx.left) as WACCType
+        val right = this.visit(ctx.right) as WACCType
+        return WACCType(st, WPair(left.type, right.type))
     }
 
-    override fun visitPairElemTypeBaseType(ctx: WACCParser.PairElemTypeBaseTypeContext): AST {
-        TODO()
+    override fun visitPairElemTypeBaseType(ctx: WACCParser.PairElemTypeBaseTypeContext): WACCType {
+        return this.visit(ctx.baseType()) as WACCType
     }
 
-    override fun visitPairElemTypeArrayType(ctx: WACCParser.PairElemTypeArrayTypeContext): AST {
-        TODO()
+    override fun visitPairElemTypeArrayType(ctx: WACCParser.PairElemTypeArrayTypeContext): WACCType {
+        return this.visit(ctx.arrayType()) as WACCType
     }
 
-    override fun visitPairElemTypeKwPair(ctx: WACCParser.PairElemTypeKwPairContext): AST {
-        TODO()
+    override fun visitPairElemTypeKwPair(ctx: WACCParser.PairElemTypeKwPairContext): WACCType {
+        return WACCType(st, WPair(WUnknown(), WUnknown()))
     }
 
     override fun visitBaseTypeInt(ctx: WACCParser.BaseTypeIntContext): WACCType {
@@ -113,7 +116,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitLiteralPair(ctx: WACCParser.LiteralPairContext): PairLiteral {
-        TODO()
+        return PairLiteral(st, WPair(WUnknown(), WUnknown()))
     }
 
     override fun visitExprBracket(ctx: WACCParser.ExprBracketContext): Expr {
@@ -164,8 +167,8 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         return Identifer(st, ctx.IDENTIFIER().text, WUnknown())
     }
 
-    override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Literal {
-        return this.visit(ctx.literal()) as Literal
+    override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Expr {
+        return this.visit(ctx.literal()) as Expr
     }
 
     override fun visitAssignLhsExpr(ctx: WACCParser.AssignLhsExprContext): Identifer {
@@ -176,8 +179,8 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         return this.visit(ctx.arrayElem()) as ArrayElement
     }
 
-    override fun visitAssignLhsPairElem(ctx: WACCParser.AssignLhsPairElemContext): Expr {
-        TODO()
+    override fun visitAssignLhsPairElem(ctx: WACCParser.AssignLhsPairElemContext): LHS {
+        return this.visit(ctx.pairElem()) as LHS
     }
 
     override fun visitAssignRhsExpr(ctx: WACCParser.AssignRhsExprContext): Expr {
@@ -188,12 +191,15 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         return this.visit(ctx.arrayLiter()) as ArrayLiteral
     }
 
-    override fun visitAssignRhsNewPair(ctx: WACCParser.AssignRhsNewPairContext): AST {
-        TODO()
+    override fun visitAssignRhsNewPair(ctx: WACCParser.AssignRhsNewPairContext): NewPairRHS {
+        return NewPairRHS(st,
+            this.visit(ctx.left) as Expr,
+            this.visit(ctx.right) as Expr,
+            WPair(WUnknown(), WUnknown()))
     }
 
-    override fun visitAssignRhsPairElem(ctx: WACCParser.AssignRhsPairElemContext): AST {
-        TODO()
+    override fun visitAssignRhsPairElem(ctx: WACCParser.AssignRhsPairElemContext): RHS {
+        return this.visit(ctx.pairElem()) as RHS
     }
 
     override fun visitAssignRhsCall(ctx: WACCParser.AssignRhsCallContext): AST {
@@ -217,16 +223,16 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
             ASTVisitor(st.createChildScope()).visit(ctx.doBlock) as Stat)
     }
 
-    override fun visitStatRead(ctx: WACCParser.StatReadContext): AST {
-        TODO()
+    override fun visitStatRead(ctx: WACCParser.StatReadContext): ReadStat {
+        return ReadStat(st, this.visit(ctx.assignLhs()) as LHS)
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
         return ASTVisitor(st.createChildScope()).visit(ctx.stat())
     }
 
-    override fun visitStatFree(ctx: WACCParser.StatFreeContext): AST {
-        TODO()
+    override fun visitStatFree(ctx: WACCParser.StatFreeContext): FreeStat {
+        return FreeStat(st, this.visit(ctx.expr()) as Expr)
     }
 
     override fun visitStatPrint(ctx: WACCParser.StatPrintContext): PrintStat {

@@ -67,8 +67,7 @@ class ArrayLiteral(
     override fun toString(): String {
         return "ArrayLiteral\n  (scope:$st)\n${
             ("type: $type\nelems: [${
-                values.map { e -> e.toString() }.reduceOrNull { a, b -> "$a $b" }
-                    ?: ""
+                values.map { e -> e.toString() }.reduceOrNull { a, b -> "$a $b" } ?: ""
             }]").prependIndent(INDENT)
         }"
     }
@@ -90,19 +89,43 @@ class WACCType(override val st: SymbolTable, override val type: WAny) : Typed {
 
 class PairLiteral(
     override val st: SymbolTable,
-    override val type: WAny,
+    override val type: WPair,
 ) : Expr {
     override fun check() {
         TODO("Not yet implemented")
     }
 
     override fun toString(): String {
-        TODO("Not yet implemented")
+        return "PairLiteral(null)\n  (scope:$st)\n${("type: $type").prependIndent(INDENT)}"
     }
 
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
+}
+
+class NewPairRHS(
+    override val st: SymbolTable,
+    val left: Expr,
+    val right: Expr,
+    override val type: WPair,
+) : RHS {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "NEWPAIR:\n  (scope:$st)\nleft:\n${
+            left.toString().prependIndent(INDENT)
+        }\nright:\n" +
+                right.toString().prependIndent(INDENT)
+    }
+
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
 }
 
 class BinaryOperation(
@@ -220,7 +243,7 @@ class Assignment(
     }
 
     override fun toString(): String {
-        return "Assingment:\n" + "  (scope:$st)\n${lhs.toString().prependIndent(INDENT)}\n${
+        return "Assignment:\n" + "  (scope:$st)\n${lhs.toString().prependIndent(INDENT)}\n${
             rhs.toString().prependIndent(INDENT)
         }"
     }
@@ -265,8 +288,8 @@ class ArrayElement(
         // This string also summons Cthulhu
         return "ArrayElem:\n" + "  (scope:$st)\n${
             ("array ident: $ident\nindex/ices:\n${
-                (indices.map { e -> e.toString() }.reduceOrNull { a, b -> "$a\n$b" }
-                    ?: "").prependIndent("  ")
+                (indices.map { e -> e.toString() }
+                    .reduceOrNull { a, b -> "$a\n$b" } ?: "").prependIndent("  ")
             }").prependIndent(INDENT)
         }\n${
             ("type: $type").prependIndent(INDENT)
@@ -331,15 +354,80 @@ class WhileStat(
     }
 }
 
-class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val expr: Expr) : Stat {
+class ReadStat(override val st: SymbolTable,
+val lhs: LHS) : Stat {
     override fun check() {
         TODO("Not yet implemented")
     }
 
     override fun toString(): String {
-        return "Print:\n" + "  (scope:$st)\n${("withNewline: $newlineAfter").prependIndent(INDENT)}\n${
+        return "Read:\n" + "  (scope:$st)\n${"LHS:\n${lhs.toString().prependIndent(INDENT)}"}"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val expr: Expr) :
+    Stat {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "Print:\n" + "  (scope:$st)\n${
+            ("withNewline: $newlineAfter").prependIndent(INDENT)
+        }\n${
             ("Expr: $expr").prependIndent(INDENT)
         }"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class PairElement(
+    override val st: SymbolTable,
+    val first: Boolean, // true = fst, false = snd
+    val expr: Expr,
+    override val type: WAny,
+) : LHS, RHS {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "Pair element:\n" + "  (scope:$st)\n${
+            ("${
+                if (first) {
+                    "FST"
+                } else {
+                    "SND"
+                }
+            }:\n${expr.toString().prependIndent(INDENT)}").prependIndent(INDENT)
+        }"
+    }
+
+    override fun evaluate(): WAny {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class FreeStat(
+    override val st: SymbolTable,
+    val expr: Expr,
+) : Stat {
+    override fun check() {
+        TODO("Not yet implemented")
+    }
+
+    override fun toString(): String {
+        return "Free:\n" + "  (scope:$st)\n${expr.toString().prependIndent(INDENT)}"
     }
 
     override fun evaluate(): WAny {
