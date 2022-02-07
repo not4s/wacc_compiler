@@ -86,20 +86,18 @@ class FunctionCall(
     }
 
     override fun toString(): String {
-        return "Calling $ident\n${
+        return "Calling $ident with parameters...:\n${
             params.mapIndexed { i, e ->
                 "Parameter $i:\n${
-                    e.toString().prependIndent(
-                        INDENT)
+                    e.toString().prependIndent(INDENT)
                 }".prependIndent("  ")
             }.reduceOrNull { a, b -> "$a\n$b" } ?: ""
-        })"
+        }"
     }
 
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
-
 }
 
 class Literal(
@@ -179,8 +177,7 @@ class NewPairRHS(
     override fun toString(): String {
         return "NEWPAIR:\n  (scope:$st)\nleft:\n${
             left.toString().prependIndent(INDENT)
-        }\nright:\n" +
-                right.toString().prependIndent(INDENT)
+        }\nright:\n" + right.toString().prependIndent(INDENT)
     }
 
 
@@ -434,8 +431,7 @@ class ReadStat(
 
 }
 
-class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val expr: Expr) :
-    Stat {
+class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val expr: Expr) : Stat {
     override fun check() {
         TODO("Not yet implemented")
     }
