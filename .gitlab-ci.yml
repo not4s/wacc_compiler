@@ -18,13 +18,20 @@ main-test:
 symbol-table-test:
   stage: test
   script:
-    - mvn test -Dtest=PointerSymbolTableTest
+    - mvn test -Dtest=ParentRefSymbolTableTest
 
 .expr-visitor-test:
   stage: test
   script:
     - mvn test -Dtest=ExprVisitorTest
 
+
+invalid/sematicErr/array:
+  stage: wacc-test
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/array/*.wacc"
 
 .invalid/semanticErr/exit:
   stage: wacc-test
@@ -33,77 +40,77 @@ symbol-table-test:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/exit/*.wacc"
 
-.invalid/semanticErr/expressions:
+invalid/semanticErr/expressions:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/expressions/*.wacc"
 
-.invalid/semanticErr/function:
+invalid/semanticErr/function:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/function/*.wacc"
 
-.invalid/semanticErr/if:
+invalid/semanticErr/if:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/if/*.wacc"
 
-.invalid/semanticErr/IO:
+invalid/semanticErr/IO:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/IO/*.wacc"
 
-.invalid/semanticErr/multiple:
+invalid/semanticErr/multiple:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/multiple/*.wacc"
 
-.invalid/semanticErr/pairs:
+invalid/semanticErr/pairs:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/pairs/*.wacc"
 
-.invalid/semanticErr/print:
+invalid/semanticErr/print:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/print/*.wacc"
 
-.invalid/semanticErr/read:
+invalid/semanticErr/read:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/read/*.wacc"
 
-.invalid/semanticErr/scope:
+invalid/semanticErr/scope:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/scope/*.wacc"
 
-.invalid/semanticErr/variables:
+invalid/semanticErr/variables:
   stage: wacc-test
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/variables/*.wacc"
 
-.invalid/semanticErr/while:
+invalid/semanticErr/while:
   stage: wacc-test
   interruptible: true
   script:
