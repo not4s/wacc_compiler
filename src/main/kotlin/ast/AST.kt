@@ -8,7 +8,7 @@ import utils.SemanticException
 import waccType.*
 import kotlin.system.exitProcess
 
-val INDENT = "  | "
+const val INDENT = "  | "
 
 interface AST {
     val st: SymbolTable
@@ -31,7 +31,6 @@ interface LHS : AST, Typed
 interface Expr : AST, Evaluable, Typed, RHS
 
 interface Stat : AST, Evaluable
-
 
 enum class BinOperator {
     MUL, DIV, MOD, ADD, SUB, GT, GEQ, LT, LEQ, EQ, NEQ, AND, OR;
@@ -62,7 +61,7 @@ class WACCFunction(
     override fun toString(): String {
         return "Function($type) $ident(${
             params.map { (id, t) -> "($t)$id" }.reduceOrNull { a, b -> "$a, $b" } ?: ""
-        }):\n${"   ".toString().prependIndent(INDENT)}"
+        }):\n${"   ".prependIndent(INDENT)}"
     }
 }
 
@@ -257,7 +256,6 @@ class BinaryOperation(
             EQ, NEQ -> WBool()
             AND, OR -> WBool()
         }
-
 }
 
 class UnaryOperation(
@@ -299,7 +297,6 @@ class UnaryOperation(
             UnOperator.SUB -> WInt()
         }
 }
-
 
 class Declaration(
     override val st: SymbolTable,
@@ -374,7 +371,6 @@ class Assignment(
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
-
 }
 
 class IdentifierSet(
@@ -394,7 +390,6 @@ class IdentifierSet(
     override val type: WAny
         get() = st.get(ident)
 }
-
 
 class IdentifierGet(
     override val st: SymbolTable,
@@ -502,7 +497,6 @@ class IfThenStat(
         TODO("Not yet implemented")
     }
 }
-
 
 class WhileStat(
     override val st: SymbolTable,
@@ -623,8 +617,6 @@ class PairElement(
             } else {
                 (expr.type as WPair).rightType
             }
-
-
 }
 
 class FreeStat(
@@ -687,7 +679,6 @@ class SkipStat(override val st: SymbolTable) : Stat {
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
-
 }
 
 class ReturnStat(
@@ -731,7 +722,6 @@ class JoinStat(
         return "$first\n$second"
     }
 
-
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
@@ -765,5 +755,4 @@ fun checkReturnType(stat: Stat, expected: WAny) {
         }
         is WhileStat -> checkReturnType(stat.doBlock, expected)
     }
-
 }
