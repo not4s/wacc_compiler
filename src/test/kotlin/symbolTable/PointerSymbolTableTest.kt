@@ -2,60 +2,60 @@ package symbolTable
 
 import org.junit.Test
 import utils.SemanticException
-import waccType.WInt
-import waccType.WStr
+import waccType.*
 import kotlin.test.fail
+import kotlin.test.assertFails
 
-class PointerSymbolTableTest {
+class ParentRefSymbolTableTest {
     @Test
     fun canDeclareInts() {
-        val pointerSymbolTable = PointerSymbolTable()
-        pointerSymbolTable.declare("x", WInt())
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("x", WInt())
     }
 
     @Test
     fun canDeclareStrings() {
-        val pointerSymbolTable = PointerSymbolTable()
-        pointerSymbolTable.declare("s", WStr())
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("s", WStr())
     }
 
 
     @Test
     fun canGetInts() {
-        val pointerSymbolTable = PointerSymbolTable()
-        pointerSymbolTable.declare("x", WInt())
-        pointerSymbolTable.get("x")
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("x", WInt())
+        parentRefSymbolTable.get("x")
 
     }
 
     @Test
     fun canGetStrings() {
-        val pointerSymbolTable = PointerSymbolTable()
-        pointerSymbolTable.declare("x", WStr())
-        pointerSymbolTable.get("x")
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("x", WStr())
+        parentRefSymbolTable.get("x")
     }
 
     @Test
     fun canReassignInt() {
-        val pointerSymbolTable = PointerSymbolTable()
-        pointerSymbolTable.declare("x", WInt())
-        pointerSymbolTable.reassign("x", WInt())
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("x", WInt())
+        parentRefSymbolTable.reassign("x", WInt())
 
     }
 
     @Test
     fun canReassignString() {
-        val pointerSymbolTable = PointerSymbolTable()
-        pointerSymbolTable.declare("x", WStr())
-        pointerSymbolTable.reassign("x", WStr())
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("x", WStr())
+        parentRefSymbolTable.reassign("x", WStr())
     }
 
     @Test
     fun reassigningIntWithStringThrowsSemanticException() {
-        val pointerSymbolTable = PointerSymbolTable()
-        pointerSymbolTable.declare("x", WInt())
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("x", WInt())
         try {
-            pointerSymbolTable.reassign("x", WStr())
+            parentRefSymbolTable.reassign("x", WStr())
             fail() // Should not get here
         } catch (e: SemanticException) {
             println(e)
@@ -66,10 +66,10 @@ class PointerSymbolTableTest {
 
     @Test
     fun gettingIntAsStringThrowsSemanticException() {
-        val pointerSymbolTable = PointerSymbolTable()
-        pointerSymbolTable.declare("x", WInt())
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("x", WInt())
         try {
-            pointerSymbolTable.getAndCast<WStr>("x")
+            parentRefSymbolTable.getAndCast<WStr>("x")
             fail() // Should not get here
         } catch (e: SemanticException) {
             println(e)
@@ -80,9 +80,9 @@ class PointerSymbolTableTest {
 
     @Test
     fun gettingUndefinedVariableThrowsSemanticException() {
-        val pointerSymbolTable = PointerSymbolTable()
+        val parentRefSymbolTable = ParentRefSymbolTable()
         try {
-            pointerSymbolTable.get("x")
+            parentRefSymbolTable.get("x")
             fail() // Should not get here
         } catch (e: SemanticException) {
             println(e)
@@ -93,9 +93,9 @@ class PointerSymbolTableTest {
 
 //    @Test
 //    fun reassigningUndeclaredVariableThrowsSemanticException() {
-//        val pointerSymbolTable = PointerSymbolTable()
+//        val parentRefSymbolTable = ParentRefSymbolTable()
 //        try {
-//            pointerSymbolTable.reassign("x", WInt(1337))
+//            parentRefSymbolTable.reassign("x", WInt(1337))
 //            fail() // Should not get here
 //        } catch (e: SemanticException) {
 //            println(e)
@@ -106,13 +106,13 @@ class PointerSymbolTableTest {
 
     @Test
     fun canCreateChildScope() {
-        val st = PointerSymbolTable()
+        val st = ParentRefSymbolTable()
         st.createChildScope()
     }
 
     @Test
     fun declaringVariableInChildScopeDoesNotCreateItInParent() {
-        val st = PointerSymbolTable()
+        val st = ParentRefSymbolTable()
         val child = st.createChildScope()
         child.declare("x", WInt())
         try {
@@ -125,113 +125,63 @@ class PointerSymbolTableTest {
         }
     }
 
-//    @Test
-//    fun childCanGetVariablesFromParent() {
-//        val st = PointerSymbolTable()
-//        st.declare("x", WInt(5))
-//        val child = st.createChildScope()
-//        assertEquals(child.get("x"), WInt(5))
-//    }
+    @Test
+    fun canDeclareArrays() {
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("array", WArray(WUnknown()))
+    }
 
-//    @Test
-//    fun childCanReassignDeclaredVariablesInParent() {
-//        val st = PointerSymbolTable()
-//        st.declare("x", WInt())
-//        val child = st.createChildScope()
-//        st.reassign("x", WInt(15))
-//        assertEquals(st.get("x"), WInt(15))
-//        assertEquals(child.get("x"), WInt(15))
-//    }
+    @Test
+    fun canDeclareArrayOfBaseTypes() {
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        parentRefSymbolTable.declare("array_1", WArray(WInt()))
+        parentRefSymbolTable.declare("array_2", WArray(WStr()))
+        parentRefSymbolTable.declare("array_3", WArray(WBool()))
+        parentRefSymbolTable.declare("array_4", WArray(WChar()))
+    }
 
-//    @Test
-//    fun childCanRedefineSameTypeVariable() {
-//        val st = PointerSymbolTable()
-//        st.declare("x", WInt(12))
-//        val child = st.createChildScope()
-//        child.declare("x", WInt(20))
-//        assertEquals(st.get("x"), WInt(12))
-//        assertEquals(child.get("x"), WInt(20))
-//    }
-//
-//    @Test
-//    fun childCanDeclareSameNameButDifferentType() {
-//        val st = PointerSymbolTable()
-//        st.declare("x", WInt(12))
-//        val child = st.createChildScope()
-//        child.declare("x", WStr("Hello"))
-//        assertEquals(st.get("x"), WInt(12))
-//        assertEquals(child.get("x"), WStr("Hello"))
-//    }
-//
-//    @Test
-//    fun childCannotReassignParentVariablesAfterNewDeclaration() {
-//        val st = PointerSymbolTable()
-//        st.declare("x", WInt(12))
-//        st.declare("y", WInt(20))
-//        val child = st.createChildScope()
-//        child.declare("x", WInt(12))
-//        child.declare("y", WStr("hi"))
-//        child.reassign("x", WInt(16))
-//        child.reassign("y", WStr("hello"))
-//
-//        assertEquals(st.get("x"), WInt(12))
-//        assertEquals(st.get("y"), WInt(20))
-//    }
-//
-//    @Test
-//    fun grandchildCanReassignGrandparent() {
-//        val st = PointerSymbolTable()
-//        st.declare("x", WInt(12))
-//        val child = st.createChildScope()
-//        val grand = child.createChildScope()
-//        grand.reassign("x", WInt(15))
-//        assertEquals(child.get("x"), WInt(15))
-//        assertEquals(st.get("x"), WInt(15))
-//    }
-//
-//    @Test
-//    fun grandchildReassignsParentBeforeGrandparent() {
-//        val st = PointerSymbolTable()
-//        st.declare("x", WInt(12))
-//        val child = st.createChildScope()
-//        child.declare("x", WInt(15))
-//        val grand = child.createChildScope()
-//        grand.reassign("x", WInt(17))
-//        assertEquals(child.get("x"), WInt(17))
-//        assertEquals(st.get("x"), WInt(12))
-//    }
-//
-//    @Test
-//    fun grandchildCannotReassignGrandparentIfRedeclareInParent() {
-//        val st = PointerSymbolTable()
-//        st.declare("x", WInt(12))
-//        val child = st.createChildScope()
-//        child.declare("x", WStr("hi"))
-//        val grand = child.createChildScope()
-//        try {
-//            grand.reassign("x", WInt(12))
-//            fail() // Should not get here
-//        } catch (e: SemanticException) {
-//            println(e)
-//        } catch (e: Exception) {
-//            fail()
-//        }
-//    }
-//
-//    @Test
-//    fun grandchildCannotGetGrandparentIfRedeclareInParent() {
-//        val st = PointerSymbolTable()
-//        st.declare("x", WInt(12))
-//        val child = st.createChildScope()
-//        child.declare("x", WStr("Hi"))
-//        val grand = child.createChildScope()
-//        try {
-//            grand.getAndCast<WInt>("x")
-//            fail() // Should not get here
-//        } catch (e: SemanticException) {
-//            println(e)
-//        } catch (e: Exception) {
-//            fail()
-//        }
-//    }
+    @Test
+    fun canDecalreArrayOfPairs() {
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        val pU_U = WPair(WUnknown(), WUnknown())
+        val pS_I = WPair(WStr(), WInt())
+        val pS_p_S_I = WPair(WStr(), pS_I)
+        parentRefSymbolTable.declare("array_1", pU_U)
+        parentRefSymbolTable.declare("array_2", pS_I)
+        parentRefSymbolTable.declare("array_3", pS_p_S_I)
+    }
+
+    @Test
+    fun canDecalreArrayOfArrays() {
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        val aI = WArray(WInt())
+        val aaI = WArray(aI)
+        val aaaI = WArray(aaI)
+        parentRefSymbolTable.declare("array_1", aI)
+        parentRefSymbolTable.declare("array_2", aaI)
+        parentRefSymbolTable.declare("array_3", aaaI)
+    }
+
+    @Test
+    fun canAssignValuesInBaseTypeArray() {
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        val arrayName = "array"
+        // invalid array indexing is a run-time error
+        val indices: Array<WInt> = arrayOf(WInt())
+        parentRefSymbolTable.declare(arrayName, WArray(WInt()))
+        parentRefSymbolTable.reassign(arrayName, indices, WInt())
+    }
+
+    @Test
+    fun canAssignValuesInPairArrays() {
+        val parentRefSymbolTable = ParentRefSymbolTable()
+        val arrayName = "array"
+        val pS_p_S_I = WPair(WStr(), WPair(WUnknown(), WUnknown()))
+        // invalid array indexing is a run-time error
+        val indices: Array<WInt> = arrayOf(WInt())
+        parentRefSymbolTable.declare(arrayName, WArray(pS_p_S_I))
+        parentRefSymbolTable.reassign(arrayName, indices, pS_p_S_I)
+        try { parentRefSymbolTable.reassign(arrayName, indices, WInt()) }
+        catch (e: SemanticException) { println(e) }
+    }
 }

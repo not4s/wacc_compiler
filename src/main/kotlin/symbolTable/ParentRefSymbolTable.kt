@@ -52,7 +52,7 @@ class ParentRefSymbolTable private constructor(private val parentTable: ParentRe
             if (prev !is WArray) {
                 throw SemanticException("Cannot access elements of non-array type: $prev")
             } else {
-                TODO("Implement this")
+                // TODO("Implement this")
             }
         } else {
             if (parentTable == null) {
@@ -61,7 +61,6 @@ class ParentRefSymbolTable private constructor(private val parentTable: ParentRe
                 parentTable.reassign(arrSym, indices, value)
             }
         }
-
     }
 
     override fun isGlobal(): Boolean {

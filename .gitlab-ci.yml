@@ -26,6 +26,13 @@ symbol-table-test:
     - mvn test -Dtest=ExprVisitorTest
 
 
+invalid/sematicErr/array:
+  stage: wacc-test
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_sprograms/invalid/semanticErr/array/*.wacc"
+
 .invalid/semanticErr/exit:
   stage: wacc-test
   interruptible: true
