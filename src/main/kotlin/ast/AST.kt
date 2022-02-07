@@ -188,11 +188,9 @@ class NewPairRHS(
         }\nright:\n" + right.toString().prependIndent(INDENT)
     }
 
-
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
-
 }
 
 class BinaryOperation(
@@ -316,7 +314,8 @@ class Declaration(
     }
 
     override fun toString(): String {
-        return "Declaration:\n" + "  (scope:$st)\n${("of: $ident").prependIndent(INDENT)}\n${
+        return "Declaration:\n" +
+                "  (scope:$st)\n${("of: $ident").prependIndent(INDENT)}\n${
             ("to: $rhs").toString().prependIndent(INDENT)
         }"
     }
@@ -342,13 +341,8 @@ class Assignment(
         when (lhs) {
             is IdentifierSet -> st.reassign(lhs.ident, rhs.type)
             is ArrayElement -> {
-                // Make sure Exprs are of type int.
-                val indices: Array<WInt> = lhs.indices.map { e ->
-                    if (e.type is WInt) {
-                        e.type as WInt
-                    } else {
-                        throw SemanticException("Non-int index in array ${lhs.ident}")
-                    }
+                val indices: Array<WInt> = lhs.indices.map { it.type as? WInt
+                        ?: throw SemanticException("Non-int index in array ${lhs.ident}")
                 }.toTypedArray()
                 st.reassign(lhs.ident, indices, rhs.type)
             }
@@ -429,13 +423,7 @@ class ArrayElement(
     }
 
     override fun check() {
-        st.get(ident, indices.map { e ->
-            if (e.type !is WInt) {
-                throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
-            } else {
-                e.type as WInt
-            }
-        }.toTypedArray())
+        this.type // call getter
     }
 
     override fun toString(): String {
@@ -456,13 +444,9 @@ class ArrayElement(
 
     override val type: WAny
         get() = st.get(ident, indices.map { e ->
-            if (e.type !is WInt) {
-                throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
-            } else {
-                e.type as WInt
-            }
+            e.type as? WInt
+                ?: throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
         }.toTypedArray())
-
 }
 
 class IfThenStat(
@@ -596,12 +580,7 @@ class PairElement(
 
     override fun toString(): String {
         return "Pair element:\n" + "  (scope:$st)\n${
-            ("${
-                if (first) {
-                    "FST"
-                } else {
-                    "SND"
-                }
+            ("${if (first) "FST" else "SND"
             }:\n${expr.toString().prependIndent(INDENT)}").prependIndent(INDENT)
         }"
     }
@@ -611,12 +590,10 @@ class PairElement(
     }
 
     override val type: WAny
-        get() =
-            if (first) {
-                (expr.type as WPair).leftType
-            } else {
-                (expr.type as WPair).rightType
-            }
+        get() {
+            val pair = expr.type as WPair
+            return if (first) pair.leftType else pair.rightType
+        }
 }
 
 class FreeStat(
@@ -748,10 +725,12 @@ fun checkReturnType(stat: Stat, expected: WAny) {
             throw SemanticException("Mismatching return type for function, expected: $expected, got: ${stat.type} ")
         }
         is JoinStat -> {
-            checkReturnType(stat.first, expected); checkReturnType(stat.second, expected)
+            checkReturnType(stat.first, expected)
+            checkReturnType(stat.second, expected)
         }
         is IfThenStat -> {
-            checkReturnType(stat.thenStat, expected); checkReturnType(stat.elseStat, expected)
+            checkReturnType(stat.thenStat, expected)
+            checkReturnType(stat.elseStat, expected)
         }
         is WhileStat -> checkReturnType(stat.doBlock, expected)
     }
