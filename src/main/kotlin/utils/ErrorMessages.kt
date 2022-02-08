@@ -68,6 +68,36 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     override val prefix = "SEMANTIC ERROR"
 
+    fun readTypeIsIncorrect(actualType: WAny) {
+        body += "Cannot read into the variable of type $actualType. Variables must be characters or numeric."
+    }
+
+    fun whileStatConditionHasNotBooleanType(actualType: WAny) {
+        whileStatConditionHasNotBooleanType()
+        body += " Got $actualType instead"
+    }
+
+    fun whileStatConditionHasNotBooleanType() {
+        body += "The conditional statement in the \"while\" statement does not evaluate to the boolean type."
+    }
+
+    fun ifStatConditionHasNotBooleanType(actualType: WAny) {
+        ifStatConditionHasNotBooleanType()
+        body += " Got $actualType instead"
+    }
+
+    fun ifStatConditionHasNotBooleanType() {
+        body += "The conditional statement in the \"if\" statement does not evaluate to the boolean type."
+    }
+
+    fun variableNotInScope(identifier: String) {
+        body += "The variable $identifier is undefined in the scope it is accessed or any parent scope"
+    }
+
+    fun functionArgumentTypeMismatch(expectedType: WAny, actualType: WAny) {
+        body += "The supplied function argument has incorrect type. Expected $expectedType, got $actualType instead."
+    }
+
     fun functionRedefineError(functionName: String) {
         body += "Cannot redefine function $functionName"
     }
@@ -88,10 +118,6 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
     fun functionReturnStatTypeMismatch(functionType: WAny, returnStatType: WAny) {
         body += "The \"return\" statement of the function returns $returnStatType, " +
                 "but the function has type $functionType"
-    }
-
-    fun functionArgumentTypeMismatch(providedArgType: WAny, expectedType: WAny) {
-        body += "The provided function argument has incorrect type $providedArgType, while $expectedType was expected"
     }
 
     fun functionCallTypeMismatch(assignLhsType: WAny, functionType: WAny) {
