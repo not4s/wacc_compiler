@@ -68,6 +68,14 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     override val prefix = "SEMANTIC ERROR"
 
+    fun functionRedefineError(functionName: String) {
+        body += "Cannot redefine function $functionName"
+    }
+
+    fun functionRedefineError() {
+        body += "Cannot redefine function"
+    }
+
     fun functionArgumentCountMismatch(expectedArgumentsCount: Int) {
         functionArgumentCountMismatch()
         body += "\nThere shall be $expectedArgumentsCount arguments"
