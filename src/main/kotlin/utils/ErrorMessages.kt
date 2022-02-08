@@ -63,6 +63,11 @@ abstract class ErrorMessageBuilder {
         this.start = start
         return this
     }
+
+    open fun appendCustomErrorMessage(msg: String): ErrorMessageBuilder {
+        body += msg
+        return this
+    }
 }
 
 class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
@@ -75,6 +80,10 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     override fun provideStart(start: PositionedError): SemanticErrorMessageBuilder {
         return super.provideStart(start) as SemanticErrorMessageBuilder
+    }
+
+    override fun appendCustomErrorMessage(msg: String): SemanticErrorMessageBuilder {
+        return super.appendCustomErrorMessage(msg) as SemanticErrorMessageBuilder
     }
 
     fun variableRedeclaration(variableName: String): SemanticErrorMessageBuilder {
@@ -225,6 +234,15 @@ class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
 
     override fun provideStart(start: PositionedError): SyntaxErrorMessageBuilder {
         return super.provideStart(start) as SyntaxErrorMessageBuilder
+    }
+
+    override fun appendCustomErrorMessage(msg: String): SyntaxErrorMessageBuilder {
+        return super.appendCustomErrorMessage(msg) as SyntaxErrorMessageBuilder
+    }
+
+    fun generalSyntaxErrorMessage(): SyntaxErrorMessageBuilder {
+        body += "Cannot parse the given code"
+        return this
     }
 }
 
