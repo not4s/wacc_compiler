@@ -2,7 +2,7 @@ package utils
 
 import waccType.WAny
 
-class PositionedError(
+data class PositionedError(
     private val lineNumber: Int,
     private val columnNumber: Int,
     private val lineText: String,
@@ -18,9 +18,9 @@ class PositionedError(
 }
 
 data class ErrorMessage(
-    val prefix: String,
-    val start: PositionedError,
-    val body: String,
+    private val prefix: String,
+    private val start: PositionedError,
+    private val body: String,
 ) {
     override fun toString(): String {
         return errorHeader(prefix) + "\n\n" +
@@ -77,35 +77,66 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return super.provideStart(start) as SemanticErrorMessageBuilder
     }
 
+    fun variableRedeclaration(variableName: String): SemanticErrorMessageBuilder {
+        body += "The variable $variableName is already declared"
+        return this
+    }
+
+    fun variableRedeclaration(): SemanticErrorMessageBuilder {
+        body += "The variable is already declared"
+        return this
+    }
+
+    fun nullPointerFstDereference(): SemanticErrorMessageBuilder {
+        body += "The 'snd' operator cannot be applied to a null value"
+        return this
+    }
+
+    fun nullPointerSndDereference(): SemanticErrorMessageBuilder {
+        body += "The 'snd' operator cannot be applied to a null value"
+        return this
+    }
+
+    fun freeNonPair(): SemanticErrorMessageBuilder {
+        body += "Cannot free a value of non-pair type."
+        return this
+    }
+
+    fun freeNonPair(actualType: WAny): SemanticErrorMessageBuilder {
+        freeNonPair()
+        body += " The actual type is $actualType"
+        return this
+    }
+
     fun readTypeIsIncorrect(actualType: WAny): SemanticErrorMessageBuilder {
         body += "Cannot read into the variable of type $actualType. Variables must be characters or numeric."
         return this
     }
 
-    fun whileStatConditionHasNotBooleanType(actualType: WAny): SemanticErrorMessageBuilder {
-        whileStatConditionHasNotBooleanType()
+    fun whileStatConditionHasNonBooleanType(actualType: WAny): SemanticErrorMessageBuilder {
+        whileStatConditionHasNonBooleanType()
         body += " Got $actualType instead"
         return this
     }
 
-    fun whileStatConditionHasNotBooleanType(): SemanticErrorMessageBuilder {
+    fun whileStatConditionHasNonBooleanType(): SemanticErrorMessageBuilder {
         body += "The conditional statement in the \"while\" statement does not evaluate to the boolean type."
         return this
     }
 
-    fun ifStatConditionHasNotBooleanType(actualType: WAny): SemanticErrorMessageBuilder {
-        ifStatConditionHasNotBooleanType()
+    fun ifStatConditionHasNonBooleanType(actualType: WAny): SemanticErrorMessageBuilder {
+        ifStatConditionHasNonBooleanType()
         body += " Got $actualType instead"
         return this
     }
 
-    fun ifStatConditionHasNotBooleanType(): SemanticErrorMessageBuilder {
+    fun ifStatConditionHasNonBooleanType(): SemanticErrorMessageBuilder {
         body += "The conditional statement in the \"if\" statement does not evaluate to the boolean type."
         return this
     }
 
     fun variableNotInScope(identifier: String): SemanticErrorMessageBuilder {
-        body += "The variable $identifier is undefined in the scope it is accessed or any parent scope"
+        body += "The variable $identifier is undefined. It is out of the current scope or any parent scope."
         return this
     }
 
