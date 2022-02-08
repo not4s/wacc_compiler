@@ -11,8 +11,12 @@ import kotlin.system.exitProcess
 val INDENT = "  | "
 
 interface AST {
+    // Overall FIELDS & FUNCTIONS
+    // Information of the symbol table
     val st: SymbolTable
-    fun check() // must throw exceptions if semantic errors are found
+    // Performs semantic analysis on the AST node and throws exceptions if error is found
+    fun check()
+    // Converts the AST node into a string containing the information of that node
     override fun toString(): String
 }
 
@@ -32,15 +36,23 @@ interface Expr : AST, Evaluable, Typed, RHS
 
 interface Stat : AST, Evaluable
 
-
+/**
+ * Types of the different binary operations
+ **/
 enum class BinOperator {
     MUL, DIV, MOD, ADD, SUB, GT, GEQ, LT, LEQ, EQ, NEQ, AND, OR;
 }
 
+/**
+ *  Types of the different unary operations
+ **/
 enum class UnOperator {
     NOT, ORD, CHR, LEN, SUB;
 }
 
+/**
+ *  The AST Node for Functions
+ **/
 class WACCFunction(
     override val st: SymbolTable,
     val ident: String,
@@ -66,6 +78,9 @@ class WACCFunction(
     }
 }
 
+/**
+ *  The AST Node for Function Calls
+ **/
 class FunctionCall(
     override val st: SymbolTable,
     val ident: String,
@@ -110,10 +125,13 @@ class FunctionCall(
         get() = (st.get(ident) as WACCFunction).type
 }
 
+/**
+ *  The AST Node for Base Type Literals
+ **/
 class Literal(
     override val st: SymbolTable,
     override val type: WBase,
-) : Expr, RHS {
+) : Expr {
     override fun check() {}
 
     override fun toString(): String {
@@ -125,6 +143,9 @@ class Literal(
     }
 }
 
+/**
+ *  The AST Node for Array Literals
+ **/
 class ArrayLiteral(
     override val st: SymbolTable,
     val values: Array<WAny>,
@@ -157,6 +178,9 @@ class WACCType(override val st: SymbolTable, override val type: WAny) : Typed {
     }
 }
 
+/**
+ *  The AST Node for Pair Literals
+ **/
 class PairLiteral(
     override val st: SymbolTable,
     override val type: WPair,
@@ -173,6 +197,9 @@ class PairLiteral(
     }
 }
 
+/**
+ * The AST Node for a RHS New Pair
+ **/
 class NewPairRHS(
     override val st: SymbolTable,
     val left: Expr,
@@ -196,6 +223,9 @@ class NewPairRHS(
 
 }
 
+/**
+ *  The AST Node for Binary Operations
+ **/
 class BinaryOperation(
     override val st: SymbolTable,
     val left: Expr,
@@ -260,6 +290,9 @@ class BinaryOperation(
 
 }
 
+/**
+ * The AST Node for Unary Operations
+ **/
 class UnaryOperation(
     override val st: SymbolTable,
     val operand: Expr,
@@ -300,7 +333,9 @@ class UnaryOperation(
         }
 }
 
-
+/**
+ * The AST Node for Declarations
+ **/
 class Declaration(
     override val st: SymbolTable,
     val decType: WAny,
@@ -329,6 +364,9 @@ class Declaration(
     }
 }
 
+/**
+ * The AST Node for Assignments
+ **/
 class Assignment(
     override val st: SymbolTable,
     val lhs: LHS,
@@ -377,6 +415,9 @@ class Assignment(
 
 }
 
+/**
+ * The AST Node for Setting Identifiers
+ **/
 class IdentifierSet(
     override val st: SymbolTable,
     val ident: String,
@@ -395,7 +436,9 @@ class IdentifierSet(
         get() = st.get(ident)
 }
 
-
+/**
+* The AST Node for Getting Identifiers
+**/
 class IdentifierGet(
     override val st: SymbolTable,
     val ident: String,
@@ -424,6 +467,9 @@ class IdentifierGet(
         get() = st.get(ident)
 }
 
+/**
+ * The AST Node for Array Elements
+ **/
 class ArrayElement(
     override val st: SymbolTable,
     val ident: String, // name of array
@@ -470,6 +516,9 @@ class ArrayElement(
 
 }
 
+/**
+ * The AST Node for If then Statements
+ **/
 class IfThenStat(
     override val st: SymbolTable,
     val condition: Expr,
@@ -503,7 +552,9 @@ class IfThenStat(
     }
 }
 
-
+/**
+ * The AST Node for While Statements
+ **/
 class WhileStat(
     override val st: SymbolTable,
     val condition: Expr,
@@ -535,6 +586,9 @@ class WhileStat(
     }
 }
 
+/**
+ * The AST Node for Read Statements
+ **/
 class ReadStat(
     override val st: SymbolTable,
     val lhs: LHS,
@@ -559,6 +613,9 @@ class ReadStat(
 
 }
 
+/**
+ * The AST Node for Print Statements
+ **/
 class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val expr: Expr) : Stat {
     init {
         check()
@@ -582,6 +639,9 @@ class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val exp
 
 }
 
+/**
+ * The AST Node for Pair Elements
+ **/
 class PairElement(
     override val st: SymbolTable,
     val first: Boolean, // true = fst, false = snd
@@ -627,6 +687,9 @@ class PairElement(
 
 }
 
+/**
+ * The AST Node for Free Statements
+ **/
 class FreeStat(
     override val st: SymbolTable,
     val expr: Expr,
@@ -652,6 +715,9 @@ class FreeStat(
 
 }
 
+/**
+ * The AST Node for Exit Statements
+ **/
 class ExitStat(
     override val st: SymbolTable,
     val exp: Expr,
@@ -675,6 +741,9 @@ class ExitStat(
     }
 }
 
+/**
+ * The AST Node for Skip Statements
+ **/
 class SkipStat(override val st: SymbolTable) : Stat {
     override fun check() {
         // Always succeeds
@@ -690,6 +759,9 @@ class SkipStat(override val st: SymbolTable) : Stat {
 
 }
 
+/**
+ * The AST Node for Return Statements
+ **/
 class ReturnStat(
     override val st: SymbolTable,
     val exp: Expr,
@@ -717,6 +789,9 @@ class ReturnStat(
     }
 }
 
+/**
+ * The AST Node for Join Statements
+ **/
 class JoinStat(
     override val st: SymbolTable,
     val first: Stat,
@@ -736,7 +811,12 @@ class JoinStat(
         TODO("Not yet implemented")
     }
 }
-
+/**
+ * Checks whether the given statement has a proper return statement by matching patterns recursively
+ * @param stat : statement to be checked
+ * @param isOuterFuncScope : examines the scope to check context
+ * @exception ExitCode.SYNTAX_ERROR
+ **/
 fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
     return when (stat) {
         is ReturnStat -> true
@@ -752,6 +832,13 @@ fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
     }
 }
 
+/**
+ * Checks the return type of a statement by matching patterns recursively and
+ * throws a semantic exception if the type does not match the expected
+ * @param stat : return type to be checked
+ * @param expected : expected type to be matched
+ * @exception SemanticException
+ **/
 fun checkReturnType(stat: Stat, expected: WAny) {
     when (stat) {
         is ReturnStat -> if (!typesAreEqual(stat.type, expected)) {
