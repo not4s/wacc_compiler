@@ -1,16 +1,8 @@
-import antlr.WACCLexer
-import antlr.WACCParser
-import antlr.WACCParserBaseVisitor
-import ast.*
-import com.sun.source.tree.LiteralTree
-import org.antlr.v4.runtime.*
-import org.junit.*
-import kotlin.test.assertEquals
-import kotlin.test.fail
-import waccType.*
+package ast
 
-/*
-internal class ASTTests() {
+import org.junit.Test
+
+internal class ASTTests {
 
     @Test
     fun canParseFunc() {
@@ -164,18 +156,7 @@ internal class ASTTests() {
 
     @Test
     fun canParseExprIntBinary() {
-        val input = CharStreams.fromString("1 + 1")
-        val lexer = WACCLexer(input)
-        val tokens = CommonTokenStream(lexer)
-        val parser = WACCParser(tokens)
 
-        val tree = parser.expr()
-        val result: AbstractSyntaxTree = AstProducerVisitor().visit(tree)
-
-        val desiredOutput
-        = BinOpAST(LiteralAST(WInt(1)), BinOpAST.BinOperator.ADD, LiteralAST(WInt(1)))
-
-        assertEquals(desiredOutput, result)
     }
 
     @Test
@@ -313,5 +294,3 @@ internal class ASTTests() {
 
     }
 }
-
-*/
