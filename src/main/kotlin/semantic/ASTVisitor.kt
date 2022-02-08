@@ -163,7 +163,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
             st,
             this.visit(ctx.left) as Expr,
             this.visit(ctx.right) as Expr,
-            when (ctx.binOp.type) {
+            op = when (ctx.binOp.type) {
                 WACCParser.OP_MULT -> BinOperator.MUL
                 WACCParser.OP_DIV -> BinOperator.DIV
                 WACCParser.OP_MOD -> BinOperator.MOD
@@ -184,7 +184,9 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
     override fun visitExprUnary(ctx: WACCParser.ExprUnaryContext): UnaryOperation {
         return UnaryOperation(
-            st, this.visit(ctx.operand) as Expr, when (ctx.unOp.type) {
+            st,
+            this.visit(ctx.operand) as Expr,
+            op = when (ctx.unOp.type) {
                 WACCParser.OP_NOT -> UnOperator.NOT
                 WACCParser.OP_ORD -> UnOperator.ORD
                 WACCParser.OP_CHR -> UnOperator.CHR
