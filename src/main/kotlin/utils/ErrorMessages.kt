@@ -37,16 +37,14 @@ data class ErrorMessage(
     }
 }
 
-class ErrorMessageBuilder {
-
-    private var prefix: String = ""
-    private var body: String = ""
-    private lateinit var start: PositionedError
-
-    companion object {
-        const val SEMANTIC_ERROR = "SEMANTIC ERROR"
-        const val SYNTAX_ERROR = "SYNTAX ERROR"
-    }
+/**
+ * The class is abstract in order to avoid creating Errors which have
+ * semantic nature but syntax error message body and vice versa
+ */
+abstract class ErrorMessageBuilder {
+    protected abstract val prefix: String
+    protected var body: String = ""
+    protected lateinit var start: PositionedError
 
     fun build(): ErrorMessage {
         return ErrorMessage(prefix, start, body)
@@ -63,6 +61,11 @@ class ErrorMessageBuilder {
     fun provideStart(start: PositionedError) {
         this.start = start
     }
+}
+
+class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
+
+    override val prefix = "SEMANTIC ERROR"
 
     fun arrayEntriesTypeClash() {
         body = "The elements of the array have inconsistent types!"
@@ -84,6 +87,10 @@ class ErrorMessageBuilder {
         val expression = if (expressionText.isNotEmpty()) "\"$expressionText\"" else ""
         body = "The $actualType expression $expression does not conform to the expected type $expectedType"
     }
+}
+
+class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
+    override val prefix = "SYNTAX ERROR"
 }
 
 fun main() {
