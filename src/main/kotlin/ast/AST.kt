@@ -8,7 +8,7 @@ import utils.SemanticException
 import waccType.*
 import kotlin.system.exitProcess
 
-val INDENT = "  | "
+const val INDENT = "  | "
 
 interface AST {
     val st: SymbolTable
@@ -31,7 +31,6 @@ interface LHS : AST, Typed
 interface Expr : AST, Evaluable, Typed, RHS
 
 interface Stat : AST, Evaluable
-
 
 enum class BinOperator {
     MUL, DIV, MOD, ADD, SUB, GT, GEQ, LT, LEQ, EQ, NEQ, AND, OR;
@@ -62,7 +61,7 @@ class WACCFunction(
     override fun toString(): String {
         return "Function($type) $ident(${
             params.map { (id, t) -> "($t)$id" }.reduceOrNull { a, b -> "$a, $b" } ?: ""
-        }):\n${"   ".toString().prependIndent(INDENT)}"
+        }):\n${"   ".prependIndent(INDENT)}"
     }
 }
 
@@ -189,11 +188,9 @@ class NewPairRHS(
         }\nright:\n" + right.toString().prependIndent(INDENT)
     }
 
-
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
-
 }
 
 class BinaryOperation(
@@ -257,7 +254,6 @@ class BinaryOperation(
             EQ, NEQ -> WBool()
             AND, OR -> WBool()
         }
-
 }
 
 class UnaryOperation(
@@ -300,7 +296,6 @@ class UnaryOperation(
         }
 }
 
-
 class Declaration(
     override val st: SymbolTable,
     val decType: WAny,
@@ -319,7 +314,8 @@ class Declaration(
     }
 
     override fun toString(): String {
-        return "Declaration:\n" + "  (scope:$st)\n${("of: $ident").prependIndent(INDENT)}\n${
+        return "Declaration:\n" +
+                "  (scope:$st)\n${("of: $ident").prependIndent(INDENT)}\n${
             ("to: $rhs").toString().prependIndent(INDENT)
         }"
     }
@@ -345,13 +341,8 @@ class Assignment(
         when (lhs) {
             is IdentifierSet -> st.reassign(lhs.ident, rhs.type)
             is ArrayElement -> {
-                // Make sure Exprs are of type int.
-                val indices: Array<WInt> = lhs.indices.map { e ->
-                    if (e.type is WInt) {
-                        e.type as WInt
-                    } else {
-                        throw SemanticException("Non-int index in array ${lhs.ident}")
-                    }
+                val indices: Array<WInt> = lhs.indices.map { it.type as? WInt
+                        ?: throw SemanticException("Non-int index in array ${lhs.ident}")
                 }.toTypedArray()
                 st.reassign(lhs.ident, indices, rhs.type)
             }
@@ -374,7 +365,6 @@ class Assignment(
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
-
 }
 
 class IdentifierSet(
@@ -394,7 +384,6 @@ class IdentifierSet(
     override val type: WAny
         get() = st.get(ident)
 }
-
 
 class IdentifierGet(
     override val st: SymbolTable,
@@ -434,13 +423,7 @@ class ArrayElement(
     }
 
     override fun check() {
-        st.get(ident, indices.map { e ->
-            if (e.type !is WInt) {
-                throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
-            } else {
-                e.type as WInt
-            }
-        }.toTypedArray())
+        this.type // call getter
     }
 
     override fun toString(): String {
@@ -461,13 +444,9 @@ class ArrayElement(
 
     override val type: WAny
         get() = st.get(ident, indices.map { e ->
-            if (e.type !is WInt) {
-                throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
-            } else {
-                e.type as WInt
-            }
+            e.type as? WInt
+                ?: throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
         }.toTypedArray())
-
 }
 
 class IfThenStat(
@@ -502,7 +481,6 @@ class IfThenStat(
         TODO("Not yet implemented")
     }
 }
-
 
 class WhileStat(
     override val st: SymbolTable,
@@ -602,12 +580,7 @@ class PairElement(
 
     override fun toString(): String {
         return "Pair element:\n" + "  (scope:$st)\n${
-            ("${
-                if (first) {
-                    "FST"
-                } else {
-                    "SND"
-                }
+            ("${if (first) "FST" else "SND"
             }:\n${expr.toString().prependIndent(INDENT)}").prependIndent(INDENT)
         }"
     }
@@ -617,14 +590,10 @@ class PairElement(
     }
 
     override val type: WAny
-        get() =
-            if (first) {
-                (expr.type as WPair).leftType
-            } else {
-                (expr.type as WPair).rightType
-            }
-
-
+        get() {
+            val pair = expr.type as WPair
+            return if (first) pair.leftType else pair.rightType
+        }
 }
 
 class FreeStat(
@@ -687,7 +656,6 @@ class SkipStat(override val st: SymbolTable) : Stat {
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
-
 }
 
 class ReturnStat(
@@ -731,7 +699,6 @@ class JoinStat(
         return "$first\n$second"
     }
 
-
     override fun evaluate(): WAny {
         TODO("Not yet implemented")
     }
@@ -758,12 +725,13 @@ fun checkReturnType(stat: Stat, expected: WAny) {
             throw SemanticException("Mismatching return type for function, expected: $expected, got: ${stat.type} ")
         }
         is JoinStat -> {
-            checkReturnType(stat.first, expected); checkReturnType(stat.second, expected)
+            checkReturnType(stat.first, expected)
+            checkReturnType(stat.second, expected)
         }
         is IfThenStat -> {
-            checkReturnType(stat.thenStat, expected); checkReturnType(stat.elseStat, expected)
+            checkReturnType(stat.thenStat, expected)
+            checkReturnType(stat.elseStat, expected)
         }
         is WhileStat -> checkReturnType(stat.doBlock, expected)
     }
-
 }
