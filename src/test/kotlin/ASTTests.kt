@@ -9,8 +9,9 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 import waccType.*
 
+/*
 internal class ASTTests() {
-    
+
     @Test
     fun canParseFunc() {
 
@@ -312,3 +313,5 @@ internal class ASTTests() {
 
     }
 }
+
+*/
