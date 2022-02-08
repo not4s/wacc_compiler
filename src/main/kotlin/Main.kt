@@ -1,6 +1,5 @@
 import antlr.WACCLexer
 import antlr.WACCParser
-import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.*
 import semantic.ASTVisitor
 import symbolTable.ParentRefSymbolTable
@@ -58,7 +57,7 @@ fun main(args: Array<String>) {
     } catch (e: SemanticException) {
         println("-----------SEMANTIC ERROR-----------")
         println(e.message)
-        e.printStackTrace(System.out)
+//        e.printStackTrace(System.out)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
 
