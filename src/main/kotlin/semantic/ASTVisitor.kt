@@ -187,7 +187,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
             st, this.visit(ctx.operand) as Expr, when (ctx.unOp.type) {
                 WACCParser.OP_NOT -> UnOperator.NOT
                 WACCParser.OP_ORD -> UnOperator.ORD
-                WACCParser.OP_CHR-> UnOperator.CHR
+                WACCParser.OP_CHR -> UnOperator.CHR
                 WACCParser.OP_LEN -> UnOperator.LEN
                 WACCParser.OP_SUBT -> UnOperator.SUB
                 else -> throw Exception("Unknown unary operand")
