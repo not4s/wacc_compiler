@@ -52,10 +52,41 @@ class ErrorMessageBuilder {
         return ErrorMessage(prefix, start, body)
     }
 
+    fun buildAndDisplay() {
+        println(build())
+    }
+
+    fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String) {
+        this.start = PositionedError(lineNumber, columnNumber, lineText)
+    }
+
+    fun provideStart(start: PositionedError) {
+        this.start = start
+    }
+
+    fun arrayEntriesTypeClash() {
+        body = "The elements of the array have inconsistent types!"
+    }
+
+    fun arrayEntriesTypeMismatch(requiredType: WAny, actualType: WAny) {
+        body = "The elements of the array of type $requiredType[] have incorrect type $actualType"
+    }
+
+    fun nonIntExpressionExit(actualType: WAny) {
+        body = "Cannot exit with non-int expression. Actual: Char"
+    }
+
+    fun nonArrayTypeElemAccess(nonArrayType: WAny) {
+        body = "Cannot access index elements of non-array type: $nonArrayType"
+    }
+
     fun operandTypeMismatch(expectedType: WAny, actualType: WAny, expressionText: String = "") {
         val expression = if (expressionText.isNotEmpty()) "\"$expressionText\"" else ""
         body = "The $actualType expression $expression does not conform to the expected type $expectedType"
     }
+}
+
+fun main() {
 }
 
 fun raiseTypeErrorAndExit(ctx: ParserRuleContext?, expectedType: WAny?, actualType: WAny?) {
