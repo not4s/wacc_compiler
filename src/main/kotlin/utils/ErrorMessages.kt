@@ -1,5 +1,6 @@
 package utils
 
+import ast.ReturnStat
 import waccType.WAny
 import org.antlr.v4.runtime.ParserRuleContext
 import kotlin.system.exitProcess
@@ -67,25 +68,55 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     override val prefix = "SEMANTIC ERROR"
 
+    fun functionArgumentCountMismatch(expectedArgumentsCount: Int) {
+        functionArgumentCountMismatch()
+        body += "\nThere shall be $expectedArgumentsCount arguments"
+    }
+
+    fun functionArgumentCountMismatch() {
+        body += "The number of provided arguments is incorrect"
+    }
+
+    fun functionReturnStatTypeMismatch(functionType: WAny, returnStatType: WAny) {
+        body += "The \"return\" statement of the function returns $returnStatType, " +
+                "but the function has type $functionType"
+    }
+
+    fun functionArgumentTypeMismatch(providedArgType: WAny, expectedType: WAny) {
+        body += "The provided function argument has incorrect type $providedArgType, while $expectedType was expected"
+    }
+
+    fun functionCallTypeMismatch(assignLhsType: WAny, functionType: WAny) {
+        body += "Cannot assign function of type $functionType to the variable of type $assignLhsType"
+    }
+
+    fun assignmentTypeMismatch(assignLhsType: WAny, assignRhsType: WAny) {
+        body += "Cannot assign expression type $assignRhsType to the variable of type $assignLhsType"
+    }
+
+    fun returnFromGlobalScope() {
+        body += "Cannot return from global scope!"
+    }
+
     fun arrayEntriesTypeClash() {
-        body = "The elements of the array have inconsistent types!"
+        body += "The elements of the array have inconsistent types!"
     }
 
     fun arrayEntriesTypeMismatch(requiredType: WAny, actualType: WAny) {
-        body = "The elements of the array of type $requiredType[] have incorrect type $actualType"
+        body += "The elements of the array of type $requiredType[] have incorrect type $actualType"
     }
 
     fun nonIntExpressionExit(actualType: WAny) {
-        body = "Cannot exit with non-int expression. Actual: Char"
+        body += "Cannot exit with non-int expression. Actual: $actualType"
     }
 
     fun nonArrayTypeElemAccess(nonArrayType: WAny) {
-        body = "Cannot access index elements of non-array type: $nonArrayType"
+        body += "Cannot access index elements of non-array type: $nonArrayType"
     }
 
     fun operandTypeMismatch(expectedType: WAny, actualType: WAny, expressionText: String = "") {
         val expression = if (expressionText.isNotEmpty()) "\"$expressionText\"" else ""
-        body = "The $actualType expression $expression does not conform to the expected type $expectedType"
+        body += "The $actualType expression $expression does not conform to the expected type $expectedType"
     }
 }
 
