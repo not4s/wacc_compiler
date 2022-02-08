@@ -1,4 +1,0 @@
-package semantic
-
-class ExprVisitorTest {
-}

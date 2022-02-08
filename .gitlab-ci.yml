@@ -13,7 +13,7 @@ make:
 main-test:
   stage: test
   script:
-    - mvn test -Dtest=MainTest
+    - mvn test
 
 symbol-table-test:
   stage: test
