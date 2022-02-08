@@ -48,17 +48,18 @@ abstract class ErrorMessageBuilder {
         return ErrorMessage(prefix, start, body)
     }
 
-    fun buildAndDisplay(): ErrorMessageBuilder {
-        println(build())
-        return this
+    fun buildAndDisplay(): ErrorMessage {
+        val errorMessage = build()
+        println(errorMessage.toString())
+        return errorMessage
     }
 
-    fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): ErrorMessageBuilder {
+    open fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): ErrorMessageBuilder {
         this.start = PositionedError(lineNumber, columnNumber, lineText)
         return this
     }
 
-    fun provideStart(start: PositionedError): ErrorMessageBuilder {
+    open fun provideStart(start: PositionedError): ErrorMessageBuilder {
         this.start = start
         return this
     }
@@ -67,6 +68,14 @@ abstract class ErrorMessageBuilder {
 class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     override val prefix = "SEMANTIC ERROR"
+
+    override fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): SemanticErrorMessageBuilder {
+        return super.provideStart(lineNumber, columnNumber, lineText) as SemanticErrorMessageBuilder
+    }
+
+    override fun provideStart(start: PositionedError): SemanticErrorMessageBuilder {
+        return super.provideStart(start) as SemanticErrorMessageBuilder
+    }
 
     fun readTypeIsIncorrect(actualType: WAny): SemanticErrorMessageBuilder {
         body += "Cannot read into the variable of type $actualType. Variables must be characters or numeric."
@@ -176,7 +185,16 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 }
 
 class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
+
     override val prefix = "SYNTAX ERROR"
+
+    override fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): SyntaxErrorMessageBuilder {
+        return super.provideStart(lineNumber, columnNumber, lineText) as SyntaxErrorMessageBuilder
+    }
+
+    override fun provideStart(start: PositionedError): SyntaxErrorMessageBuilder {
+        return super.provideStart(start) as SyntaxErrorMessageBuilder
+    }
 }
 
 class SemanticException(private val reason: String) : Exception() {
