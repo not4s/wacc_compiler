@@ -6,7 +6,7 @@ import kotlin.test.fail
 
 class SyntaxErrorMessageBuilderTest {
 
-    private val customMsg = "Testing Syntax Error Builder"
+    private val customMsg = "Testing Syntax Error Message Builder"
     private val lineNum = 23
     private val columnNum = 8
     private val lineText = "int foo = 123 + 34 + 21"
@@ -28,7 +28,7 @@ class SyntaxErrorMessageBuilderTest {
     }
 
     @Test
-    fun allowsMultipleErrorMessages() {
+    fun allowsMultipleCustomErrorMessages() {
         try {
             SyntaxErrorMessageBuilder()
                 .provideStart(positionedError)
