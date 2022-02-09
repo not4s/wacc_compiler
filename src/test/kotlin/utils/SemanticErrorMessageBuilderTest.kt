@@ -23,7 +23,7 @@ class SemanticErrorMessageBuilderTest {
                 .build()
             fail("Should not allow multiple errors here")
         } catch (e: IllegalStateException) {
-            assertEquals(e.message, ErrorMessageBuilder.SPECIFIC_MESSAGE_RESTRICTION)
+            assertEquals(ErrorMessageBuilder.SPECIFIC_MESSAGE_RESTRICTION, e.message)
         }
     }
 
@@ -39,6 +39,20 @@ class SemanticErrorMessageBuilderTest {
         } catch (e: Exception) {
             e.printStackTrace()
             fail("Adding many custom error messages before or after specific error message must be allowed")
+        }
+    }
+
+    @Test
+    fun doesNotAllowSettingStartMultipleTimes() {
+        try {
+            SemanticErrorMessageBuilder()
+                .provideStart(positionedError)
+                .provideStart(lineNum, columnNum, customMsg)
+                .appendCustomErrorMessage("some message")
+                .build()
+            fail("Start should be set once")
+        } catch (e: IllegalStateException) {
+            assertEquals(ErrorMessageBuilder.SET_START_ONCE_RESTRICTION, e.message)
         }
     }
 }

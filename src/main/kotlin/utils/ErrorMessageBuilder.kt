@@ -7,8 +7,10 @@ package utils
 abstract class ErrorMessageBuilder {
 
     companion object {
-        const val SPECIFIC_MESSAGE_RESTRICTION
-            = "Only a single specific error message can be added. Use appendCustomErrorMessage() method instead"
+        const val SET_START_ONCE_RESTRICTION: String
+            = "Start property must be set and only once."
+        const val SPECIFIC_MESSAGE_RESTRICTION : String
+            = "Only a single specific error message can be added. Use appendCustomErrorMessage() method instead."
     }
 
     protected abstract val prefix: String
