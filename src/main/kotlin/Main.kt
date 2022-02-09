@@ -5,6 +5,7 @@ import semantic.ASTVisitor
 import symbolTable.ParentRefSymbolTable
 import utils.ExitCode
 import utils.SemanticException
+import utils.SyntaxErrorMessageBuilder
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -44,9 +45,14 @@ fun main(args: Array<String>) {
             msg: String?,
             e: RecognitionException?
         ) {
-            println(msg)
+            SyntaxErrorMessageBuilder()
+                .provideStart(line, charPositionInLine, getErrorLine(line))
+                .appendCustomErrorMessage(msg!!)
+                .buildAndPrint()
             exitProcess(ExitCode.SYNTAX_ERROR)
         }
+
+        fun getErrorLine(line: Int): String = input.toString().split("\n")[line - 1]
     })
 
     val tree = parser.program()
