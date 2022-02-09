@@ -5,9 +5,16 @@ package utils
  * semantic nature but syntax error message body and vice versa
  */
 abstract class ErrorMessageBuilder {
+
+    companion object {
+        const val SPECIFIC_MESSAGE_RESTRICTION
+            = "Only a single specific error message can be added. Use appendCustomErrorMessage() method instead"
+    }
+
     protected abstract val prefix: String
     private var body: String = ""
     private lateinit var start: PositionedError
+    private var theSpecificMessageIsAppended = false
 
     private fun prependNewLineIfNeeded() {
         if (body.isNotEmpty() && body.last() != '\n') {
@@ -44,5 +51,16 @@ abstract class ErrorMessageBuilder {
         prependNewLineIfNeeded()
         body += msg
         return this
+    }
+
+    /**
+     * Apart from adding the specific message also restricts only a single call of such function
+     */
+    open fun appendSpecificErrorMessage(msg: String): ErrorMessageBuilder {
+        if (theSpecificMessageIsAppended) {
+            throw IllegalStateException(SPECIFIC_MESSAGE_RESTRICTION)
+        }
+        theSpecificMessageIsAppended = true
+        return appendCustomErrorMessage(msg)
     }
 }
