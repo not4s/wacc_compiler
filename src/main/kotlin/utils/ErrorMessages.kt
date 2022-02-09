@@ -8,7 +8,6 @@ data class PositionedError(
     private val columnNumber: Int,
     private val lineText: String,
 ) {
-
     /**
      * Special constructor which allows creating PositionError from ParserRuleContext
      * @param parserCtx is a ParserRuleContext which has start Attribute,

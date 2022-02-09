@@ -5,8 +5,7 @@ import antlr.WACCParserBaseVisitor
 import ast.*
 import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
-import utils.ExitCode
-import utils.SemanticException
+import utils.*
 import waccType.*
 import kotlin.system.exitProcess
 
@@ -18,6 +17,10 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         for (f in ctx.func()) {
             val id = f.IDENTIFIER().text
             if (id in st.dict) {
+                SemanticErrorMessageBuilder()
+                    .provideStart(PositionedError(f))
+                    .functionRedefineError()
+                    .buildAndDisplay()
                 throw SemanticException("Cannot redefine function $id")
             }
             st.dict[id] = WACCFunction(st, id, mapOf(), SkipStat(st), WUnknown())
@@ -128,7 +131,10 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         try {
             Integer.parseInt(ctx.text)
         } catch (e: java.lang.NumberFormatException) {
-            println("Attempted to parse a very big int!")
+            SyntaxErrorMessageBuilder()
+                .provideStart(PositionedError(ctx))
+                .appendCustomErrorMessage("Attempted to parse a very big int ${ctx.text}!")
+                .buildAndDisplay()
             exitProcess(ExitCode.SYNTAX_ERROR)
         }
         return Literal(st, WInt())
