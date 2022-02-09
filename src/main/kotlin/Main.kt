@@ -33,6 +33,7 @@ fun main(args: Array<String>) {
 
     val parser = WACCParser(tokens)
 
+    // setting the only listeners to our custom listener
     parser.removeErrorListeners()
     parser.addErrorListener(object : BaseErrorListener() {
         override fun syntaxError(
@@ -48,8 +49,6 @@ fun main(args: Array<String>) {
         }
     })
 
-    parser.errorHandler = TerminateOnErrorStrategy()
-
     val tree = parser.program()
     try {
         val res = ASTVisitor(ParentRefSymbolTable()).visit(tree)
@@ -61,11 +60,4 @@ fun main(args: Array<String>) {
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
 
-}
-
-class TerminateOnErrorStrategy : DefaultErrorStrategy() {
-    override fun reportError(recognizer: Parser?, e: RecognitionException?) {
-        println(e)
-        exitProcess(ExitCode.SYNTAX_ERROR)
-    }
 }
