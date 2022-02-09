@@ -55,4 +55,18 @@ class SemanticErrorMessageBuilderTest {
             assertEquals(ErrorMessageBuilder.SET_START_ONCE_RESTRICTION, e.message)
         }
     }
+
+    @Test
+    fun requiresInitialisingStart() {
+        try {
+            SemanticErrorMessageBuilder()
+                .ifStatConditionHasNonBooleanType()
+                .appendCustomErrorMessage("Some message")
+                .appendCustomErrorMessage("foo")
+                .build()
+            fail("Somehow managed to build ErrorMessage without start")
+        } catch (e: IllegalStateException) {
+            assertEquals(ErrorMessageBuilder.UNINITIALIZED_START, e.message)
+        }
+    }
 }

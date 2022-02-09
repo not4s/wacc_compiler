@@ -25,7 +25,7 @@ abstract class ErrorMessageBuilder {
     }
 
     fun build(): ErrorMessage {
-        val startParam = start ?: throw IllegalStateException()
+        val startParam = start ?: throw IllegalStateException(UNINITIALIZED_START)
         return ErrorMessage(prefix, startParam, body)
     }
 
