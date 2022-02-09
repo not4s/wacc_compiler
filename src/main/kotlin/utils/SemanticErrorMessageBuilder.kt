@@ -44,7 +44,7 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     fun freeNonPair(actualType: WAny): SemanticErrorMessageBuilder {
         freeNonPair()
-        return appendSpecificErrorMessage("The actual type is $actualType")
+        return appendCustomErrorMessage("The actual type is $actualType")
     }
 
     fun readTypeIsIncorrect(actualType: WAny): SemanticErrorMessageBuilder {
@@ -54,7 +54,7 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     fun whileStatConditionHasNonBooleanType(actualType: WAny): SemanticErrorMessageBuilder {
         whileStatConditionHasNonBooleanType()
-        return appendSpecificErrorMessage("Got $actualType instead")
+        return appendCustomErrorMessage("Got $actualType instead")
     }
 
     fun whileStatConditionHasNonBooleanType(): SemanticErrorMessageBuilder {
@@ -64,7 +64,7 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     fun ifStatConditionHasNonBooleanType(actualType: WAny): SemanticErrorMessageBuilder {
         ifStatConditionHasNonBooleanType()
-        return appendSpecificErrorMessage(" Got $actualType instead")
+        return appendCustomErrorMessage(" Got $actualType instead")
     }
 
     fun ifStatConditionHasNonBooleanType(): SemanticErrorMessageBuilder {
@@ -92,7 +92,7 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     fun functionArgumentCountMismatch(expectedArgumentsCount: Int): SemanticErrorMessageBuilder {
         functionArgumentCountMismatch()
-        return appendSpecificErrorMessage("There shall be $expectedArgumentsCount arguments")
+        return appendCustomErrorMessage("There shall be $expectedArgumentsCount arguments")
     }
 
     fun functionArgumentCountMismatch(): SemanticErrorMessageBuilder {

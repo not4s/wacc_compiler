@@ -1,6 +1,8 @@
 package utils
 
 import org.junit.Test
+import waccType.WAny
+import waccType.WInt
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
@@ -67,6 +69,50 @@ class SemanticErrorMessageBuilderTest {
             fail("Somehow managed to build ErrorMessage without start")
         } catch (e: IllegalStateException) {
             assertEquals(ErrorMessageBuilder.UNINITIALIZED_START, e.message)
+        }
+    }
+
+    @Test
+    fun usingDifferentOverloadedFunctionsDoesNotResultIntoConflict() {
+        try {
+            // Calling specific error message without arguments
+            SemanticErrorMessageBuilder()
+                .provideStart(positionedError)
+                .freeNonPair(WInt())
+                .build()
+            SemanticErrorMessageBuilder()
+                .provideStart(positionedError)
+                .whileStatConditionHasNonBooleanType()
+                .build()
+            SemanticErrorMessageBuilder()
+                .provideStart(positionedError)
+                .ifStatConditionHasNonBooleanType()
+                .build()
+            SemanticErrorMessageBuilder()
+                .provideStart(positionedError)
+                .functionArgumentCountMismatch()
+                .build()
+
+            // Calling specific error message witharguments
+            SemanticErrorMessageBuilder()
+                .provideStart(positionedError)
+                .freeNonPair(WInt())
+                .build()
+            SemanticErrorMessageBuilder()
+                .provideStart(positionedError)
+                .whileStatConditionHasNonBooleanType(WInt())
+                .build()
+            SemanticErrorMessageBuilder()
+                .provideStart(positionedError)
+                .ifStatConditionHasNonBooleanType(WInt())
+                .build()
+            SemanticErrorMessageBuilder()
+                .provideStart(positionedError)
+                .functionArgumentCountMismatch(5)
+                .build()
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+            fail("Should not result into an error")
         }
     }
 }
