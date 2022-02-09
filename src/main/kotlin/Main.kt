@@ -62,7 +62,6 @@ fun main(args: Array<String>) {
     } catch (e: SemanticException) {
         println("-----------SEMANTIC ERROR-----------")
         println(e.message)
-//        e.printStackTrace(System.out)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
 
