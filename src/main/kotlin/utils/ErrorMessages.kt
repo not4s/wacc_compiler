@@ -1,10 +1,22 @@
 package utils
 
+import antlr.WACCParser
+import org.antlr.v4.runtime.ParserRuleContext
+
 data class PositionedError(
     private val lineNumber: Int,
     private val columnNumber: Int,
     private val lineText: String,
 ) {
+
+    /**
+     * Special constructor which allows creating PositionError from ParserRuleContext
+     * @param parserCtx is a ParserRuleContext which has start Attribute,
+     * which has everything needed for a PositionedError
+     */
+    constructor(parserCtx: ParserRuleContext)
+            : this(parserCtx.start.line, parserCtx.start.charPositionInLine, parserCtx.start.text)
+
     override fun toString(): String {
         val linePrefix = "$lineNumber | "
         val arrowLength = 3
