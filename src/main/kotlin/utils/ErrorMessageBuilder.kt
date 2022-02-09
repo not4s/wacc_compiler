@@ -7,15 +7,15 @@ package utils
 abstract class ErrorMessageBuilder {
 
     companion object {
-        const val SET_START_ONCE_RESTRICTION: String
-            = "Start property must be set and only once."
+        const val UNINITIALIZED_START: String = "The 'start' property is not initialised"
+        const val SET_START_ONCE_RESTRICTION: String = "The 'start' property must be set only once."
         const val SPECIFIC_MESSAGE_RESTRICTION : String
             = "Only a single specific error message can be added. Use appendCustomErrorMessage() method instead."
     }
 
     protected abstract val prefix: String
     private var body: String = ""
-    private lateinit var start: PositionedError
+    private var start: PositionedError? = null
     private var theSpecificMessageIsAppended = false
 
     private fun prependNewLineIfNeeded() {
@@ -25,7 +25,8 @@ abstract class ErrorMessageBuilder {
     }
 
     fun build(): ErrorMessage {
-        return ErrorMessage(prefix, start, body)
+        val startParam = start ?: throw IllegalStateException()
+        return ErrorMessage(prefix, startParam, body)
     }
 
     fun buildAndDisplay(): ErrorMessage {
@@ -35,12 +36,14 @@ abstract class ErrorMessageBuilder {
     }
 
     open fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): ErrorMessageBuilder {
-        this.start = PositionedError(lineNumber, columnNumber, lineText)
-        return this
+        return provideStart(PositionedError(lineNumber, columnNumber, lineText))
     }
 
-    open fun provideStart(start: PositionedError): ErrorMessageBuilder {
-        this.start = start
+    open fun provideStart(startProvided: PositionedError): ErrorMessageBuilder {
+        if (this.start != null) {
+            throw IllegalStateException(SET_START_ONCE_RESTRICTION)
+        }
+        this.start = startProvided
         return this
     }
 
