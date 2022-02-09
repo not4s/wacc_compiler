@@ -1,10 +1,21 @@
 package utils
 
+import org.antlr.v4.runtime.ParserRuleContext
+
 data class PositionedError(
     private val lineNumber: Int,
     private val columnNumber: Int,
-    private val lineText: String,
+    private var lineText: String = "",
 ) {
+
+    /**
+     * Special constructor which allows creating PositionError from ParserRuleContext
+     * @param parserCtx is a ParserRuleContext which has start Attribute,
+     * which has everything needed for a PositionedError
+     */
+    constructor(parserCtx: ParserRuleContext)
+            : this(parserCtx.start.line, parserCtx.start.charPositionInLine, parserCtx.start.text)
+
     override fun toString(): String {
         val linePrefix = "$lineNumber | "
         val arrowLength = 3
@@ -12,6 +23,14 @@ data class PositionedError(
         val pointingArrow = "$arrowAlignment|\n".repeat(arrowLength - 1) + arrowAlignment + "V\n"
         return "Error at line $lineNumber, position $columnNumber as follows:\n"+
                 pointingArrow + "$linePrefix$lineText\n"
+    }
+
+    fun setLineText(line: String) {
+        lineText = line
+    }
+
+    fun getLineText(): String {
+        return lineText
     }
 }
 
@@ -21,15 +40,18 @@ data class ErrorMessage(
     private val body: String,
 ) {
     override fun toString(): String {
-        return errorHeader(prefix) + "\n\n" +
-                start + "\n\n" +
-                body + "\n\n"
+        val display = if (start.getLineText().isEmpty()) "" else "$start\n\n"
+        return errorHeader(prefix) + "\n\n" + display + body + "\n\n"
     }
 
     companion object {
         fun errorHeader(prefix: String): String {
             return "----------< $prefix! >----------"
         }
+    }
+
+    fun setLineText(line: String) {
+        start.setLineText(line)
     }
 }
 
