@@ -6,8 +6,14 @@ package utils
  */
 abstract class ErrorMessageBuilder {
     protected abstract val prefix: String
-    protected var body: String = ""
-    protected lateinit var start: PositionedError
+    private var body: String = ""
+    private lateinit var start: PositionedError
+
+    private fun prependNewLineIfNeeded() {
+        if (body.isNotEmpty() && body.last() != '\n') {
+            body += "\n"
+        }
+    }
 
     fun build(): ErrorMessage {
         return ErrorMessage(prefix, start, body)
@@ -29,7 +35,13 @@ abstract class ErrorMessageBuilder {
         return this
     }
 
+    /**
+     * Wrapper around the public error messages. Before appending the message
+     * the new line prepended if the previous line does not end with new line character.
+     * @param msg is the string which is appended to a body and newLine if needed
+     */
     open fun appendCustomErrorMessage(msg: String): ErrorMessageBuilder {
+        prependNewLineIfNeeded()
         body += msg
         return this
     }

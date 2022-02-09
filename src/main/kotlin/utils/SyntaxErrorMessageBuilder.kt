@@ -17,7 +17,6 @@ class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
     }
 
     fun generalSyntaxErrorMessage(): SyntaxErrorMessageBuilder {
-        body += "Cannot parse the given code"
-        return this
+        return appendCustomErrorMessage("Cannot parse the given code!")
     }
 }
