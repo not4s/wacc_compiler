@@ -18,11 +18,14 @@ data class PositionedError(
 
     override fun toString(): String {
         val linePrefix = "$lineNumber | "
-        val arrowLength = 3
         val arrowAlignment = " ".repeat(linePrefix.length + columnNumber)
-        val pointingArrow = "$arrowAlignment|\n".repeat(arrowLength - 1) + arrowAlignment + "V\n"
-        return "Error at line $lineNumber, position $columnNumber as follows:\n"+
-                pointingArrow + "$linePrefix$lineText\n"
+        val pointingArrow = "$arrowAlignment^\n"
+        return "Error at [${getCoordinates()}]:\n"+
+                "$linePrefix$lineText\n" + pointingArrow
+    }
+
+    fun getCoordinates() : String {
+        return "$lineNumber: $columnNumber"
     }
 
     fun setLineText(line: String) {
@@ -36,12 +39,13 @@ data class PositionedError(
 
 data class ErrorMessage(
     private val prefix: String,
-    private val start: PositionedError,
+    private val errorCoordinates: PositionedError,
     private val body: String,
 ) {
     override fun toString(): String {
-        val display = if (start.getLineText().isEmpty()) "" else "$start\n\n"
-        return errorHeader(prefix) + "\n\n" + display + body + "\n\n"
+        val display: String? = if (errorCoordinates.getLineText().isEmpty()) null else "$errorCoordinates"
+        display?.let { return "${errorHeader(prefix)}\n\n$body\n$display\n\n" }
+        return "${errorHeader(prefix)}\n\n$body\nat ${errorCoordinates.getCoordinates()}\n\n"
     }
 
     companion object {
@@ -51,7 +55,7 @@ data class ErrorMessage(
     }
 
     fun setLineText(line: String) {
-        start.setLineText(line)
+        errorCoordinates.setLineText(line)
     }
 }
 

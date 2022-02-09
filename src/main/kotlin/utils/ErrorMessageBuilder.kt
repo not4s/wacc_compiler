@@ -29,7 +29,7 @@ abstract class ErrorMessageBuilder {
         return ErrorMessage(prefix, startParam, body)
     }
 
-    fun buildAndDisplay(): ErrorMessage {
+    fun buildAndPrint(): ErrorMessage {
         val errorMessage = build()
         println(errorMessage.toString())
         return errorMessage
@@ -39,8 +39,9 @@ abstract class ErrorMessageBuilder {
      * The following function or its other overloaded version must be
      * called once during building process
      */
-    open fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String = ""): ErrorMessageBuilder {
-        return provideStart(PositionedError(lineNumber, columnNumber, lineText))
+    open fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String?): ErrorMessageBuilder {
+        lineText?.let { return provideStart(PositionedError(lineNumber, columnNumber, lineText)) }
+        return provideStart(PositionedError(lineNumber, columnNumber, ""))
     }
 
     open fun provideStart(startProvided: PositionedError): ErrorMessageBuilder {
