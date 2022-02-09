@@ -49,6 +49,10 @@ data class ErrorMessage(
             return "----------< $prefix! >----------"
         }
     }
+
+    fun setLineText(line: String) {
+        start.setLineText(line)
+    }
 }
 
 class SemanticException(private val reason: String) : Exception() {
