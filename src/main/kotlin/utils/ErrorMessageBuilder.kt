@@ -7,7 +7,7 @@ package utils
 abstract class ErrorMessageBuilder {
 
     companion object {
-        const val UNINITIALIZED_START: String = "The 'start' property is not initialised"
+        const val UNINITIALIZED_START: String = "The 'start' property is not initialised. Use provideStart()"
         const val SET_START_ONCE_RESTRICTION: String = "The 'start' property must be set only once."
         const val SPECIFIC_MESSAGE_RESTRICTION : String
             = "Only a single specific error message can be added. Use appendCustomErrorMessage() method instead."
@@ -35,6 +35,10 @@ abstract class ErrorMessageBuilder {
         return errorMessage
     }
 
+    /**
+     * The following function or its other overloaded version must be
+     * called once during building process
+     */
     open fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): ErrorMessageBuilder {
         return provideStart(PositionedError(lineNumber, columnNumber, lineText))
     }
@@ -59,7 +63,8 @@ abstract class ErrorMessageBuilder {
     }
 
     /**
-     * Apart from adding the specific message also restricts only a single call of such function
+     * Apart from adding the specific message also restricts only a single
+     * call of such method will be done during building process
      */
     open fun appendSpecificErrorMessage(msg: String): ErrorMessageBuilder {
         if (theSpecificMessageIsAppended) {
