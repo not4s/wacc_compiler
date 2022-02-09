@@ -10,8 +10,8 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return super.provideStart(lineNumber, columnNumber, lineText) as SemanticErrorMessageBuilder
     }
 
-    override fun provideStart(start: PositionedError): SemanticErrorMessageBuilder {
-        return super.provideStart(start) as SemanticErrorMessageBuilder
+    override fun provideStart(startProvided: PositionedError): SemanticErrorMessageBuilder {
+        return super.provideStart(startProvided) as SemanticErrorMessageBuilder
     }
 
     override fun appendCustomErrorMessage(msg: String): SemanticErrorMessageBuilder {

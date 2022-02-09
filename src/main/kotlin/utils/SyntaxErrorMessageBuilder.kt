@@ -8,8 +8,8 @@ class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
         return super.provideStart(lineNumber, columnNumber, lineText) as SyntaxErrorMessageBuilder
     }
 
-    override fun provideStart(start: PositionedError): SyntaxErrorMessageBuilder {
-        return super.provideStart(start) as SyntaxErrorMessageBuilder
+    override fun provideStart(startProvided: PositionedError): SyntaxErrorMessageBuilder {
+        return super.provideStart(startProvided) as SyntaxErrorMessageBuilder
     }
 
     override fun appendCustomErrorMessage(msg: String): SyntaxErrorMessageBuilder {
