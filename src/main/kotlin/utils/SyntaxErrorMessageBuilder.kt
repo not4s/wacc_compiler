@@ -4,7 +4,7 @@ class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
 
     override val prefix = "SYNTAX ERROR"
 
-    override fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String?): SyntaxErrorMessageBuilder {
+    override fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): SyntaxErrorMessageBuilder {
         return super.provideStart(lineNumber, columnNumber, lineText) as SyntaxErrorMessageBuilder
     }
 

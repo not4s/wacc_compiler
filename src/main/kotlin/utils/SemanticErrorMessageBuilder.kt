@@ -6,7 +6,7 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     override val prefix = "SEMANTIC ERROR"
 
-    override fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String?): SemanticErrorMessageBuilder {
+    override fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): SemanticErrorMessageBuilder {
         return super.provideStart(lineNumber, columnNumber, lineText) as SemanticErrorMessageBuilder
     }
 
