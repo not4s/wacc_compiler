@@ -4,7 +4,6 @@ import org.junit.Test
 import utils.SemanticException
 import waccType.*
 import kotlin.test.fail
-import kotlin.test.assertFails
 
 class ParentRefSymbolTableTest {
     @Test

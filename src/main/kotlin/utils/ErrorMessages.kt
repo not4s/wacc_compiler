@@ -1,26 +1,36 @@
 package utils
 
-import waccType.WAny
-import org.antlr.v4.runtime.ParserRuleContext
-import kotlin.system.exitProcess
-
-fun raiseTypeErrorAndExit(ctx: ParserRuleContext?, expectedType: WAny?, actualType: WAny?) {
-    ctx?.run {
-        println("Line ${ctx.start.line}: Invalid operand expression type\n" +
-                "Expected: $expectedType, got: $actualType\"")
-        exitProcess(ExitCode.SEMANTIC_ERROR)
+data class PositionedError(
+    private val lineNumber: Int,
+    private val columnNumber: Int,
+    private val lineText: String,
+) {
+    override fun toString(): String {
+        val linePrefix = "$lineNumber | "
+        val arrowLength = 3
+        val arrowAlignment = " ".repeat(linePrefix.length + columnNumber)
+        val pointingArrow = "$arrowAlignment|\n".repeat(arrowLength - 1) + arrowAlignment + "V\n"
+        return "Error at line $lineNumber, position $columnNumber as follows:\n"+
+                pointingArrow + "$linePrefix$lineText\n"
     }
-    raiseNullContextError()
 }
 
-fun raiseNullContextError() {
-    println("Null Context Error")
-    exitProcess(ExitCode.UNKNOWN_ERROR)
-}
+data class ErrorMessage(
+    private val prefix: String,
+    private val start: PositionedError,
+    private val body: String,
+) {
+    override fun toString(): String {
+        return errorHeader(prefix) + "\n\n" +
+                start + "\n\n" +
+                body + "\n\n"
+    }
 
-fun raiseSemanticErrorAndExit() {
-    println("Semantic error!")
-    exitProcess(ExitCode.SEMANTIC_ERROR)
+    companion object {
+        fun errorHeader(prefix: String): String {
+            return "----------< $prefix! >----------"
+        }
+    }
 }
 
 class SemanticException(private val reason: String) : Exception() {
