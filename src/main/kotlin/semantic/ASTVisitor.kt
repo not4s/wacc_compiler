@@ -17,6 +17,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         for (f in ctx.func()) {
             val id = f.IDENTIFIER().text
             if (id in st.dict) {
+                // TODO: REPLACE buildAndDisplay() WITH BUILDING AND ADDING TO ERROR COLLECTION
                 SemanticErrorMessageBuilder()
                     .provideStart(PositionedError(f))
                     .functionRedefineError()
@@ -131,6 +132,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         try {
             Integer.parseInt(ctx.text)
         } catch (e: java.lang.NumberFormatException) {
+            // TODO: REPLACE buildAndDisplay() WITH BUILDING AND ADDING TO ERROR COLLECTION
             SyntaxErrorMessageBuilder()
                 .provideStart(PositionedError(ctx))
                 .appendCustomErrorMessage("Attempted to parse a very big int ${ctx.text}!")
