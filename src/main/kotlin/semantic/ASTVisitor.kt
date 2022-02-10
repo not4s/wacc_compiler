@@ -3,40 +3,42 @@ package semantic
 import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import ast.*
-import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
 import utils.*
 import waccType.*
 import kotlin.system.exitProcess
 
-class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
+class ASTVisitor(
+    private val st: SymbolTable
+) : WACCParserBaseVisitor<AST>() {
 
     override fun visitProgram(ctx: WACCParser.ProgramContext): Stat {
-        st as ParentRefSymbolTable
         // This adds functions to st
         for (f in ctx.func()) {
             val id = f.IDENTIFIER().text
-            if (id in st.dict) {
-                // TODO: REPLACE buildAndPrint() WITH BUILDING AND ADDING TO ERROR COLLECTION
+            if (id in st.getMap()) {
                 SemanticErrorMessageBuilder()
                     .provideStart(PositionedError(f))
                     .functionRedefineError()
                     .buildAndPrint()
                 throw SemanticException("Cannot redefine function $id")
             }
-            st.dict[id] = WACCFunction(st, id, mapOf(), SkipStat(st), WUnknown())
+            st.declare(
+                symbol = id,
+                value = WACCFunction(st, id, mapOf(), SkipStat(st), WUnknown())
+            )
         }
         ctx.func()
             .map { this.visit(it) as WACCFunction }
-            .forEach { st.dict[it.identifier] = it }
+            .forEach { st.declare(it.identifier, it) }
 
         // Explicitly call checks after defining all functions
-        st.dict.forEach { (_, f) -> (f as WACCFunction).check() }
-        // Create a subscope, functions are now stored in parent table.
+        st.getMap().forEach { (_, f) -> (f as WACCFunction).check() }
+        // Create a child scope, functions are now stored in parent table.
         // This scope is still 'global'
-        val subscope = st.createChildScope()
-        subscope.isGlobal = true
-        return ASTVisitor(subscope).visit(ctx.stat()) as Stat
+        val childScope = st.createChildScope()
+        childScope.isGlobal = true
+        return ASTVisitor(childScope).visit(ctx.stat()) as Stat
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {
@@ -75,8 +77,8 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
-        val elems: Array<WAny> = ctx.expr().map { e -> (this.visit(e) as Expr).type }.toTypedArray()
-        return ArrayLiteral(st, elems)
+        val elements: Array<WAny> = ctx.expr().map { e -> (this.visit(e) as Expr).type }.toTypedArray()
+        return ArrayLiteral(st, elements)
     }
 
     override fun visitPairLiter(ctx: WACCParser.PairLiterContext): PairLiteral {
@@ -132,7 +134,6 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         try {
             Integer.parseInt(ctx.text)
         } catch (e: java.lang.NumberFormatException) {
-            // TODO: REPLACE buildAndPrint() WITH BUILDING AND ADDING TO ERROR COLLECTION
             SyntaxErrorMessageBuilder()
                 .provideStart(PositionedError(ctx))
                 .appendCustomErrorMessage("Attempted to parse a very big int ${ctx.text}!")

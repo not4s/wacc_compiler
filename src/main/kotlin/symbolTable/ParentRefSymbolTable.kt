@@ -7,7 +7,7 @@ class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlo
     SymbolTable(isGlobal) {
     constructor() : this(null, true)
 
-    val dict = mutableMapOf<String, WAny>()
+    private val dict = mutableMapOf<String, WAny>()
 
     override fun get(symbol: String): WAny {
         // Flashbacks to Haskell's >>=
@@ -41,6 +41,10 @@ class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlo
                 return parentTable.get(arrSym, indices)
             }
         }
+    }
+
+    override fun getMap(): Map<String, WAny> {
+        return dict
     }
 
     override fun declare(symbol: String, value: WAny) {
