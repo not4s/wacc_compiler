@@ -76,7 +76,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
         val elems: Array<WAny> = ctx.expr().map { e -> (this.visit(e) as Expr).type }.toTypedArray()
-        return ArrayLiteral(st, elems, WArray(WUnknown()))
+        return ArrayLiteral(st, elems)
     }
 
     override fun visitPairLiter(ctx: WACCParser.PairLiterContext): PairLiteral {

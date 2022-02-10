@@ -6,6 +6,10 @@ import symbolTable.ParentRefSymbolTable
 import utils.ExitCode
 import utils.SemanticException
 import utils.SyntaxErrorMessageBuilder
+import waccType.WArray
+import waccType.WInt
+import waccType.WStr
+import waccType.typesAreEqual
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -13,7 +17,7 @@ fun main(args: Array<String>) {
 
     println("You have passed in: ${args.joinToString()}")
     val file =
-        File(args.getOrNull(0) ?: "wacc_test/sample_programs/valid/pairs/writeFst.wacc")
+        File(args.getOrNull(0) ?: "wacc_test/sample_programs/invalid/semanticErr/array/arrayTypeClash.wacc")
     println("Opening file: $file\n")
 
     val input = CharStreams.fromFileName(file.absolutePath)
