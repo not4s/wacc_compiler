@@ -253,58 +253,30 @@ class BinaryOperation(
         check()
     }
 
+    /**
+     * Check that operands have the same type
+     * Then checks that binary operation can be applied to operands of such types
+     * @throws SemanticException whenever any of those checks fails
+     */
     override fun check() {
-        when (op) {
-            MUL, DIV, MOD, ADD, BinOperator.SUB -> {
-                if (!typesAreEqual(left.type, right.type)) {
-                    semanticErrorMessage
-                        .operandTypeMismatch(left.type, right.type)
-                        .buildAndPrint()
-                    throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
-                }
-                if (!typesAreEqual(left.type, WInt())) {
-                    semanticErrorMessage
-                        .binOpInvalidType(left.type)
-                        .buildAndPrint()
-                    throw SemanticException("Attempted to call binary operation $op on non-int types: ${left.type} ")
-                }
+        if (!typesAreEqual(left.type, right.type)) {
+            semanticErrorMessage
+                .operandTypeMismatch(left.type, right.type)
+                .buildAndPrint()
+            throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
+        }
+        val operationTypeNotValid: Boolean
+            = when (op) {
+                MUL, DIV, MOD, ADD, BinOperator.SUB -> !typesAreEqual(left.type, WInt())
+                GT, GEQ, LT, LEQ -> !typesAreEqual(left.type, WInt()) && !typesAreEqual(left.type, WChar())
+                EQ, NEQ -> false
+                AND, OR -> !typesAreEqual(left.type, WBool())
             }
-            GT, GEQ, LT, LEQ -> {
-                if (!typesAreEqual(left.type, right.type)) {
-                    semanticErrorMessage
-                        .operandTypeMismatch(left.type, right.type)
-                        .buildAndPrint()
-                    throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
-                }
-                if (!typesAreEqual(left.type, WInt()) && !typesAreEqual(left.type, WChar())) {
-                    semanticErrorMessage
-                        .binOpInvalidType(left.type)
-                        .buildAndPrint()
-                    throw SemanticException("Attempted to call binary operation $op on weird (non-int, non-char) types: ${left.type} ")
-                }
-            }
-            EQ, NEQ -> {
-                if (!typesAreEqual(left.type, right.type)) {
-                    semanticErrorMessage
-                        .operandTypeMismatch(left.type, right.type)
-                        .buildAndPrint()
-                    throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
-                }
-            }
-            AND, OR -> {
-                if (!typesAreEqual(left.type, right.type)) {
-                    semanticErrorMessage
-                        .operandTypeMismatch(left.type, right.type)
-                        .buildAndPrint()
-                    throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
-                }
-                if (!typesAreEqual(left.type, WBool())) {
-                    semanticErrorMessage
-                        .binOpInvalidType(left.type)
-                        .buildAndPrint()
-                    throw SemanticException("Attempted to call binary operation $op on non-bool types: ${left.type} ")
-                }
-            }
+        if (operationTypeNotValid) {
+            semanticErrorMessage
+                .binOpInvalidType(left.type)
+                .buildAndPrint()
+            throw SemanticException("Attempted to call binary operation $op on operands of invalid type: ${left.type} ")
         }
     }
 
