@@ -1,15 +1,13 @@
 package ast
 
-import antlr.WACCParser
-import antlr.WACCParserBaseVisitor
-import org.antlr.v4.runtime.ParserRuleContext
 import ast.BinOperator.*
 import ast.UnOperator.*
+import org.antlr.v4.runtime.ParserRuleContext
 import symbolTable.SymbolTable
 import utils.ExitCode
-import utils.SemanticException
-import utils.SemanticErrorMessageBuilder
 import utils.PositionedError
+import utils.SemanticErrorMessageBuilder
+import utils.SemanticException
 import waccType.*
 import kotlin.system.exitProcess
 
@@ -85,8 +83,8 @@ class WACCFunction(
  **/
 class FunctionCall(
     override val st: SymbolTable,
-    val ident: String,
-    val params: Array<Expr>,
+    val identifier: String,
+    private val params: Array<Expr>,
     parserCtx: ParserRuleContext,
 ) : RHS {
 
@@ -99,24 +97,24 @@ class FunctionCall(
 
     override fun check() {
         // Check params against st
-        val func = st.get(ident) as WACCFunction
+        val func = st.get(identifier) as WACCFunction
 
         // If function is not yet defined, just return
         if (func.body is SkipStat && func.params.isEmpty() && func.type is WUnknown) {
             return
         }
         if (func.params.size != params.size) {
-            throw SemanticException("Argument count does not match up with expected count for function $ident")
+            throw SemanticException("Argument count does not match up with expected count for function $identifier")
         }
         func.params.onEachIndexed { i, (_, v) ->
             if (!typesAreEqual(v, params[i].type)) {
-                throw SemanticException("Mismatching types for function $ident call: expected $v, got ${params[i].type}")
+                throw SemanticException("Mismatching types for function $identifier call: expected $v, got ${params[i].type}")
             }
         }
     }
 
     override fun toString(): String {
-        return "Calling $ident with parameters...:\n${
+        return "Calling $identifier with parameters...:\n${
             params.mapIndexed { i, e ->
                 "Parameter $i:\n${
                     e.toString().prependIndent(INDENT)
@@ -126,7 +124,7 @@ class FunctionCall(
     }
 
     override val type: WAny
-        get() = (st.get(ident) as WACCFunction).type
+        get() = (st.get(identifier) as WACCFunction).type
 }
 
 /**
@@ -236,7 +234,7 @@ class BinaryOperation(
     parserCtx: ParserRuleContext,
 ) : Expr {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -324,7 +322,7 @@ class UnaryOperation(
     parserCtx: ParserRuleContext,
 ) : Expr {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     override fun check() {
@@ -377,32 +375,31 @@ class UnaryOperation(
 class Declaration(
     override val st: SymbolTable,
     val decType: WAny,
-    val ident: String,
+    val identifier: String,
     val rhs: RHS,
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
         check()
-        st.declare(ident, decType)
+        st.declare(identifier, decType)
     }
 
     override fun check() {
-
         if (!typesAreEqual(decType, rhs.type)) {
             semanticErrorMessage
                 .operandTypeMismatch(decType, rhs.type)
                 .buildAndPrint()
-            throw SemanticException("Attempted to declare variable $decType $ident to ${rhs.type}")
+            throw SemanticException("Attempted to declare variable $decType $identifier to ${rhs.type}")
         }
     }
 
     override fun toString(): String {
         return "Declaration:\n" +
-                "  (scope:$st)\n${("of: $ident").prependIndent(INDENT)}\n${
+                "  (scope:$st)\n${("of: $identifier").prependIndent(INDENT)}\n${
             ("to: $rhs").toString().prependIndent(INDENT)
         }"
     }
@@ -418,7 +415,7 @@ class Assignment(
     parserCtx: ParserRuleContext
 ) : Stat {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -434,7 +431,7 @@ class Assignment(
             throw SemanticException("Cannot assign ${rhs.type} to ${lhs.type}")
         }
         when (lhs) {
-            is IdentifierSet -> st.reassign(lhs.ident, rhs.type)
+            is IdentifierSet -> st.reassign(lhs.identifier, rhs.type)
             is ArrayElement -> {
                 val indices: Array<WInt> = lhs.indices.map { it.type as? WInt
                         ?: run {
@@ -444,17 +441,17 @@ class Assignment(
                             throw SemanticException("Non-int index in array ${it.type}")
                         }
                 }.toTypedArray()
-                st.reassign(lhs.ident, indices, rhs.type)
+                st.reassign(lhs.identifier, indices, rhs.type)
             }
             is PairElement -> {
-                // Make sure this is: fst <ident> = blah. Otherwise invalid.
+                // Make sure this is: fst <identifier> = blah. Otherwise invalid.
                 if (lhs.expr !is IdentifierGet) {
                     semanticErrorMessage
                         .pairElementInvalidType()
                         .buildAndPrint()
                     throw SemanticException("Cannot refer to ${lhs.type} with fst/snd")
                 }
-                st.reassign(lhs.expr.ident, lhs.first, rhs.type)
+                st.reassign(lhs.expr.identifier, lhs.first, rhs.type)
             }
         }
     }
@@ -471,20 +468,20 @@ class Assignment(
  **/
 class IdentifierSet(
     override val st: SymbolTable,
-    val ident: String,
+    val identifier: String,
 ) : LHS {
     override fun check() {
         // Always valid.
     }
 
     override fun toString(): String {
-        return "IdentifierSet:\n" + "  (scope:$st)\n${("ident: $ident").prependIndent(INDENT)}\n${
+        return "IdentifierSet:\n" + "  (scope:$st)\n${("ident: $identifier").prependIndent(INDENT)}\n${
             ("type: $type").prependIndent(INDENT)
         }"
     }
 
     override val type: WAny
-        get() = st.get(ident)
+        get() = st.get(identifier)
 }
 
 /**
@@ -492,11 +489,11 @@ class IdentifierSet(
 **/
 class IdentifierGet(
     override val st: SymbolTable,
-    val ident: String,
+    val identifier: String,
     parserCtx: ParserRuleContext
 ) : Expr {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -505,22 +502,22 @@ class IdentifierGet(
 
     override fun check() {
 
-        if (!typesAreEqual(st.get(ident), type)) {
+        if (!typesAreEqual(st.get(identifier), type)) {
             semanticErrorMessage
-                .operandTypeMismatch(st.get(ident), type)
+                .operandTypeMismatch(st.get(identifier), type)
                 .buildAndPrint()
-            throw SemanticException("Attempted to use variable of type ${st.get(ident)} as $type")
+            throw SemanticException("Attempted to use variable of type ${st.get(identifier)} as $type")
         }
     }
 
     override fun toString(): String {
-        return "IdentifierGet:\n" + "  (scope:$st)\n${("ident: $ident").prependIndent(INDENT)}\n${
+        return "IdentifierGet:\n" + "  (scope:$st)\n${("ident: $identifier").prependIndent(INDENT)}\n${
             ("type: $type").prependIndent(INDENT)
         }"
     }
 
     override val type: WAny
-        get() = st.get(ident)
+        get() = st.get(identifier)
 }
 
 /**
@@ -528,12 +525,12 @@ class IdentifierGet(
  **/
 class ArrayElement(
     override val st: SymbolTable,
-    val ident: String, // name of array
+    val identifier: String, // name of array
     val indices: Array<Expr>, // List of indices
     parserCtx: ParserRuleContext,
 ) : LHS, Expr {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -547,7 +544,7 @@ class ArrayElement(
     override fun toString(): String {
         // This string also summons Cthulhu
         return "ArrayElem:\n" + "  (scope:$st)\n${
-            ("array ident: $ident\nindex/ices:\n${
+            ("array identifier: $identifier\nindex/ices:\n${
                 (indices.map { e -> e.toString() }
                     .reduceOrNull { a, b -> "$a\n$b" } ?: "").prependIndent("  ")
             }").prependIndent(INDENT)
@@ -557,7 +554,7 @@ class ArrayElement(
     }
 
     override val type: WAny
-        get() = st.get(ident, indices.map { e ->
+        get() = st.get(identifier, indices.map { e ->
             e.type as? WInt
                 ?: run {
                     semanticErrorMessage
@@ -579,7 +576,7 @@ class IfThenStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -618,7 +615,7 @@ class WhileStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -655,7 +652,7 @@ class ReadStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -679,7 +676,12 @@ class ReadStat(
 /**
  * The AST Node for Print Statements
  **/
-class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val expr: Expr) : Stat {
+class PrintStat(
+    override val st: SymbolTable,
+    private val newlineAfter: Boolean,
+    val expr: Expr
+) : Stat {
+
     init {
         check()
     }
@@ -707,7 +709,7 @@ class PairElement(
     parserCtx: ParserRuleContext,
 ) : LHS, RHS {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -752,7 +754,7 @@ class FreeStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -780,11 +782,11 @@ class FreeStat(
  **/
 class ExitStat(
     override val st: SymbolTable,
-    val exp: Expr,
+    private val expression: Expr,
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -792,16 +794,16 @@ class ExitStat(
     }
 
     override fun check() {
-        if (exp.type !is WInt) {
+        if (expression.type !is WInt) {
             semanticErrorMessage
-                .nonIntExpressionExit(exp.type)
+                .nonIntExpressionExit(expression.type)
                 .buildAndPrint()
-            throw SemanticException("Cannot exit with non-int expression. Actual: ${exp.type}")
+            throw SemanticException("Cannot exit with non-int expression. Actual: ${expression.type}")
         }
     }
 
     override fun toString(): String {
-        return "Exit:\n" + "  (scope:$st)\n${exp.toString().prependIndent(INDENT)}"
+        return "Exit:\n" + "  (scope:$st)\n${expression.toString().prependIndent(INDENT)}"
     }
 }
 
@@ -823,11 +825,11 @@ class SkipStat(override val st: SymbolTable) : Stat {
  **/
 class ReturnStat(
     override val st: SymbolTable,
-    val exp: Expr,
+    val expression: Expr,
     parserCtx: ParserRuleContext,
 ) : Stat, Typed {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
+    private val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
@@ -835,7 +837,7 @@ class ReturnStat(
     }
 
     override val type: WAny
-        get() = exp.type
+        get() = expression.type
 
     override fun check() {
         // Check scope
@@ -848,7 +850,7 @@ class ReturnStat(
     }
 
     override fun toString(): String {
-        return "Return:\n" + "  (scope:$st)\n${exp.toString().prependIndent(INDENT)}"
+        return "Return:\n" + "  (scope:$st)\n${expression.toString().prependIndent(INDENT)}"
     }
 }
 
@@ -869,6 +871,7 @@ class JoinStat(
         return "$first\n$second"
     }
 }
+
 /**
  * Checks whether the given statement has a proper return statement by matching patterns recursively
  * @param stat : statement to be checked
@@ -891,7 +894,7 @@ fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
 }
 
 /**
- * Checks the return type of a statement by matching patterns recursively and
+ * Checks the return type of statement by matching patterns recursively and
  * throws a semantic exception if the type does not match the expected
  * @param stat : return type to be checked
  * @param expected : expected type to be matched
