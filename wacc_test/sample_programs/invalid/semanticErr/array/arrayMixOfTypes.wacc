@@ -9,5 +9,5 @@
 # Program:
 
 begin
-  int[] b = [2, [1, 2], 'b'];
+  int[] b = [2, 'b', "Hello World!"]
 end
