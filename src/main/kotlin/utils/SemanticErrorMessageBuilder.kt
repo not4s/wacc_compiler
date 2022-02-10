@@ -138,4 +138,25 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return appendSpecificErrorMessage(
             "The $actualType expression does not conform to the expected type $expectedType")
     }
+
+    fun binOpInvalidType(actualType: WAny): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "Cannot call this binary operation on $actualType")
+    }
+
+    fun unOpInvalidType(actualType: WAny): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "Cannot call this unary operation on $actualType")
+    }
+
+    fun arrayIndexInvalidType(): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "The indexes of the array have an non-int Type")
+    }
+
+    fun pairElementInvalidType(): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "The pair element has an invalid type"
+        )
+    }
 }
