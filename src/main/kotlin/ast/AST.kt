@@ -127,24 +127,30 @@ class Literal(
 class ArrayLiteral(
     override val st: SymbolTable,
     val values: Array<WAny>,
-    override val type: WArray,
 ) : Expr, RHS {
     init {
         check()
     }
-
     override fun check() {
-        if(values.isEmpty()) {
-            return
-        }
-        val firstElem = values[0]
-        for (elem : WAny in values) {
-            if(typesAreEqual(firstElem, elem)) {
-                // TODO: better error message
-                throw SemanticException("Types do not match type")
-            }
-        }
+        type
     }
+
+    override val type: WArray
+        get() =
+            if (values.isEmpty()) {
+                WArray(WUnknown())
+            } else {
+            val expType : WAny = values.first()
+                for (elem in values) {
+                    if (!typesAreEqual(elem, expType)) {
+                        throw SemanticException("Types in array are not equal: $elem, $expType")
+                    }
+                }
+                WArray(expType)
+            }
+
+
+
 
     override fun toString(): String {
         return "ArrayLiteral\n  (scope:$st)\n${
