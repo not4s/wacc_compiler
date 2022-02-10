@@ -30,10 +30,11 @@ class ASTVisitor(
         }
         ctx.func()
             .map { this.visit(it) as WACCFunction }
-            .forEach { st.declare(it.identifier, it) }
+            .forEach { st.reassign(it.identifier, it) }
 
         // Explicitly call checks after defining all functions
         st.getMap().forEach { (_, f) -> (f as WACCFunction).check() }
+
         // Create a child scope, functions are now stored in parent table.
         // This scope is still 'global'
         val childScope = st.createChildScope()

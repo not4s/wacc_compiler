@@ -54,15 +54,15 @@ enum class BinOperator {
 }
 
 /**
- *  Types of the different unary operations
+ * Types of the different unary operations
  **/
 enum class UnOperator {
     NOT, ORD, CHR, LEN, SUB;
 }
 
 /**
- *  The AST Node for Functions
- *  @property type : return type of the function
+ * The AST Node for Functions
+ * @property type : return type of the function
  **/
 class WACCFunction(
     override val st: SymbolTable,
@@ -852,7 +852,8 @@ fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
         is ReturnStat -> true
         is ExitStat -> true
         is JoinStat -> if (hasReturn(stat.first, true) && !hasReturn(stat.second, false) && inOuterFuncScope) {
-            println("Should not have return before another non-return statement."); exitProcess(ExitCode.SYNTAX_ERROR)
+            println("Should not have return before another non-return statement.")
+            exitProcess(ExitCode.SYNTAX_ERROR)
         } else {
             hasReturn(stat.second, true)
         }
