@@ -337,32 +337,17 @@ class UnaryOperation(
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     override fun check() {
-
-        when (op) {
-            NOT -> if (operand.type !is WBool) {
-                semanticErrorMessage
-                    .unOpInvalidType(operand.type)
-                    .buildAndPrint()
-                throw SemanticException("Attempted to call $op on non-bool type: ${operand.type}")
-            }
-            ORD -> if (operand.type !is WChar) {
-                semanticErrorMessage
-                    .unOpInvalidType(operand.type)
-                    .buildAndPrint()
-                throw SemanticException("Attempted to call $op on non-char type: ${operand.type}")
-            }
-            CHR, UnOperator.SUB -> if (operand.type !is WInt) {
-                semanticErrorMessage
-                    .unOpInvalidType(operand.type)
-                    .buildAndPrint()
-                throw SemanticException("Attempted to call $op on non-int type: ${operand.type}")
-            }
-            LEN -> if (operand.type !is WArray) {
-                semanticErrorMessage
-                    .unOpInvalidType(operand.type)
-                    .buildAndPrint()
-                throw SemanticException("Attempted to call $op on non-array type: ${operand.type}")
-            }
+        val typeIsIncorrect: Boolean = when(op) {
+            NOT -> operand.type !is WBool
+            ORD -> operand.type !is WChar
+            LEN -> operand.type !is WArray
+            CHR, UnOperator.SUB -> operand.type !is WInt
+        }
+        if (typeIsIncorrect) {
+            semanticErrorMessage
+                .unOpInvalidType(operand.type)
+                .buildAndPrint()
+            throw SemanticException("Attempted to call $op operation on invalid type: ${operand.type}")
         }
     }
 
