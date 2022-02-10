@@ -459,11 +459,11 @@ class Assignment(
             is IdentifierSet -> st.reassign(lhs.ident, rhs.type)
             is ArrayElement -> {
                 val indices: Array<WInt> = lhs.indices.map { it.type as? WInt
-                        ?: {
+                        ?: run {
                             semanticErrorMessage
                                 .arrayIndexInvalidType()
                                 .buildAndPrint()
-                            throw SemanticException("Non-int index in array ${lhs.ident}")
+                            throw SemanticException("Non-int index in array ${it.type}")
                         }
                 }.toTypedArray()
                 st.reassign(lhs.ident, indices, rhs.type)
@@ -594,14 +594,13 @@ class ArrayElement(
     override val type: WAny
         get() = st.get(ident, indices.map { e ->
             e.type as? WInt
-                ?: {
+                ?: run {
                     semanticErrorMessage
                         .arrayIndexInvalidType()
                         .buildAndPrint()
                     throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
                 }
         }.toTypedArray())
-
 }
 
 /**
