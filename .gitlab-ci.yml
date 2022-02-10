@@ -13,18 +13,12 @@ make:
 main-test:
   stage: test
   script:
-    - mvn test -Dtest=MainTest
+    - mvn test
 
 symbol-table-test:
   stage: test
   script:
     - mvn test -Dtest=ParentRefSymbolTableTest
-
-.expr-visitor-test:
-  stage: test
-  script:
-    - mvn test -Dtest=ExprVisitorTest
-
 
 invalid/sematicErr/array:
   stage: wacc-test
@@ -33,7 +27,7 @@ invalid/sematicErr/array:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/semanticErr/array/*.wacc"
 
-.invalid/semanticErr/exit:
+invalid/semanticErr/exit:
   stage: wacc-test
   interruptible: true
   script:

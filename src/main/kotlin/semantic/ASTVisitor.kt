@@ -5,8 +5,7 @@ import antlr.WACCParserBaseVisitor
 import ast.*
 import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
-import utils.ExitCode
-import utils.SemanticException
+import utils.*
 import waccType.*
 import kotlin.system.exitProcess
 
@@ -18,17 +17,20 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         for (f in ctx.func()) {
             val id = f.IDENTIFIER().text
             if (id in st.dict) {
+                // TODO: REPLACE buildAndPrint() WITH BUILDING AND ADDING TO ERROR COLLECTION
+                SemanticErrorMessageBuilder()
+                    .provideStart(PositionedError(f))
+                    .functionRedefineError()
+                    .buildAndPrint()
                 throw SemanticException("Cannot redefine function $id")
             }
             st.dict[id] = WACCFunction(st, id, mapOf(), SkipStat(st), WUnknown())
-
         }
-
         ctx.func()
-            .map { f -> (this.visit(f) as WACCFunction) }.forEach {
-                st.dict[it.ident] = it
-            }
-        // Explicitly call checks after defining all funcs
+            .map { this.visit(it) as WACCFunction }
+            .forEach { st.dict[it.ident] = it }
+
+        // Explicitly call checks after defining all functions
         st.dict.forEach { (_, f) -> (f as WACCFunction).check() }
         // Create a subscope, functions are now stored in parent table.
         // This scope is still 'global'
@@ -74,7 +76,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
         val elems: Array<WAny> = ctx.expr().map { e -> (this.visit(e) as Expr).type }.toTypedArray()
-        return ArrayLiteral(st, elems, WArray(WUnknown()))
+        return ArrayLiteral(st, elems)
     }
 
     override fun visitPairLiter(ctx: WACCParser.PairLiterContext): PairLiteral {
@@ -130,7 +132,11 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         try {
             Integer.parseInt(ctx.text)
         } catch (e: java.lang.NumberFormatException) {
-            println("Attempted to parse a very big int!")
+            // TODO: REPLACE buildAndPrint() WITH BUILDING AND ADDING TO ERROR COLLECTION
+            SyntaxErrorMessageBuilder()
+                .provideStart(PositionedError(ctx))
+                .appendCustomErrorMessage("Attempted to parse a very big int ${ctx.text}!")
+                .buildAndPrint()
             exitProcess(ExitCode.SYNTAX_ERROR)
         }
         return Literal(st, WInt())
@@ -165,40 +171,39 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
             st,
             this.visit(ctx.left) as Expr,
             this.visit(ctx.right) as Expr,
-            when (ctx.binOp.text) {
-                // Oh no
-                "*" -> BinOperator.MUL
-                "/" -> BinOperator.DIV
-                "%" -> BinOperator.MOD
-                "+" -> BinOperator.ADD
-                "-" -> BinOperator.SUB
-                ">" -> BinOperator.GT
-                ">=" -> BinOperator.GEQ
-                "<" -> BinOperator.LT
-                "<=" -> BinOperator.LEQ
-                "==" -> BinOperator.EQ
-                "!=" -> BinOperator.NEQ
-                "&&" -> BinOperator.AND
-                "||" -> BinOperator.OR
-                else -> throw Exception("What.")
+            op = when (ctx.binOp.type) {
+                WACCParser.OP_MULT -> BinOperator.MUL
+                WACCParser.OP_DIV -> BinOperator.DIV
+                WACCParser.OP_MOD -> BinOperator.MOD
+                WACCParser.OP_ADD -> BinOperator.ADD
+                WACCParser.OP_SUBT -> BinOperator.SUB
+                WACCParser.OP_GT -> BinOperator.GT
+                WACCParser.OP_GEQ -> BinOperator.GEQ
+                WACCParser.OP_LT -> BinOperator.LT
+                WACCParser.OP_LEQ -> BinOperator.LEQ
+                WACCParser.OP_EQ -> BinOperator.EQ
+                WACCParser.OP_NEQ -> BinOperator.NEQ
+                WACCParser.OP_AND -> BinOperator.AND
+                WACCParser.OP_OR-> BinOperator.OR
+                else -> throw Exception("Unknown binary operand")
             }
         )
     }
 
     override fun visitExprUnary(ctx: WACCParser.ExprUnaryContext): UnaryOperation {
         return UnaryOperation(
-            st, this.visit(ctx.operand) as Expr, when (ctx.unOp.text) {
-                // Oh no again
-                "!" -> UnOperator.NOT
-                "ord" -> UnOperator.ORD
-                "chr" -> UnOperator.CHR
-                "len" -> UnOperator.LEN
-                "-" -> UnOperator.SUB
-                else -> throw Exception("What.")
+            st,
+            this.visit(ctx.operand) as Expr,
+            op = when (ctx.unOp.type) {
+                WACCParser.OP_NOT -> UnOperator.NOT
+                WACCParser.OP_ORD -> UnOperator.ORD
+                WACCParser.OP_CHR -> UnOperator.CHR
+                WACCParser.OP_LEN -> UnOperator.LEN
+                WACCParser.OP_SUBT -> UnOperator.SUB
+                else -> throw Exception("Unknown unary operand")
             }
         )
     }
-
 
     override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): IdentifierGet {
         return IdentifierGet(st, ctx.IDENTIFIER().text)
@@ -242,11 +247,10 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitAssignRhsCall(ctx: WACCParser.AssignRhsCallContext): FunctionCall {
-        val params: Array<Expr> = if (ctx.argList() == null) {
-            arrayOf()
-        } else {
-            ctx.argList().expr().map { arg -> this.visit(arg) as Expr }.toTypedArray()
-        }
+        val params: Array<Expr>
+            = ctx.argList()?.expr()?.map { arg -> this.visit(arg) as Expr }?.toTypedArray()
+            ?: arrayOf()
+
         return FunctionCall(
             st,
             ctx.IDENTIFIER().text,

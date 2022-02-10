@@ -1,13 +1,13 @@
 # arrays can only contain one type
 
 # Output:
-# #syntax_error#
+# #semantic_error#
 
 # Exit:
-# 100
+# 200
 
 # Program:
 
 begin
-  int[] b = [2, [1, 2], 'b'];
+  int[] b = [2, 'b', "Hello World!"]
 end

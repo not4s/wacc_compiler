@@ -42,16 +42,16 @@ pairType
   ;
 
 pairElemType
-  : baseType #pairElemTypeBaseType
-  | arrayType #pairElemTypeArrayType
-  | KW_PAIR   #pairElemTypeKwPair
+  : baseType                               #pairElemTypeBaseType
+  | arrayType                              #pairElemTypeArrayType
+  | KW_PAIR                                #pairElemTypeKwPair
   ;
 
 baseType
-  : KW_INT    #baseTypeInt
-  | KW_BOOL   #baseTypeBool
-  | KW_CHAR   #baseTypeChar
-  | KW_STRING #baseTypeString
+  : KW_INT                                 #baseTypeInt
+  | KW_BOOL                                #baseTypeBool
+  | KW_CHAR                                #baseTypeChar
+  | KW_STRING                              #baseTypeString
   ;
 
 literal
@@ -92,10 +92,10 @@ assignLhs
 
 assignRhs
   : expr       #assignRhsExpr
-  | arrayLiter #assignRhsArrayLiter
-  | KW_NEWPAIR SYM_LBRACKET left=expr SYM_COMMA right=expr SYM_RBRACKET #assignRhsNewPair
-  | pairElem  #assignRhsPairElem
-  | KW_CALL IDENTIFIER SYM_LBRACKET argList? SYM_RBRACKET #assignRhsCall
+  | arrayLiter                                                             #assignRhsArrayLiter
+  | KW_NEWPAIR SYM_LBRACKET left=expr SYM_COMMA right=expr SYM_RBRACKET    #assignRhsNewPair
+  | pairElem                                                               #assignRhsPairElem
+  | KW_CALL IDENTIFIER SYM_LBRACKET argList? SYM_RBRACKET                  #assignRhsCall
   ;
 
 argList
@@ -103,19 +103,19 @@ argList
   ;
 
 stat
-  : KW_SKIP                                       #statSkip
-  | KW_EXIT expr                                  #statExit
-  | KW_FREE expr                                  #statFree
-  | KW_RETURN expr                                #statReturn
-  | KW_PRINT expr                                 #statPrint
-  | KW_PRINTLN expr                               #statPrintln
-  | KW_READ assignLhs                             #statRead
+  : KW_SKIP                                                                #statSkip
+  | KW_EXIT expr                                                           #statExit
+  | KW_FREE expr                                                           #statFree
+  | KW_RETURN expr                                                         #statReturn
+  | KW_PRINT expr                                                          #statPrint
+  | KW_PRINTLN expr                                                        #statPrintln
+  | KW_READ assignLhs                                                      #statRead
   | KW_IF ifCond=expr KW_THEN thenBlock=stat KW_ELSE elseBlock=stat KW_FI  #statIfThenElse
   | KW_WHILE whileCond=expr KW_DO doBlock=stat KW_DONE                     #statWhileDo
-  | KW_BEGIN stat KW_END                          #statBeginEnd
-  | type IDENTIFIER SYM_EQUALS assignRhs          #statInit
-  | assignLhs SYM_EQUALS assignRhs                #statStore
-  | left=stat SYM_SEMICOLON right=stat            #statJoin
+  | KW_BEGIN stat KW_END                                                   #statBeginEnd
+  | type IDENTIFIER SYM_EQUALS assignRhs                                   #statInit
+  | assignLhs SYM_EQUALS assignRhs                                         #statStore
+  | left=stat SYM_SEMICOLON right=stat                                     #statJoin
   ;
 
 param

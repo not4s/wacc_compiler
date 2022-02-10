@@ -13,11 +13,11 @@ dircache=${oldDir/sample_programs/reference_cache}
 name=$(basename $1 .wacc)
 
 a=`cat $1`
-b=`cat "$dircache/$name.ref"`
 
 # Check if the output of this file has been pre-cached.
 if test -f "$dircache/$name.ref"
 then
+  b=`cat "$dircache/$name.ref"`
   # Make sure file contains actual wacc source code (ie. wacc has not been modified)
   if [[ "$b" == *"$a"* ]]
   then

@@ -1,11 +1,15 @@
 import antlr.WACCLexer
 import antlr.WACCParser
-import antlr.WACCParserBaseVisitor
 import org.antlr.v4.runtime.*
 import semantic.ASTVisitor
 import symbolTable.ParentRefSymbolTable
 import utils.ExitCode
 import utils.SemanticException
+import utils.SyntaxErrorMessageBuilder
+import waccType.WArray
+import waccType.WInt
+import waccType.WStr
+import waccType.typesAreEqual
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -13,7 +17,7 @@ fun main(args: Array<String>) {
 
     println("You have passed in: ${args.joinToString()}")
     val file =
-        File(args.getOrNull(0) ?: "wacc_test/sample_programs/valid/pairs/writeFst.wacc")
+        File(args.getOrNull(0) ?: "wacc_test/sample_programs/invalid/semanticErr/array/arrayTypeClash.wacc")
     println("Opening file: $file\n")
 
     val input = CharStreams.fromFileName(file.absolutePath)
@@ -34,6 +38,7 @@ fun main(args: Array<String>) {
 
     val parser = WACCParser(tokens)
 
+    // setting the only listeners to our custom listener
     parser.removeErrorListeners()
     parser.addErrorListener(object : BaseErrorListener() {
         override fun syntaxError(
@@ -44,12 +49,15 @@ fun main(args: Array<String>) {
             msg: String?,
             e: RecognitionException?
         ) {
-            println(msg)
+            SyntaxErrorMessageBuilder()
+                .provideStart(line, charPositionInLine, getErrorLine(line))
+                .appendCustomErrorMessage(msg!!)
+                .buildAndPrint()
             exitProcess(ExitCode.SYNTAX_ERROR)
         }
-    })
 
-    parser.errorHandler = TerminateOnErrorStrategy()
+        fun getErrorLine(line: Int): String = input.toString().split("\n")[line - 1]
+    })
 
     val tree = parser.program()
     try {
@@ -58,15 +66,7 @@ fun main(args: Array<String>) {
     } catch (e: SemanticException) {
         println("-----------SEMANTIC ERROR-----------")
         println(e.message)
-        e.printStackTrace(System.out)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
 
-}
-
-class TerminateOnErrorStrategy : DefaultErrorStrategy() {
-    override fun reportError(recognizer: Parser?, e: RecognitionException?) {
-        println(e)
-        exitProcess(ExitCode.SYNTAX_ERROR)
-    }
 }
