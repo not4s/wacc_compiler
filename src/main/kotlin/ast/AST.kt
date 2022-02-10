@@ -1,10 +1,15 @@
 package ast
 
+import antlr.WACCParser
+import antlr.WACCParserBaseVisitor
+import org.antlr.v4.runtime.ParserRuleContext
 import ast.BinOperator.*
 import ast.UnOperator.*
 import symbolTable.SymbolTable
 import utils.ExitCode
 import utils.SemanticException
+import utils.SemanticErrorMessageBuilder
+import utils.PositionedError
 import waccType.*
 import kotlin.system.exitProcess
 
@@ -82,7 +87,12 @@ class FunctionCall(
     override val st: SymbolTable,
     val ident: String,
     val params: Array<Expr>,
+    parserCtx: ParserRuleContext,
 ) : RHS {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
@@ -90,6 +100,7 @@ class FunctionCall(
     override fun check() {
         // Check params against st
         val func = st.get(ident) as WACCFunction
+
         // If function is not yet defined, just return
         if (func.body is SkipStat && func.params.isEmpty() && func.type is WUnknown) {
             return
@@ -222,39 +233,66 @@ class BinaryOperation(
     val left: Expr,
     val right: Expr,
     val op: BinOperator,
+    parserCtx: ParserRuleContext,
 ) : Expr {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
 
     override fun check() {
+
         when (op) {
             MUL, DIV, MOD, ADD, BinOperator.SUB -> {
                 if (!typesAreEqual(left.type, right.type)) {
+                    semanticErrorMessage
+                        .operandTypeMismatch(left.type, right.type)
+                        .buildAndPrint()
                     throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
                 }
                 if (!typesAreEqual(left.type, WInt())) {
+                    semanticErrorMessage
+                        .binOpInvalidType(left.type)
+                        .buildAndPrint()
                     throw SemanticException("Attempted to call binary operation $op on non-int types: ${left.type} ")
                 }
             }
             GT, GEQ, LT, LEQ -> {
                 if (!typesAreEqual(left.type, right.type)) {
+                    semanticErrorMessage
+                        .operandTypeMismatch(left.type, right.type)
+                        .buildAndPrint()
                     throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
                 }
                 if (!typesAreEqual(left.type, WInt()) && !typesAreEqual(left.type, WChar())) {
+                    semanticErrorMessage
+                        .binOpInvalidType(left.type)
+                        .buildAndPrint()
                     throw SemanticException("Attempted to call binary operation $op on weird (non-int, non-char) types: ${left.type} ")
                 }
             }
             EQ, NEQ -> {
                 if (!typesAreEqual(left.type, right.type)) {
+                    semanticErrorMessage
+                        .operandTypeMismatch(left.type, right.type)
+                        .buildAndPrint()
                     throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
                 }
             }
             AND, OR -> {
                 if (!typesAreEqual(left.type, right.type)) {
+                    semanticErrorMessage
+                        .operandTypeMismatch(left.type, right.type)
+                        .buildAndPrint()
                     throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
                 }
                 if (!typesAreEqual(left.type, WBool())) {
+                    semanticErrorMessage
+                        .binOpInvalidType(left.type)
+                        .buildAndPrint()
                     throw SemanticException("Attempted to call binary operation $op on non-bool types: ${left.type} ")
                 }
             }
@@ -283,19 +321,37 @@ class UnaryOperation(
     override val st: SymbolTable,
     val operand: Expr,
     val op: UnOperator,
+    parserCtx: ParserRuleContext,
 ) : Expr {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     override fun check() {
+
         when (op) {
             NOT -> if (operand.type !is WBool) {
+                semanticErrorMessage
+                    .unOpInvalidType(operand.type)
+                    .buildAndPrint()
                 throw SemanticException("Attempted to call $op on non-bool type: ${operand.type}")
             }
             ORD -> if (operand.type !is WChar) {
+                semanticErrorMessage
+                    .unOpInvalidType(operand.type)
+                    .buildAndPrint()
                 throw SemanticException("Attempted to call $op on non-char type: ${operand.type}")
             }
             CHR, UnOperator.SUB -> if (operand.type !is WInt) {
+                semanticErrorMessage
+                    .unOpInvalidType(operand.type)
+                    .buildAndPrint()
                 throw SemanticException("Attempted to call $op on non-int type: ${operand.type}")
             }
             LEN -> if (operand.type !is WArray) {
+                semanticErrorMessage
+                    .unOpInvalidType(operand.type)
+                    .buildAndPrint()
                 throw SemanticException("Attempted to call $op on non-array type: ${operand.type}")
             }
         }
@@ -323,14 +379,23 @@ class Declaration(
     val decType: WAny,
     val ident: String,
     val rhs: RHS,
+    parserCtx: ParserRuleContext,
 ) : Stat {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
         st.declare(ident, decType)
     }
 
     override fun check() {
+
         if (!typesAreEqual(decType, rhs.type)) {
+            semanticErrorMessage
+                .operandTypeMismatch(decType, rhs.type)
+                .buildAndPrint()
             throw SemanticException("Attempted to declare variable $decType $ident to ${rhs.type}")
         }
     }
@@ -350,26 +415,43 @@ class Assignment(
     override val st: SymbolTable,
     val lhs: LHS,
     val rhs: RHS,
+    parserCtx: ParserRuleContext
 ) : Stat {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
 
     override fun check() {
+
         if (!typesAreEqual(lhs.type, rhs.type)) {
+            semanticErrorMessage
+                .operandTypeMismatch(lhs.type, rhs.type)
+                .buildAndPrint()
             throw SemanticException("Cannot assign ${rhs.type} to ${lhs.type}")
         }
         when (lhs) {
             is IdentifierSet -> st.reassign(lhs.ident, rhs.type)
             is ArrayElement -> {
                 val indices: Array<WInt> = lhs.indices.map { it.type as? WInt
-                        ?: throw SemanticException("Non-int index in array ${lhs.ident}")
+                        ?: run {
+                            semanticErrorMessage
+                                .arrayIndexInvalidType()
+                                .buildAndPrint()
+                            throw SemanticException("Non-int index in array ${it.type}")
+                        }
                 }.toTypedArray()
                 st.reassign(lhs.ident, indices, rhs.type)
             }
             is PairElement -> {
                 // Make sure this is: fst <ident> = blah. Otherwise invalid.
                 if (lhs.expr !is IdentifierGet) {
+                    semanticErrorMessage
+                        .pairElementInvalidType()
+                        .buildAndPrint()
                     throw SemanticException("Cannot refer to ${lhs.type} with fst/snd")
                 }
                 st.reassign(lhs.expr.ident, lhs.first, rhs.type)
@@ -411,13 +493,22 @@ class IdentifierSet(
 class IdentifierGet(
     override val st: SymbolTable,
     val ident: String,
+    parserCtx: ParserRuleContext
 ) : Expr {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
 
     override fun check() {
+
         if (!typesAreEqual(st.get(ident), type)) {
+            semanticErrorMessage
+                .operandTypeMismatch(st.get(ident), type)
+                .buildAndPrint()
             throw SemanticException("Attempted to use variable of type ${st.get(ident)} as $type")
         }
     }
@@ -439,7 +530,12 @@ class ArrayElement(
     override val st: SymbolTable,
     val ident: String, // name of array
     val indices: Array<Expr>, // List of indices
+    parserCtx: ParserRuleContext,
 ) : LHS, Expr {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
@@ -463,9 +559,13 @@ class ArrayElement(
     override val type: WAny
         get() = st.get(ident, indices.map { e ->
             e.type as? WInt
-                ?: throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
+                ?: run {
+                    semanticErrorMessage
+                        .arrayIndexInvalidType()
+                        .buildAndPrint()
+                    throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
+                }
         }.toTypedArray())
-
 }
 
 /**
@@ -476,13 +576,21 @@ class IfThenStat(
     val condition: Expr,
     val thenStat: Stat,
     val elseStat: Stat,
+    parserCtx: ParserRuleContext,
 ) : Stat {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
 
     override fun check() {
         if (condition.type !is WBool) {
+            semanticErrorMessage
+                .ifStatConditionHasNonBooleanType(condition.type)
+                .buildAndPrint()
             throw SemanticException("If statement has non-bool condition, actual: ${condition.type}")
         }
         thenStat.check()
@@ -507,13 +615,21 @@ class WhileStat(
     override val st: SymbolTable,
     val condition: Expr,
     val doBlock: Stat,
+    parserCtx: ParserRuleContext,
 ) : Stat {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
 
     override fun check() {
         if (condition.type !is WBool) {
+            semanticErrorMessage
+                .whileStatConditionHasNonBooleanType(condition.type)
+                .buildAndPrint()
             throw SemanticException("While loop has non-bool condition, actual: ${condition.type}")
         }
         doBlock.check()
@@ -536,13 +652,21 @@ class WhileStat(
 class ReadStat(
     override val st: SymbolTable,
     val lhs: LHS,
+    parserCtx: ParserRuleContext,
 ) : Stat {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
 
     override fun check() {
         if (lhs.type !is WChar && lhs.type !is WInt) {
+            semanticErrorMessage
+                .readTypeIsIncorrect(lhs.type)
+                .buildAndPrint()
             throw SemanticException("Cannot read into non-char or non-int variable, actual: ${lhs.type}")
         }
     }
@@ -580,16 +704,27 @@ class PairElement(
     override val st: SymbolTable,
     val first: Boolean, // true = fst, false = snd
     val expr: Expr,
+    parserCtx: ParserRuleContext,
 ) : LHS, RHS {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
     override fun check() {
         if (expr.type !is WPair) {
+            semanticErrorMessage
+                .pairElementInvalidType()
+                .buildAndPrint()
             throw SemanticException("Cannot call fst/snd on non-pair type: ${expr.type}")
         }
         // Check null
         if (expr is PairLiteral) {
+            semanticErrorMessage
+                .pairElementInvalidType()
+                .buildAndPrint()
             throw SemanticException("NULL POINTER EXCEPTION! Can't deref null.")
         }
     }
@@ -614,7 +749,12 @@ class PairElement(
 class FreeStat(
     override val st: SymbolTable,
     val expr: Expr,
+    parserCtx: ParserRuleContext,
 ) : Stat {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
@@ -622,6 +762,9 @@ class FreeStat(
     override fun check() {
         // Make sure expr is Pair
         if (expr.type !is WPair) {
+            semanticErrorMessage
+                .freeNonPair()
+                .buildAndPrint()
             throw SemanticException("This isn't C, you can't free a $expr")
         }
     }
@@ -638,13 +781,21 @@ class FreeStat(
 class ExitStat(
     override val st: SymbolTable,
     val exp: Expr,
+    parserCtx: ParserRuleContext,
 ) : Stat {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
 
     override fun check() {
         if (exp.type !is WInt) {
+            semanticErrorMessage
+                .nonIntExpressionExit(exp.type)
+                .buildAndPrint()
             throw SemanticException("Cannot exit with non-int expression. Actual: ${exp.type}")
         }
     }
@@ -673,7 +824,12 @@ class SkipStat(override val st: SymbolTable) : Stat {
 class ReturnStat(
     override val st: SymbolTable,
     val exp: Expr,
+    parserCtx: ParserRuleContext,
 ) : Stat, Typed {
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
+        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+
     init {
         check()
     }
@@ -684,6 +840,9 @@ class ReturnStat(
     override fun check() {
         // Check scope
         if (st.isGlobal) {
+            semanticErrorMessage
+                .returnFromGlobalScope()
+                .buildAndPrint()
             throw SemanticException("Cannot return out of global scope.")
         }
     }
