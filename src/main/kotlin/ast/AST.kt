@@ -20,21 +20,17 @@ interface AST {
     override fun toString(): String
 }
 
-interface Evaluable : AST {
-    fun evaluate(): WAny
-}
-
 interface Typed : AST {
     val type: WAny
 }
 
-interface RHS : AST, Evaluable, Typed
+interface RHS : AST, Typed
 
 interface LHS : AST, Typed
 
-interface Expr : AST, Evaluable, Typed, RHS
+interface Expr : AST, Typed, RHS
 
-interface Stat : AST, Evaluable
+interface Stat : AST
 
 /**
  * Types of the different binary operations
@@ -60,6 +56,7 @@ class WACCFunction(
     val body: Stat,
     override val type: WAny, // return type
 ) : AST, Typed, WAny {
+
     override fun check() {
         // TODO: Param checking?
         body.check()
@@ -117,10 +114,6 @@ class FunctionCall(
         }"
     }
 
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-
     override val type: WAny
         get() = (st.get(ident) as WACCFunction).type
 }
@@ -136,10 +129,6 @@ class Literal(
 
     override fun toString(): String {
         return "Literal\n  (scope:$st)\n${("type: $type").prependIndent(INDENT)}"
-    }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
     }
 }
 
@@ -171,19 +160,12 @@ class ArrayLiteral(
                 WArray(expType)
             }
 
-
-
-
     override fun toString(): String {
         return "ArrayLiteral\n  (scope:$st)\n${
             ("type: $type\nelems: [${
                 values.map { e -> e.toString() }.reduceOrNull { a, b -> "$a $b" } ?: ""
             }]").prependIndent(INDENT)
         }"
-    }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
     }
 }
 
@@ -210,10 +192,6 @@ class PairLiteral(
     override fun toString(): String {
         return "PairLiteral(null)\n  (scope:$st)\n${("type: $type").prependIndent(INDENT)}"
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
 }
 
 /**
@@ -234,12 +212,6 @@ class NewPairRHS(
             left.toString().prependIndent(INDENT)
         }\nright:\n" + right.toString().prependIndent(INDENT)
     }
-
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-
 }
 
 /**
@@ -295,10 +267,6 @@ class BinaryOperation(
         }"
     }
 
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-
     override val type: WAny
         get() = when (op) {
             MUL, DIV, MOD, ADD, BinOperator.SUB -> WInt()
@@ -306,7 +274,6 @@ class BinaryOperation(
             EQ, NEQ -> WBool()
             AND, OR -> WBool()
         }
-
 }
 
 /**
@@ -336,10 +303,6 @@ class UnaryOperation(
 
     override fun toString(): String {
         return "$op\n" + "  (scope:$st)\n${operand.toString().prependIndent(INDENT)}"
-    }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
     }
 
     override val type: WAny
@@ -377,10 +340,6 @@ class Declaration(
                 "  (scope:$st)\n${("of: $ident").prependIndent(INDENT)}\n${
             ("to: $rhs").toString().prependIndent(INDENT)
         }"
-    }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
     }
 }
 
@@ -423,11 +382,6 @@ class Assignment(
             rhs.toString().prependIndent(INDENT)
         }"
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-
 }
 
 /**
@@ -474,10 +428,6 @@ class IdentifierGet(
         }"
     }
 
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-
     override val type: WAny
         get() = st.get(ident)
 }
@@ -508,10 +458,6 @@ class ArrayElement(
         }\n${
             ("type: $type").prependIndent(INDENT)
         }"
-    }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
     }
 
     override val type: WAny
@@ -552,10 +498,6 @@ class IfThenStat(
             ("then:\n${thenStat.toString().prependIndent("   ")}").prependIndent(INDENT)
         }\n${("else:\n${elseStat.toString().prependIndent("   ")}").prependIndent(INDENT)}"
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
 }
 
 /**
@@ -586,10 +528,6 @@ class WhileStat(
             ("do:\n${doBlock.toString().prependIndent("   ")}").prependIndent(INDENT)
         }"
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
 }
 
 /**
@@ -612,11 +550,6 @@ class ReadStat(
     override fun toString(): String {
         return "Read:\n" + "  (scope:$st)\n${"LHS:\n${lhs.toString().prependIndent(INDENT)}"}"
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-
 }
 
 /**
@@ -638,11 +571,6 @@ class PrintStat(override val st: SymbolTable, val newlineAfter: Boolean, val exp
             ("Expr: $expr").prependIndent(INDENT)
         }"
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-
 }
 
 /**
@@ -671,10 +599,6 @@ class PairElement(
             ("${if (first) "FST" else "SND"
             }:\n${expr.toString().prependIndent(INDENT)}").prependIndent(INDENT)
         }"
-    }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
     }
 
     override val type: WAny
@@ -706,10 +630,6 @@ class FreeStat(
         return "Free:\n" + "  (scope:$st)\n${expr.toString().prependIndent(INDENT)}"
     }
 
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-
 }
 
 /**
@@ -732,10 +652,6 @@ class ExitStat(
     override fun toString(): String {
         return "Exit:\n" + "  (scope:$st)\n${exp.toString().prependIndent(INDENT)}"
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
 }
 
 /**
@@ -749,11 +665,6 @@ class SkipStat(override val st: SymbolTable) : Stat {
     override fun toString(): String {
         return "Skip"
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
-
 }
 
 /**
@@ -780,10 +691,6 @@ class ReturnStat(
     override fun toString(): String {
         return "Return:\n" + "  (scope:$st)\n${exp.toString().prependIndent(INDENT)}"
     }
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
 }
 
 /**
@@ -802,16 +709,11 @@ class JoinStat(
     override fun toString(): String {
         return "$first\n$second"
     }
-
-
-    override fun evaluate(): WAny {
-        TODO("Not yet implemented")
-    }
 }
 /**
  * Checks whether the given statement has a proper return statement by matching patterns recursively
  * @param stat : statement to be checked
- * @param isOuterFuncScope : examines the scope to check context
+ * @param inOuterFuncScope : examines the scope to check context
  * @exception ExitCode.SYNTAX_ERROR
  **/
 fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
