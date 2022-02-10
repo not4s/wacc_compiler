@@ -129,8 +129,21 @@ class ArrayLiteral(
     val values: Array<WAny>,
     override val type: WArray,
 ) : Expr, RHS {
+    init {
+        check()
+    }
+
     override fun check() {
-        TODO("Not yet implemented")
+        if(values.isEmpty()) {
+            return
+        }
+        val firstElem = values[0]
+        for (elem : WAny in values) {
+            if(typesAreEqual(firstElem, elem)) {
+                // TODO: better error message
+                throw SemanticException("Types do not match type")
+            }
+        }
     }
 
     override fun toString(): String {

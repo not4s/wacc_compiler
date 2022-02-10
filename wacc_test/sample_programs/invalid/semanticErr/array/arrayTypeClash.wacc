@@ -1,10 +1,10 @@
 # arrays can only contain one type
 
 # Output:
-# #syntax_error#
+# #semantic_error#
 
 # Exit:
-# 100
+# 200
 
 # Program:
 
