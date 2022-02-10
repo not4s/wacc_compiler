@@ -80,7 +80,6 @@ class WACCFunction(
             exitProcess(ExitCode.SYNTAX_ERROR)
         }
         checkReturnType(body, type)
-
     }
 
     override fun toString(): String {

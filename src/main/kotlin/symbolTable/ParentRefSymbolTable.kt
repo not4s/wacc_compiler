@@ -59,7 +59,7 @@ class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlo
         if (prev != null) {
             // Then make sure it's the same type.
             if (typesAreEqual(prev, value)) {
-                dict[symbol] = prev
+                dict[symbol] = value
                 return
             } else {
                 throw SemanticException("Attempted to reassign type of declared $prev to $value")
