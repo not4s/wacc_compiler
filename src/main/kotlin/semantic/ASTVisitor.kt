@@ -71,7 +71,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
     override fun visitArrayElem(ctx: WACCParser.ArrayElemContext): ArrayElement {
         val indices: Array<Expr> = ctx.expr().map { e -> this.visit(e) as Expr }.toTypedArray()
-        return ArrayElement(st, ctx.IDENTIFIER().text, indices)
+        return ArrayElement(st, ctx.IDENTIFIER().text, indices, ctx)
     }
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
@@ -85,12 +85,12 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
 
     override fun visitPairElemFst(ctx: WACCParser.PairElemFstContext): AST {
         val expr = this.visit(ctx.expr()) as Expr
-        return PairElement(st, true, expr)
+        return PairElement(st, true, expr, ctx)
     }
 
     override fun visitPairElemSnd(ctx: WACCParser.PairElemSndContext): AST {
         val expr = this.visit(ctx.expr()) as Expr
-        return PairElement(st, false, expr)
+        return PairElement(st, false, expr, ctx)
     }
 
     override fun visitPairType(ctx: WACCParser.PairTypeContext): WACCType {
@@ -186,7 +186,8 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
                 WACCParser.OP_AND -> BinOperator.AND
                 WACCParser.OP_OR-> BinOperator.OR
                 else -> throw Exception("Unknown binary operand")
-            }
+            },
+            ctx
         )
     }
 
@@ -201,12 +202,13 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
                 WACCParser.OP_LEN -> UnOperator.LEN
                 WACCParser.OP_SUBT -> UnOperator.SUB
                 else -> throw Exception("Unknown unary operand")
-            }
+            },
+            ctx
         )
     }
 
     override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): IdentifierGet {
-        return IdentifierGet(st, ctx.IDENTIFIER().text)
+        return IdentifierGet(st, ctx.IDENTIFIER().text, ctx)
     }
 
     override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Expr {
@@ -254,7 +256,8 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         return FunctionCall(
             st,
             ctx.IDENTIFIER().text,
-            params
+            params,
+            ctx
         )
     }
 
@@ -267,7 +270,8 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
             st,
             (this.visit(ctx.type()) as Typed).type,
             ctx.IDENTIFIER().text,
-            this.visit(ctx.assignRhs()) as RHS
+            this.visit(ctx.assignRhs()) as RHS,
+            ctx
         )
     }
 
@@ -275,12 +279,13 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         return WhileStat(
             st,
             this.visit(ctx.whileCond) as Expr,
-            ASTVisitor(st.createChildScope()).visit(ctx.doBlock) as Stat
+            ASTVisitor(st.createChildScope()).visit(ctx.doBlock) as Stat,
+            ctx
         )
     }
 
     override fun visitStatRead(ctx: WACCParser.StatReadContext): ReadStat {
-        return ReadStat(st, this.visit(ctx.assignLhs()) as LHS)
+        return ReadStat(st, this.visit(ctx.assignLhs()) as LHS, ctx)
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
@@ -288,7 +293,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitStatFree(ctx: WACCParser.StatFreeContext): FreeStat {
-        return FreeStat(st, this.visit(ctx.expr()) as Expr)
+        return FreeStat(st, this.visit(ctx.expr()) as Expr, ctx)
     }
 
     override fun visitStatPrint(ctx: WACCParser.StatPrintContext): PrintStat {
@@ -300,14 +305,15 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitStatExit(ctx: WACCParser.StatExitContext): ExitStat {
-        return ExitStat(st, this.visit(ctx.expr()) as Expr)
+        return ExitStat(st, this.visit(ctx.expr()) as Expr, ctx)
     }
 
     override fun visitStatStore(ctx: WACCParser.StatStoreContext): Assignment {
         return Assignment(
             st,
             this.visit(ctx.assignLhs()) as LHS,
-            this.visit(ctx.assignRhs()) as RHS
+            this.visit(ctx.assignRhs()) as RHS,
+            ctx
         )
     }
 
@@ -320,7 +326,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
     }
 
     override fun visitStatReturn(ctx: WACCParser.StatReturnContext): ReturnStat {
-        return ReturnStat(st, this.visit(ctx.expr()) as Expr)
+        return ReturnStat(st, this.visit(ctx.expr()) as Expr, ctx)
     }
 
     override fun visitStatIfThenElse(ctx: WACCParser.StatIfThenElseContext): IfThenStat {
@@ -329,7 +335,8 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
             this.visit(ctx.ifCond) as Expr,
             // Create child scopes for the if-then-else blocks
             ASTVisitor(st.createChildScope()).visit(ctx.thenBlock) as Stat,
-            ASTVisitor(st.createChildScope()).visit(ctx.elseBlock) as Stat
+            ASTVisitor(st.createChildScope()).visit(ctx.elseBlock) as Stat,
+            ctx
         )
     }
 
