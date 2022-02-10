@@ -28,7 +28,7 @@ class ASTVisitor(val st: SymbolTable) : WACCParserBaseVisitor<AST>() {
         }
         ctx.func()
             .map { this.visit(it) as WACCFunction }
-            .forEach { st.dict[it.ident] = it }
+            .forEach { st.dict[it.identifier] = it }
 
         // Explicitly call checks after defining all functions
         st.dict.forEach { (_, f) -> (f as WACCFunction).check() }

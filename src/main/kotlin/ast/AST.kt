@@ -14,12 +14,23 @@ import kotlin.system.exitProcess
 const val INDENT = "  | "
 
 interface AST {
-    // Overall FIELDS & FUNCTIONS
-    // Information of the symbol table
+    /**
+     *  Information in the symbol table is the mapping from variable and
+     *  function identifiers to its type The symbol table attribute references the table,
+     *  corresponding to its nearest scope
+     */
     val st: SymbolTable
-    // Performs semantic analysis on the AST node and throws exceptions if semantic errors are found
-    fun check()
-    // Converts the AST node into a string containing the information of that node
+
+    /**
+     *  Performs semantic analysis on the AST node and throws exceptions if semantic errors are found
+     *  The default implementation does nothing, which means that it always succeeds
+     *  @throws SemanticException if something goes wrong
+     */
+    fun check() {}
+
+    /**
+     *  Converts the AST node into a string containing the information of that node
+     */
     override fun toString(): String
 }
 
@@ -51,20 +62,21 @@ enum class UnOperator {
 
 /**
  *  The AST Node for Functions
+ *  @property type : return type of the function
  **/
 class WACCFunction(
     override val st: SymbolTable,
-    val ident: String,
+    val identifier: String,
     val params: Map<String, WAny>,
     val body: Stat,
-    override val type: WAny, // return type
+    override val type: WAny,
 ) : AST, Typed, WAny {
 
     override fun check() {
         // TODO: Param checking?
         body.check()
         if (!hasReturn(body, true)) {
-            println("Function $ident does not return on every branch.")
+            println("Function $identifier does not return on every branch.")
             exitProcess(ExitCode.SYNTAX_ERROR)
         }
         checkReturnType(body, type)
@@ -72,7 +84,7 @@ class WACCFunction(
     }
 
     override fun toString(): String {
-        return "Function($type) $ident(${
+        return "Function($type) $identifier(${
             params.map { (id, t) -> "($t)$id" }.reduceOrNull { a, b -> "$a, $b" } ?: ""
         }):\n${"   ".prependIndent(INDENT)}"
     }
@@ -171,7 +183,7 @@ class ArrayLiteral(
 
     override fun toString(): String {
         return "ArrayLiteral\n  (scope:$st)\n${
-            ("type: $type\nelems: [${
+            ("type: $type\nelements: [${
                 values.map { e -> e.toString() }.reduceOrNull { a, b -> "$a $b" } ?: ""
             }]").prependIndent(INDENT)
         }"
@@ -204,7 +216,7 @@ class PairLiteral(
 }
 
 /**
- * The AST Node for a RHS New Pair
+ * The AST Node for RHS New Pair
  **/
 class NewPairRHS(
     override val st: SymbolTable,
@@ -242,7 +254,6 @@ class BinaryOperation(
     }
 
     override fun check() {
-
         when (op) {
             MUL, DIV, MOD, ADD, BinOperator.SUB -> {
                 if (!typesAreEqual(left.type, right.type)) {
@@ -423,7 +434,6 @@ class Assignment(
     }
 
     override fun check() {
-
         if (!typesAreEqual(lhs.type, rhs.type)) {
             semanticErrorMessage
                 .operandTypeMismatch(lhs.type, rhs.type)
@@ -470,12 +480,9 @@ class IdentifierSet(
     override val st: SymbolTable,
     val identifier: String,
 ) : LHS {
-    override fun check() {
-        // Always valid.
-    }
 
     override fun toString(): String {
-        return "IdentifierSet:\n" + "  (scope:$st)\n${("ident: $identifier").prependIndent(INDENT)}\n${
+        return "IdentifierSet:\n" + "  (scope:$st)\n${("identifier: $identifier").prependIndent(INDENT)}\n${
             ("type: $type").prependIndent(INDENT)
         }"
     }
@@ -501,7 +508,6 @@ class IdentifierGet(
     }
 
     override fun check() {
-
         if (!typesAreEqual(st.get(identifier), type)) {
             semanticErrorMessage
                 .operandTypeMismatch(st.get(identifier), type)
@@ -511,7 +517,7 @@ class IdentifierGet(
     }
 
     override fun toString(): String {
-        return "IdentifierGet:\n" + "  (scope:$st)\n${("ident: $identifier").prependIndent(INDENT)}\n${
+        return "IdentifierGet:\n" + "  (scope:$st)\n${("identifier: $identifier").prependIndent(INDENT)}\n${
             ("type: $type").prependIndent(INDENT)
         }"
     }
@@ -522,11 +528,13 @@ class IdentifierGet(
 
 /**
  * The AST Node for Array Elements
+ * @property identifier : is the variable name of the array
+ * @property indices : List of child ASTs
  **/
 class ArrayElement(
     override val st: SymbolTable,
-    val identifier: String, // name of array
-    val indices: Array<Expr>, // List of indices
+    val identifier: String,
+    val indices: Array<Expr>,
     parserCtx: ParserRuleContext,
 ) : LHS, Expr {
 
@@ -537,12 +545,14 @@ class ArrayElement(
         check()
     }
 
+    /**
+     *  Here the semantic analysis is conducted inside getter
+     */
     override fun check() {
-        this.type // call getter
+        this.type
     }
 
     override fun toString(): String {
-        // This string also summons Cthulhu
         return "ArrayElem:\n" + "  (scope:$st)\n${
             ("array identifier: $identifier\nindex/ices:\n${
                 (indices.map { e -> e.toString() }
@@ -701,6 +711,8 @@ class PrintStat(
 
 /**
  * The AST Node for Pair Elements
+ * @property first: is a boolean flag which determines which pair element
+ * operator is used. 'true' stands for 'fst' and 'false' for 'snd'
  **/
 class PairElement(
     override val st: SymbolTable,
@@ -727,7 +739,7 @@ class PairElement(
             semanticErrorMessage
                 .pairElementInvalidType()
                 .buildAndPrint()
-            throw SemanticException("NULL POINTER EXCEPTION! Can't deref null.")
+            throw SemanticException("NULL POINTER EXCEPTION! Can't dereference null.")
         }
     }
 
@@ -761,8 +773,10 @@ class FreeStat(
         check()
     }
 
+    /**
+     * Ensures that the type of the expression to be freed is a pair
+     */
     override fun check() {
-        // Make sure expr is Pair
         if (expr.type !is WPair) {
             semanticErrorMessage
                 .freeNonPair()
@@ -811,10 +825,6 @@ class ExitStat(
  * The AST Node for Skip Statements
  **/
 class SkipStat(override val st: SymbolTable) : Stat {
-    override fun check() {
-        // Always succeeds
-    }
-
     override fun toString(): String {
         return "Skip"
     }
@@ -839,8 +849,10 @@ class ReturnStat(
     override val type: WAny
         get() = expression.type
 
+    /**
+     * Checks the scope
+     */
     override fun check() {
-        // Check scope
         if (st.isGlobal) {
             semanticErrorMessage
                 .returnFromGlobalScope()
