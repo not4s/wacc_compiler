@@ -22,6 +22,21 @@ class ASTVisitor(
     private var semanticErrorOccurred: BooleanReference = BooleanReference(false)
 
     /**
+     * Wrapper around try-catch block to write less repetitive code
+     * @param default is the AST which is returned if an error occured
+     * @param block is the action to perform inside 'try' clause
+     * @return The resultant AST
+     */
+    private fun catchAsManySemanticErrorAsPossible(default: AST, block: () -> AST): AST {
+        return try {
+            block.invoke()
+        } catch (e: SemanticException) {
+            semanticErrorOccurred.set(true)
+            default
+        }
+    }
+
+    /**
      * Used for transferring the Boolean value of the fact of semantic error occurrence
      */
     private constructor(st: SymbolTable, errorAlreadyOccurred: BooleanReference) : this(st) {
@@ -49,14 +64,8 @@ class ASTVisitor(
             waccFunctions.add(Pair(f, bodyLessFunction))
         }
         waccFunctions
-            .map { (ctx, waccFunction) ->
-                try {
-                    visitFuncBody(waccFunction, ctx)
-                } catch (e: SemanticException) {
-                    semanticErrorOccurred.set(true)
-                    waccFunction
-                }
-            }.forEach { st.reassign(it.identifier, it) }
+            .map { (ctx, waccFunction) -> visitFuncBody(waccFunction, ctx) }
+            .forEach { st.reassign(it.identifier, it) }
 
         // Explicitly call checks after defining all functions
         st.getMap().forEach { (_, f) -> (f as WACCFunction).check() }
@@ -350,18 +359,12 @@ class ASTVisitor(
     }
 
     override fun visitStatJoin(ctx: WACCParser.StatJoinContext): JoinStat {
-        val left = try {
-            this.visit(ctx.left) as Stat
-        } catch (e: SemanticException) {
-            semanticErrorOccurred.set(true)
-            SkipStat(st)
-        }
-        val right = try {
-            this.visit(ctx.right) as Stat
-        } catch (e: SemanticException) {
-            semanticErrorOccurred.set(true)
-            SkipStat(st)
-        }
+        val left: Stat = catchAsManySemanticErrorAsPossible(SkipStat(st)) {
+            this.visit(ctx.left)
+        } as Stat
+        val right: Stat = catchAsManySemanticErrorAsPossible(SkipStat(st)) {
+            this.visit(ctx.right)
+        } as Stat
         return JoinStat(st, left, right)
     }
 
@@ -421,13 +424,15 @@ class ASTVisitor(
      * Visit the function body after the function type and params were already visited
      */
     private fun visitFuncBody(function: WACCFunction, ctx: WACCParser.FuncContext): WACCFunction {
-        return WACCFunction(
-            function.st,
-            function.identifier,
-            function.params,
-            ASTVisitor(function.st, semanticErrorOccurred).visit(ctx.stat()) as Stat,
-            function.type
-        )
+        return catchAsManySemanticErrorAsPossible(function) {
+            WACCFunction(
+                function.st,
+                function.identifier,
+                function.params,
+                ASTVisitor(function.st, semanticErrorOccurred).visit(ctx.stat()) as Stat,
+                function.type
+            )
+        } as WACCFunction
     }
 
     /**
