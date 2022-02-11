@@ -20,6 +20,10 @@ class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
         return super.appendSpecificErrorMessage(msg) as SyntaxErrorMessageBuilder
     }
 
+    override fun setLineText(codeText: String): SyntaxErrorMessageBuilder {
+        return super.setLineText(codeText) as SyntaxErrorMessageBuilder
+    }
+
     fun generalSyntaxErrorMessage(): SyntaxErrorMessageBuilder {
         return appendCustomErrorMessage("Cannot parse the given code!")
     }

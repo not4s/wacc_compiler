@@ -1,6 +1,7 @@
 package utils
 
 import org.junit.Test
+import utils.ErrorMessageBuilder.Companion.UNINITIALIZED_START
 import waccType.WAny
 import waccType.WInt
 import kotlin.test.assertEquals
@@ -68,7 +69,7 @@ class SemanticErrorMessageBuilderTest {
                 .build()
             fail("Somehow managed to build ErrorMessage without start")
         } catch (e: IllegalStateException) {
-            assertEquals(ErrorMessageBuilder.UNINITIALIZED_START, e.message)
+            assertEquals(UNINITIALIZED_START, e.message)
         }
     }
 
@@ -93,7 +94,7 @@ class SemanticErrorMessageBuilderTest {
                 .functionArgumentCountMismatch()
                 .build()
 
-            // Calling specific error message witharguments
+            // Calling specific error message with arguments
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
                 .freeNonPair(WInt())
@@ -113,6 +114,20 @@ class SemanticErrorMessageBuilderTest {
         } catch (e: IllegalStateException) {
             e.printStackTrace()
             fail("Should not result into an error")
+        }
+    }
+
+    @Test
+    fun doesNotAllowToSetLineTextWhenStartIsNotProvided() {
+        try {
+            SemanticErrorMessageBuilder()
+                .setLineText(lineText)
+                .provideStart(positionedError)
+                .whileStatConditionHasNonBooleanType(WInt())
+                .build()
+            fail("Cannot set lineText when start is not initialized")
+        } catch (e: IllegalStateException) {
+            assertEquals(UNINITIALIZED_START, e.message)
         }
     }
 }

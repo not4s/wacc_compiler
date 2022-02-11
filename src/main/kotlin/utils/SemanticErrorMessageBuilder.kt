@@ -22,6 +22,10 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return super.appendSpecificErrorMessage(msg) as SemanticErrorMessageBuilder
     }
 
+    override fun setLineText(codeText: String): SemanticErrorMessageBuilder {
+        return super.setLineText(codeText) as SemanticErrorMessageBuilder
+    }
+
     fun variableRedeclaration(variableName: String): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage("The variable $variableName is already declared")
     }

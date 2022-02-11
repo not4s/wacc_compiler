@@ -73,4 +73,10 @@ abstract class ErrorMessageBuilder {
         theSpecificMessageIsAppended = true
         return appendCustomErrorMessage(msg)
     }
+
+    open fun setLineText(codeText: String): ErrorMessageBuilder {
+        val safeStart = start ?: throw IllegalStateException(UNINITIALIZED_START)
+        safeStart.setLineText(codeText)
+        return this
+    }
 }
