@@ -1,32 +1,24 @@
 import antlr.WACCLexer
 import antlr.WACCParser
-import org.antlr.v4.runtime.*
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
 import semantic.ASTVisitor
 import symbolTable.ParentRefSymbolTable
+import syntax.SyntaxErrBuilderErrorListener
 import utils.ExitCode
 import utils.SemanticException
-import utils.SyntaxErrorMessageBuilder
 import java.io.File
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-
+    if (args.isEmpty()) {
+        throw IllegalArgumentException("Please provide filepath as argument.")
+    }
     println("You have passed in: ${args.joinToString()}")
-    val file = File(args.getOrNull(0)
-        ?: "wacc_test/sample_programs/invalid/semanticErr/array/arrayTypeClash.wacc")
+    val file = File(args[0])
     println("Opening file: $file\n")
 
     val input = CharStreams.fromFileName(file.absolutePath)
-//    val input = CharStreams.fromString(
-//        """
-//        begin
-//            int x = 5;
-//            int y = "hi";
-//            exit 2
-//        end
-//
-//    """.trimIndent()
-//    )
 
     val lexer = WACCLexer(input)
 
@@ -36,23 +28,7 @@ fun main(args: Array<String>) {
 
     // setting the only listeners to our custom listener
     parser.removeErrorListeners()
-    parser.addErrorListener(object : BaseErrorListener() {
-        override fun syntaxError(
-            recognizer: Recognizer<*, *>?,
-            offendingSymbol: Any?,
-            line: Int,
-            charPositionInLine: Int,
-            msg: String?,
-            e: RecognitionException?
-        ) {
-            SyntaxErrorMessageBuilder()
-                .provideStart(line - 1, charPositionInLine)
-                .setLineTextFromSrcFile(file.absolutePath)
-                .appendCustomErrorMessage(msg ?: "Null message")
-                .buildAndPrint()
-            exitProcess(ExitCode.SYNTAX_ERROR)
-        }
-    })
+    parser.addErrorListener(SyntaxErrBuilderErrorListener(file))
 
     val tree = parser.program()
     try {
