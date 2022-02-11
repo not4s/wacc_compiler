@@ -321,7 +321,9 @@ class ASTVisitor(
 
     override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): WhileStat {
         val conditionExpr = this.visit(ctx.whileCond) as Expr
-        val loopBodyStat = ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.doBlock) as Stat
+        val loopBodyStat = catchAsManySemanticErrorAsPossible(SkipStat(st)) {
+            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.doBlock)
+        } as Stat
         return WhileStat(st, conditionExpr, loopBodyStat, ctx)
     }
 
@@ -350,12 +352,9 @@ class ASTVisitor(
     }
 
     override fun visitStatStore(ctx: WACCParser.StatStoreContext): Assignment {
-        return Assignment(
-            st,
-            this.visit(ctx.assignLhs()) as LHS,
-            this.visit(ctx.assignRhs()) as RHS,
-            ctx
-        )
+        val assignLhs = this.visit(ctx.assignLhs()) as LHS
+        val assignRhs = this.visit(ctx.assignRhs()) as RHS
+        return Assignment(st, assignLhs, assignRhs, ctx)
     }
 
     override fun visitStatJoin(ctx: WACCParser.StatJoinContext): JoinStat {
@@ -377,14 +376,14 @@ class ASTVisitor(
     }
 
     override fun visitStatIfThenElse(ctx: WACCParser.StatIfThenElseContext): IfThenStat {
-        return IfThenStat(
-            st,
-            this.visit(ctx.ifCond) as Expr,
-            // Create child scopes for the if-then-else blocks
-            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.thenBlock) as Stat,
-            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.elseBlock) as Stat,
-            ctx
-        )
+        val thenStat = catchAsManySemanticErrorAsPossible(SkipStat(st)) {
+            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.thenBlock)
+        } as Stat
+        val elseStat = catchAsManySemanticErrorAsPossible(SkipStat(st)) {
+            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.elseBlock)
+        } as Stat
+        val cond = this.visit(ctx.ifCond) as Expr
+        return IfThenStat(st, cond, thenStat, elseStat, ctx)
     }
 
     override fun visitParam(ctx: WACCParser.ParamContext): AST {
