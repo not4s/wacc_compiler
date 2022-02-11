@@ -49,8 +49,14 @@ class ASTVisitor(
             waccFunctions.add(Pair(f, bodyLessFunction))
         }
         waccFunctions
-            .map { (ctx, waccFunction) -> visitFuncBody(waccFunction, ctx) }
-            .forEach { st.reassign(it.identifier, it) }
+            .map { (ctx, waccFunction) ->
+                try {
+                    visitFuncBody(waccFunction, ctx)
+                } catch (e: SemanticException) {
+                    semanticErrorOccurred.set(true)
+                    waccFunction
+                }
+            }.forEach { st.reassign(it.identifier, it) }
 
         // Explicitly call checks after defining all functions
         st.getMap().forEach { (_, f) -> (f as WACCFunction).check() }
