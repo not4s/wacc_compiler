@@ -3,6 +3,7 @@ package semantic
 import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import ast.*
+import ast.statement.*
 import symbolTable.SymbolTable
 import utils.*
 import waccType.*
