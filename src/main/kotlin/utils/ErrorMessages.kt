@@ -52,10 +52,6 @@ data class ErrorMessage(
             return "-----------------< $prefix! >-----------------"
         }
     }
-
-    fun setLineText(line: String) {
-        errorCoordinates.setLineText(line)
-    }
 }
 
 class SemanticException(val reason: String) : Exception() {
