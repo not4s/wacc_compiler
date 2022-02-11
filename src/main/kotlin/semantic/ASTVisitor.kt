@@ -325,7 +325,17 @@ class ASTVisitor(
     }
 
     override fun visitStatJoin(ctx: WACCParser.StatJoinContext): JoinStat {
-        return JoinStat(st, this.visit(ctx.left) as Stat, this.visit(ctx.right) as Stat)
+        val left = try {
+            this.visit(ctx.left) as Stat
+        } catch (e: SemanticException) {
+            SkipStat(st)
+        }
+        val right = try {
+            this.visit(ctx.right) as Stat
+        } catch (e: SemanticException) {
+            SkipStat(st)
+        }
+        return JoinStat(st, left, right)
     }
 
     override fun visitStatSkip(ctx: WACCParser.StatSkipContext): SkipStat {
