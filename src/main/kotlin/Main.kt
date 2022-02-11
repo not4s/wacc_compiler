@@ -38,5 +38,4 @@ fun main(args: Array<String>) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
-
 }
