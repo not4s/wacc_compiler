@@ -9,6 +9,7 @@ import java.io.File
 abstract class ErrorMessageBuilder {
 
     companion object {
+        const val UNINITIALIZED_LINE_TEXT: String = "The lineText is not specified!"
         const val LINE_TEXT_ALREADY_SPECIFIED: String = "The code text of the ErrorMessage has already been specified"
         const val UNINITIALIZED_START: String = "The 'start' property is not initialised. Use provideStart()"
         const val SET_START_ONCE_RESTRICTION: String = "The 'start' property must be set only once."
@@ -30,6 +31,9 @@ abstract class ErrorMessageBuilder {
 
     fun build(): ErrorMessage {
         val startParam = start ?: throw IllegalStateException(UNINITIALIZED_START)
+        if (!theLineTextSpecified) {
+            throw IllegalStateException(UNINITIALIZED_LINE_TEXT)
+        }
         return ErrorMessage(prefix, startParam, body)
     }
 

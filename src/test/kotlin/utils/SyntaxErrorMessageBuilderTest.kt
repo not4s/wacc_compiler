@@ -20,6 +20,7 @@ class SyntaxErrorMessageBuilderTest {
             = SyntaxErrorMessageBuilder()
             .appendCustomErrorMessage(customMsg)
             .provideStart(positionedError)
+            .setLineText(lineText)
             .build()
 
         val constructorErrorMessage
@@ -35,6 +36,7 @@ class SyntaxErrorMessageBuilderTest {
                 .provideStart(positionedError)
                 .appendCustomErrorMessage("Message 1")
                 .appendCustomErrorMessage("Message 2")
+                .setLineText(lineText)
                 .build()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -54,6 +56,19 @@ class SyntaxErrorMessageBuilderTest {
             fail("Multiple calls of line text setter should not be allowed")
         } catch (e: IllegalStateException) {
             assertEquals(ErrorMessageBuilder.LINE_TEXT_ALREADY_SPECIFIED, e.message)
+        }
+    }
+
+    @Test
+    fun requireSettingLineText() {
+        try {
+            SyntaxErrorMessageBuilder()
+                .provideStart(positionedError)
+                .appendCustomErrorMessage("some message")
+                .build()
+            fail("Invalid build without lineText set")
+        } catch (e: IllegalStateException) {
+            assertEquals(ErrorMessageBuilder.UNINITIALIZED_LINE_TEXT, e.message)
         }
     }
 }
