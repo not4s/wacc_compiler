@@ -18,7 +18,7 @@ class ASTVisitor(
 
     /**
      * Wrapper around try-catch block to write less repetitive code
-     * @param default is the AST which is returned if an error occured
+     * @param default is the AST which is returned if an error occurred
      * @param block is the action to perform inside 'try' clause
      * @return The resultant AST
      */
@@ -106,19 +106,25 @@ class ASTVisitor(
         return  this.visit(ctx.pairType())  as WACCType
     }
 
-    // <something[]>[]
+    /**
+     * Visiting types like <something[]>[]
+     */
     override fun visitArrayTypeArrayType(ctx: WACCParser.ArrayTypeArrayTypeContext): WACCType {
         val elemType: WACCType = safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.arrayType()) } as WACCType
         return WACCType(st, WArray(elemType.type))
     }
 
-    // int[], str[], char[], bool[]
+    /**
+     * Visiting types like int[], str[], char[], bool[]
+     */
     override fun visitArrayTypeBaseType(ctx: WACCParser.ArrayTypeBaseTypeContext): WACCType {
         val elemType: WACCType = safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.baseType()) } as WACCType
         return WACCType(st, WArray(elemType.type))
     }
 
-    // pair[]
+    /**
+     * Visiting types like pair[]
+     */
     override fun visitArrayTypePairType(ctx: WACCParser.ArrayTypePairTypeContext): AST {
         val elemType: WACCType = safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.pairType()) } as WACCType
         return WACCType(st, WArray(elemType.type))
@@ -467,5 +473,4 @@ class ASTVisitor(
     override fun visitFunc(ctx: WACCParser.FuncContext): WACCFunction {
         throw Exception("Don't call me!")
     }
-
 }

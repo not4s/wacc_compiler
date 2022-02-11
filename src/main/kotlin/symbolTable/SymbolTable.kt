@@ -26,11 +26,20 @@ abstract class SymbolTable(
 
     abstract fun declare(symbol: String, value: WAny, errBuilder: SemanticErrorMessageBuilder)
 
-    // Base type
+    /**
+     * Reassignment for base types
+     */
     abstract fun reassign(symbol: String, value: WAny, errBuilder: SemanticErrorMessageBuilder)
-    // Arrays
+
+    /**
+     * Reassignment for arrays
+     */
     abstract fun reassign(arrSym: String, indices: Array<WInt>, value: WAny, errBuilder: SemanticErrorMessageBuilder)
-    // Pairs
+
+    /**
+     * Reassignment for pairs
+     */
     abstract fun reassign(pairSym: String, fst: Boolean, value: WAny, errBuilder: SemanticErrorMessageBuilder)
+
     abstract fun createChildScope(): SymbolTable
 }

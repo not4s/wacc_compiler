@@ -8,7 +8,7 @@ import utils.SyntaxErrorMessageBuilder
 import java.io.File
 import kotlin.system.exitProcess
 
-class SyntaxErrBuilderErrorListener(val sourceFile: File) : BaseErrorListener() {
+class SyntaxErrBuilderErrorListener(private val sourceFile: File) : BaseErrorListener() {
     override fun syntaxError(
         recognizer: Recognizer<*, *>?,
         offendingSymbol: Any?,

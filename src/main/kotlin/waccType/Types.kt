@@ -85,12 +85,6 @@ class WPair(
         result = 31 * result + rightType.hashCode()
         return result
     }
-
-    fun displayAsLispTree(): String {
-        val leftStr = if (leftType is WPair) leftType.displayAsLispTree() else leftType.toString()
-        val rightStr = if (rightType is WPair) rightType.displayAsLispTree() else rightType.toString()
-        return "Pair($leftStr, $rightStr)"
-    }
 }
 
 /**
