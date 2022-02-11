@@ -1,14 +1,15 @@
 package utils
 
 import org.junit.Test
+import java.lang.IllegalStateException
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class SyntaxErrorMessageBuilderTest {
 
     private val customMsg = "Testing Syntax Error Message Builder"
-    private val lineNum = 23
-    private val columnNum = 8
+    private val lineNum = 5
+    private val columnNum = 3
     private val lineText = "int foo = 123 + 34 + 21"
     private val positionedError = PositionedError(lineNum, columnNum, lineText)
 
@@ -38,6 +39,21 @@ class SyntaxErrorMessageBuilderTest {
         } catch (e: Exception) {
             e.printStackTrace()
             fail("Appending multiple error messages must be allowed")
+        }
+    }
+
+    @Test
+    fun doNotAllowMultipleLineTextSettings() {
+        try {
+            SyntaxErrorMessageBuilder()
+                .provideStart(positionedError)
+                .appendCustomErrorMessage("some message")
+                .setLineText("Very original test string!")
+                .setLineText("Yet another very original test string!!!")
+                .build()
+            fail("Multiple calls of line text setter should not be allowed")
+        } catch (e: IllegalStateException) {
+            assertEquals(ErrorMessageBuilder.LINE_TEXT_ALREADY_SPECIFIED, e.message)
         }
     }
 }

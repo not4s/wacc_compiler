@@ -9,7 +9,8 @@ import waccType.*
 import kotlin.system.exitProcess
 
 class ASTVisitor(
-    private val st: SymbolTable
+    private val st: SymbolTable,
+    private val srcFilePath: String
 ) : WACCParserBaseVisitor<AST>() {
 
     override fun visitProgram(ctx: WACCParser.ProgramContext): Stat {
@@ -20,6 +21,7 @@ class ASTVisitor(
             if (id in st.getMap()) {
                 SemanticErrorMessageBuilder()
                     .provideStart(PositionedError(f))
+                    .setLineTextFromSrcFile(srcFilePath)
                     .functionRedefineError()
                     .buildAndPrint()
                 throw SemanticException("Cannot redefine function $id")
@@ -42,7 +44,7 @@ class ASTVisitor(
         // This scope is still 'global'
         val childScope = st.createChildScope()
         childScope.isGlobal = true
-        return ASTVisitor(childScope).visit(ctx.stat()) as Stat
+        return ASTVisitor(childScope, srcFilePath).visit(ctx.stat()) as Stat
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {
@@ -278,17 +280,13 @@ class ASTVisitor(
         val decType = (this.visit(ctx.type()) as Typed).type
         val rhs = this.visit(ctx.assignRhs()) as RHS
         val identifier = ctx.IDENTIFIER().text
-        val declaration = Declaration(st, decType, identifier, rhs, ctx)
-        return declaration
+        return Declaration(st, decType, identifier, rhs, ctx)
     }
 
     override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): WhileStat {
-        return WhileStat(
-            st,
-            this.visit(ctx.whileCond) as Expr,
-            ASTVisitor(st.createChildScope()).visit(ctx.doBlock) as Stat,
-            ctx
-        )
+        val conditionExpr = this.visit(ctx.whileCond) as Expr
+        val loopBodyStat = ASTVisitor(st.createChildScope(), srcFilePath).visit(ctx.doBlock) as Stat
+        return WhileStat(st, conditionExpr, loopBodyStat, ctx)
     }
 
     override fun visitStatRead(ctx: WACCParser.StatReadContext): ReadStat {
@@ -296,7 +294,7 @@ class ASTVisitor(
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
-        return ASTVisitor(st.createChildScope()).visit(ctx.stat())
+        return ASTVisitor(st.createChildScope(), srcFilePath).visit(ctx.stat())
     }
 
     override fun visitStatFree(ctx: WACCParser.StatFreeContext): FreeStat {
@@ -351,8 +349,8 @@ class ASTVisitor(
             st,
             this.visit(ctx.ifCond) as Expr,
             // Create child scopes for the if-then-else blocks
-            ASTVisitor(st.createChildScope()).visit(ctx.thenBlock) as Stat,
-            ASTVisitor(st.createChildScope()).visit(ctx.elseBlock) as Stat,
+            ASTVisitor(st.createChildScope(), srcFilePath).visit(ctx.thenBlock) as Stat,
+            ASTVisitor(st.createChildScope(), srcFilePath).visit(ctx.elseBlock) as Stat,
             ctx
         )
     }
@@ -398,7 +396,7 @@ class ASTVisitor(
             function.st,
             function.identifier,
             function.params,
-            ASTVisitor(function.st).visit(ctx.stat()) as Stat,
+            ASTVisitor(function.st, srcFilePath).visit(ctx.stat()) as Stat,
             function.type
         )
     }

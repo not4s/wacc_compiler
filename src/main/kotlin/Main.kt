@@ -61,7 +61,7 @@ fun main(args: Array<String>) {
 
     val tree = parser.program()
     try {
-        val res = ASTVisitor(ParentRefSymbolTable()).visit(tree)
+        val res = ASTVisitor(ParentRefSymbolTable(), file.absolutePath).visit(tree)
         println(res)
     } catch (e: SemanticException) {
         println("-----------SEMANTIC ERROR-----------")

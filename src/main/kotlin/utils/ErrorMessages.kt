@@ -3,7 +3,7 @@ package utils
 import org.antlr.v4.runtime.ParserRuleContext
 
 data class PositionedError(
-    private val lineNumber: Int,
+    val lineNumber: Int,
     private val columnNumber: Int,
     private var lineText: String = "",
 ) {
