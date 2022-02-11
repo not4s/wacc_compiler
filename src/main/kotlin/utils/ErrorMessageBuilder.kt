@@ -47,8 +47,8 @@ abstract class ErrorMessageBuilder {
      * The following function or its other overloaded version must be
      * called once during building process
      */
-    open fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): ErrorMessageBuilder {
-        return provideStart(PositionedError(lineNumber, columnNumber, lineText))
+    open fun provideStart(lineNumber: Int, columnNumber: Int): ErrorMessageBuilder {
+        return provideStart(PositionedError(lineNumber, columnNumber, ""))
     }
 
     open fun provideStart(startProvided: PositionedError): ErrorMessageBuilder {
@@ -104,6 +104,6 @@ abstract class ErrorMessageBuilder {
      */
     open fun setLineTextFromSrcFile(srcFilePath: String): ErrorMessageBuilder {
         val safeStart = start ?: throw IllegalStateException(UNINITIALIZED_START)
-        return setLineText(File(srcFilePath).readLines()[safeStart.lineNumber])
+        return setLineText(File(srcFilePath).readLines()[safeStart.lineNumber - 1])
     }
 }

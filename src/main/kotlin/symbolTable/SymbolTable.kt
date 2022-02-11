@@ -4,8 +4,10 @@ import waccType.WAny
 import utils.SemanticException
 import waccType.WInt
 
-abstract class SymbolTable(var isGlobal : Boolean) {
-
+abstract class SymbolTable(
+    var isGlobal : Boolean,
+    val srcFilePath: String
+) {
     abstract fun get(symbol: String): WAny
 
     abstract fun get(arrSym: String, indices: Array<WInt>): WAny

@@ -2,7 +2,6 @@ package utils
 
 import org.junit.Test
 import utils.ErrorMessageBuilder.Companion.UNINITIALIZED_START
-import waccType.WAny
 import waccType.WInt
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -51,7 +50,7 @@ class SemanticErrorMessageBuilderTest {
         try {
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
-                .provideStart(lineNum, columnNum, customMsg)
+                .provideStart(lineNum, columnNum)
                 .appendCustomErrorMessage("some message")
                 .build()
             fail("Start should be set once")

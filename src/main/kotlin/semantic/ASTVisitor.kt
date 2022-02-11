@@ -10,8 +10,23 @@ import kotlin.system.exitProcess
 
 class ASTVisitor(
     private val st: SymbolTable,
-    private val srcFilePath: String
 ) : WACCParserBaseVisitor<AST>() {
+
+    class BooleanReference(private var flag: Boolean = false) {
+        fun set(newValue: Boolean) {
+            flag = newValue
+        }
+        fun get() = flag
+    }
+
+    private var semanticErrorOccurred: BooleanReference = BooleanReference(false)
+
+    /**
+     * Used for transferring the Boolean value of the fact of semantic error occurrence
+     */
+    private constructor(st: SymbolTable, errorAlreadyOccurred: BooleanReference) : this(st) {
+        semanticErrorOccurred = errorAlreadyOccurred
+    }
 
     override fun visitProgram(ctx: WACCParser.ProgramContext): Stat {
         // This adds functions to symbol table
@@ -21,7 +36,7 @@ class ASTVisitor(
             if (id in st.getMap()) {
                 SemanticErrorMessageBuilder()
                     .provideStart(PositionedError(f))
-                    .setLineTextFromSrcFile(srcFilePath)
+                    .setLineTextFromSrcFile(st.srcFilePath)
                     .functionRedefineError()
                     .buildAndPrint()
                 throw SemanticException("Cannot redefine function $id")
@@ -44,7 +59,12 @@ class ASTVisitor(
         // This scope is still 'global'
         val childScope = st.createChildScope()
         childScope.isGlobal = true
-        return ASTVisitor(childScope, srcFilePath).visit(ctx.stat()) as Stat
+        val programAST = ASTVisitor(childScope, semanticErrorOccurred).visit(ctx.stat()) as Stat
+        println(semanticErrorOccurred)
+        if (semanticErrorOccurred.get()) {
+            throw SemanticException("At least one SemanticError occurred")
+        }
+        return programAST
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {
@@ -140,6 +160,7 @@ class ASTVisitor(
         } catch (e: java.lang.NumberFormatException) {
             SyntaxErrorMessageBuilder()
                 .provideStart(PositionedError(ctx))
+                .setLineTextFromSrcFile(st.srcFilePath)
                 .appendCustomErrorMessage("Attempted to parse a very big int ${ctx.text}!")
                 .buildAndPrint()
             exitProcess(ExitCode.SYNTAX_ERROR)
@@ -285,7 +306,7 @@ class ASTVisitor(
 
     override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): WhileStat {
         val conditionExpr = this.visit(ctx.whileCond) as Expr
-        val loopBodyStat = ASTVisitor(st.createChildScope(), srcFilePath).visit(ctx.doBlock) as Stat
+        val loopBodyStat = ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.doBlock) as Stat
         return WhileStat(st, conditionExpr, loopBodyStat, ctx)
     }
 
@@ -294,7 +315,7 @@ class ASTVisitor(
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
-        return ASTVisitor(st.createChildScope(), srcFilePath).visit(ctx.stat())
+        return ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.stat())
     }
 
     override fun visitStatFree(ctx: WACCParser.StatFreeContext): FreeStat {
@@ -326,11 +347,13 @@ class ASTVisitor(
         val left = try {
             this.visit(ctx.left) as Stat
         } catch (e: SemanticException) {
+            semanticErrorOccurred.set(true)
             SkipStat(st)
         }
         val right = try {
             this.visit(ctx.right) as Stat
         } catch (e: SemanticException) {
+            semanticErrorOccurred.set(true)
             SkipStat(st)
         }
         return JoinStat(st, left, right)
@@ -349,8 +372,8 @@ class ASTVisitor(
             st,
             this.visit(ctx.ifCond) as Expr,
             // Create child scopes for the if-then-else blocks
-            ASTVisitor(st.createChildScope(), srcFilePath).visit(ctx.thenBlock) as Stat,
-            ASTVisitor(st.createChildScope(), srcFilePath).visit(ctx.elseBlock) as Stat,
+            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.thenBlock) as Stat,
+            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.elseBlock) as Stat,
             ctx
         )
     }
@@ -396,7 +419,7 @@ class ASTVisitor(
             function.st,
             function.identifier,
             function.params,
-            ASTVisitor(function.st, srcFilePath).visit(ctx.stat()) as Stat,
+            ASTVisitor(function.st, semanticErrorOccurred).visit(ctx.stat()) as Stat,
             function.type
         )
     }

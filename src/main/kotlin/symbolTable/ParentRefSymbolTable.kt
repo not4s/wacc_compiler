@@ -3,9 +3,15 @@ package symbolTable
 import utils.SemanticException
 import waccType.*
 
-class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlobal: Boolean) :
-    SymbolTable(isGlobal) {
-    constructor() : this(null, true)
+class ParentRefSymbolTable(
+    private val parentTable: ParentRefSymbolTable?,
+    isGlobal: Boolean,
+    srcFilePath: String
+) : SymbolTable(
+    isGlobal = isGlobal,
+    srcFilePath = srcFilePath
+) {
+    constructor(srcFilePath: String) : this(null, true, srcFilePath)
 
     private val dict = mutableMapOf<String, WAny>()
 
@@ -140,7 +146,7 @@ class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlo
     }
 
     override fun createChildScope(): SymbolTable {
-        return ParentRefSymbolTable(this, false)
+        return ParentRefSymbolTable(this, false, srcFilePath)
     }
 
     override fun toString(): String {

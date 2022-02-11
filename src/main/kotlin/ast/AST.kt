@@ -3,14 +3,12 @@ package ast
 import ast.BinOperator.*
 import ast.UnOperator.*
 import org.antlr.v4.runtime.ParserRuleContext
-import org.intellij.lang.annotations.Identifier
 import symbolTable.SymbolTable
 import utils.ExitCode
 import utils.PositionedError
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
-import kotlin.math.exp
 import kotlin.system.exitProcess
 
 const val INDENT = "  | "
@@ -47,6 +45,13 @@ interface LHS : AST, Typed
 interface Expr : AST, Typed, RHS
 
 interface Stat : AST
+
+fun builderTemplateFromContext(parserCtx: ParserRuleContext,
+                               st: SymbolTable): SemanticErrorMessageBuilder {
+    return SemanticErrorMessageBuilder()
+        .provideStart(PositionedError(parserCtx))
+        .setLineTextFromSrcFile(st.srcFilePath)
+}
 
 /**
  * Types of the different binary operations
@@ -101,8 +106,7 @@ class FunctionCall(
     parserCtx: ParserRuleContext,
 ) : RHS {
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -228,8 +232,8 @@ class PairLiteral(
  **/
 class NewPairRHS(
     override val st: SymbolTable,
-    val left: Expr,
-    val right: Expr,
+    private val left: Expr,
+    private val right: Expr,
     override val type: WPair,
 ) : RHS {
 
@@ -245,14 +249,13 @@ class NewPairRHS(
  **/
 class BinaryOperation(
     override val st: SymbolTable,
-    val left: Expr,
-    val right: Expr,
+    private val left: Expr,
+    private val right: Expr,
     val op: BinOperator,
     parserCtx: ParserRuleContext,
 ) : Expr {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -306,13 +309,12 @@ class BinaryOperation(
  **/
 class UnaryOperation(
     override val st: SymbolTable,
-    val operand: Expr,
+    private val operand: Expr,
     val op: UnOperator,
     parserCtx: ParserRuleContext,
 ) : Expr {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     override fun check() {
         val typeIsIncorrect: Boolean = when(op) {
@@ -348,14 +350,13 @@ class UnaryOperation(
  **/
 class Declaration(
     override val st: SymbolTable,
-    var decType: WAny,
+    private var decType: WAny,
     val identifier: String,
-    val rhs: RHS,
+    private val rhs: RHS,
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -386,13 +387,12 @@ class Declaration(
  **/
 class Assignment(
     override val st: SymbolTable,
-    val lhs: LHS,
-    val rhs: RHS,
+    private val lhs: LHS,
+    private val rhs: RHS,
     parserCtx: ParserRuleContext
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -465,8 +465,7 @@ class IdentifierGet(
     parserCtx: ParserRuleContext
 ) : Expr {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -505,8 +504,7 @@ class ArrayElement(
     parserCtx: ParserRuleContext,
 ) : LHS, Expr {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -553,8 +551,7 @@ class IfThenStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -592,8 +589,7 @@ class WhileStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -625,12 +621,11 @@ class WhileStat(
  **/
 class ReadStat(
     override val st: SymbolTable,
-    val lhs: LHS,
+    private val lhs: LHS,
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -690,8 +685,7 @@ class PairElement(
 
     private var actualType: WAny? = null
 
-    val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -756,8 +750,7 @@ class FreeStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -790,8 +783,7 @@ class ExitStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -829,8 +821,7 @@ class ReturnStat(
     parserCtx: ParserRuleContext,
 ) : Stat, Typed {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
-        = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
