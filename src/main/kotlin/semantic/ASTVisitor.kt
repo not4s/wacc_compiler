@@ -46,20 +46,24 @@ class ASTVisitor(
                 .setLineTextFromSrcFile(st.srcFilePath)
             val id = f.IDENTIFIER().text
             if (id in st.getMap()) {
-                errBuilder.functionRedefineError()
+                errBuilder.functionRedefineError(id)
                     .buildAndPrint()
-                throw SemanticException("Cannot redefine function $id")
+                semanticErrorCount.incrementAndGet()
             }
             val bodyLessFunction = visitFuncParams(f)
-            st.declare(
-                symbol = id,
-                value = bodyLessFunction,
-                errBuilder = errBuilder
-            )
+            try {
+                st.declare(
+                    symbol = id,
+                    value = bodyLessFunction,
+                    errBuilder = builderTemplateFromContext(ctx, st)
+                )
+            } catch (e: SemanticException) {
+                semanticErrorCount.incrementAndGet()
+            }
             waccFunctions.add(Pair(f, bodyLessFunction))
         }
         for ((funCtx, waccFun) in waccFunctions) {
-            val funcAST = visitFuncBody(waccFun, funCtx)
+            val funcAST = safeVisit(waccFun) { visitFuncBody(waccFun, funCtx) } as WACCFunction
             st.reassign(
                 funcAST.identifier,
                 funcAST,
@@ -67,7 +71,14 @@ class ASTVisitor(
             )
         }
         // Explicitly call checks after defining all functions
-        st.getMap().forEach { (_, f) -> (f as WACCFunction).check() }
+        for ((_, f) in st.getMap()) {
+            f as WACCFunction
+            try {
+                f.check()
+            } catch (e: SemanticException) {
+                semanticErrorCount.incrementAndGet()
+            }
+        }
 
         // Create a child scope, functions are now stored in parent table.
         // This scope is still 'global'
@@ -83,15 +94,15 @@ class ASTVisitor(
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {
-        return safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.baseType()) } as WACCType
+        return this.visit(ctx.baseType()) as WACCType
     }
 
     override fun visitTypeArrayType(ctx: WACCParser.TypeArrayTypeContext): WACCType {
-        return safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.arrayType()) } as WACCType
+        return this.visit(ctx.arrayType())  as WACCType
     }
 
     override fun visitTypePairType(ctx: WACCParser.TypePairTypeContext): WACCType {
-        return safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.pairType()) } as WACCType
+        return  this.visit(ctx.pairType())  as WACCType
     }
 
     // <something[]>[]
@@ -267,7 +278,7 @@ class ASTVisitor(
     }
 
     override fun visitAssignLhsPairElem(ctx: WACCParser.AssignLhsPairElemContext): LHS {
-        return safeVisit(IdentifierSet(st, "!!!SEMANTICERR", ctx)) { this.visit(ctx.pairElem()) } as LHS
+        return this.visit(ctx.pairElem()) as LHS
     }
 
     override fun visitAssignRhsExpr(ctx: WACCParser.AssignRhsExprContext): Expr {
@@ -326,7 +337,7 @@ class ASTVisitor(
     }
 
     override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): WhileStat {
-        val conditionExpr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.whileCond) } as Expr
+        val conditionExpr = safeVisit(Literal(st, WBool())) { this.visit(ctx.whileCond) } as Expr
         val loopBodyStat = safeVisit(SkipStat(st)) {
             ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.doBlock)
         } as Stat
@@ -336,8 +347,9 @@ class ASTVisitor(
     override fun visitStatRead(ctx: WACCParser.StatReadContext): ReadStat {
         return ReadStat(
             st,
-            safeVisit(IdentifierSet(st, "!!!SEMANTICERR", ctx)) { this.visit(ctx.assignLhs()) } as LHS,
-            ctx)
+            this.visit(ctx.assignLhs()) as LHS,
+            ctx
+        )
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
@@ -361,7 +373,7 @@ class ASTVisitor(
     }
 
     override fun visitStatStore(ctx: WACCParser.StatStoreContext): Assignment {
-        val assignLhs = safeVisit(IdentifierSet(st, "!!!SEMANTICERR", ctx)) { this.visit(ctx.assignLhs()) } as LHS
+        val assignLhs = this.visit(ctx.assignLhs()) as LHS
         val assignRhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.assignRhs()) } as RHS
         return Assignment(st, assignLhs, assignRhs, ctx)
     }
@@ -387,7 +399,7 @@ class ASTVisitor(
         val elseStat = safeVisit(SkipStat(st)) {
             ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.elseBlock)
         } as Stat
-        val cond = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.ifCond) } as Expr
+        val cond = safeVisit(Literal(st, WBool())) { this.visit(ctx.ifCond) } as Expr
         return IfThenStat(st, cond, thenStat, elseStat, ctx)
     }
 

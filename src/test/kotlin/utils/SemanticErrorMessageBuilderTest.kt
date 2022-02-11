@@ -20,7 +20,7 @@ class SemanticErrorMessageBuilderTest {
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
                 .functionRedefineError()
-                .functionArgumentCountMismatch()
+                .functionArgumentCountMismatch(3, 5)
                 .freeNonPair()
                 .build()
             fail("Should not allow multiple errors here")
@@ -36,7 +36,7 @@ class SemanticErrorMessageBuilderTest {
                 .provideStart(positionedError)
                 .setLineText(lineText)
                 .appendCustomErrorMessage("prefix")
-                .functionArgumentCountMismatch()
+                .functionArgumentCountMismatch(1, 2)
                 .appendCustomErrorMessage("suffix")
                 .build()
         } catch (e: Exception) {
@@ -95,7 +95,7 @@ class SemanticErrorMessageBuilderTest {
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
                 .setLineText(lineText)
-                .functionArgumentCountMismatch()
+                .functionArgumentCountMismatch(1, 2)
                 .build()
 
             // Calling specific error message with arguments
@@ -117,7 +117,7 @@ class SemanticErrorMessageBuilderTest {
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
                 .setLineText(lineText)
-                .functionArgumentCountMismatch(5)
+                .functionArgumentCountMismatch(5,7)
                 .build()
         } catch (e: IllegalStateException) {
             e.printStackTrace()

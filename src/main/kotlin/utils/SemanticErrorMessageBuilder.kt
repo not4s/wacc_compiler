@@ -57,7 +57,8 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     fun readTypeIsIncorrect(actualType: WAny): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "Cannot read into the variable of type $actualType. Variables must be characters or numeric.")
+            "Cannot read into the variable of type $actualType. Variables must be characters or numeric."
+        )
     }
 
     fun whileStatConditionHasNonBooleanType(actualType: WAny): SemanticErrorMessageBuilder {
@@ -67,7 +68,8 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     fun whileStatConditionHasNonBooleanType(): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "The conditional statement in the \"while\" statement does not evaluate to the boolean type.")
+            "The conditional statement in the \"while\" statement does not evaluate to the boolean type."
+        )
     }
 
     fun ifStatConditionHasNonBooleanType(actualType: WAny): SemanticErrorMessageBuilder {
@@ -77,17 +79,20 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     fun ifStatConditionHasNonBooleanType(): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "The conditional statement in the \"if\" statement does not evaluate to the boolean type.")
+            "The conditional statement in the \"if\" statement does not evaluate to the boolean type."
+        )
     }
 
     fun variableNotInScope(identifier: String): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "The variable $identifier is undefined. It is out of the current scope or any parent scope.")
+            "The variable $identifier is undefined. It is out of the current scope or any parent scope."
+        )
     }
 
     fun functionArgumentTypeMismatch(expectedType: WAny, actualType: WAny): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "The supplied function argument has incorrect type. Expected $expectedType, got $actualType instead.")
+            "The supplied function argument has incorrect type. Expected $expectedType, got $actualType instead."
+        )
     }
 
     fun functionRedefineError(functionName: String): SemanticErrorMessageBuilder {
@@ -98,28 +103,27 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return appendSpecificErrorMessage("Cannot redefine function")
     }
 
-    fun functionArgumentCountMismatch(expectedArgumentsCount: Int): SemanticErrorMessageBuilder {
-        functionArgumentCountMismatch()
-        return appendCustomErrorMessage("There shall be $expectedArgumentsCount arguments")
-    }
-
-    fun functionArgumentCountMismatch(): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage("The number of provided arguments is incorrect")
+    fun functionArgumentCountMismatch(expectedNum: Int, actualNum: Int): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage("The number of provided arguments ($actualNum) is incorrect, expected : $expectedNum")
     }
 
     fun functionReturnStatTypeMismatch(functionType: WAny, returnStatType: WAny): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage("The \"return\" statement of the function returns $returnStatType, " +
-                "but the function has type $functionType")
+        return appendSpecificErrorMessage(
+            "The \"return\" statement of the function returns $returnStatType, " +
+                    "but the function has type $functionType"
+        )
     }
 
     fun functionCallTypeMismatch(assignLhsType: WAny, functionType: WAny): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "Cannot assign function of type $functionType to the variable of type $assignLhsType")
+            "Cannot assign function of type $functionType to the variable of type $assignLhsType"
+        )
     }
 
     fun assignmentTypeMismatch(assignLhsType: WAny, assignRhsType: WAny): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "Cannot assign expression type $assignRhsType to the variable of type $assignLhsType")
+            "Cannot assign expression type $assignRhsType to the variable of type $assignLhsType"
+        )
     }
 
     fun returnFromGlobalScope(): SemanticErrorMessageBuilder {
@@ -144,22 +148,26 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     fun operandTypeMismatch(expectedType: WAny, actualType: WAny): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "The $actualType expression does not conform to the expected type $expectedType")
+            "The $actualType expression does not conform to the expected type $expectedType"
+        )
     }
 
-    fun binOpInvalidType(actualType: WAny): SemanticErrorMessageBuilder {
+    fun binOpInvalidType(actualType: WAny, operation: String): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "Cannot call this binary operation on $actualType")
+            "Cannot call this binary operation ($operation) on $actualType"
+        )
     }
 
-    fun unOpInvalidType(actualType: WAny): SemanticErrorMessageBuilder {
+    fun unOpInvalidType(actualType: WAny, operation: String): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "Cannot call this unary operation on $actualType")
+            "Cannot call this unary operation ($operation) on $actualType"
+        )
     }
 
     fun arrayIndexInvalidType(): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
-            "The indexes of the array have an non-int Type")
+            "The indexes of the array have an non-int Type"
+        )
     }
 
     fun pairElementInvalidType(): SemanticErrorMessageBuilder {

@@ -19,7 +19,10 @@ class ParentRefSymbolTable(
     override fun get(symbol: String, errBuilder: SemanticErrorMessageBuilder): WAny {
         // Flashbacks to Haskell's >>=
         return dict[symbol] ?: parentTable?.get(symbol, errBuilder)
-        ?: throw SemanticException("Attempted to get undeclared variable $symbol")
+        ?: run {
+            errBuilder.variableNotInScope(symbol).buildAndPrint()
+            throw SemanticException("Attempted to get undeclared variable $symbol")
+        }
     }
 
     override fun get(arrSym: String, indices: Array<WInt>, errBuilder: SemanticErrorMessageBuilder): WAny {
@@ -135,7 +138,13 @@ class ParentRefSymbolTable(
                 return
             }
             if (prev !is WPair) {
-                errBuilder.unOpInvalidType(prev).buildAndPrint()
+                errBuilder.unOpInvalidType(
+                    prev, if (fst) {
+                        "fst"
+                    } else {
+                        "snd"
+                    }
+                ).buildAndPrint()
                 throw SemanticException("Cannot obtain (fst/snd) from type: $prev")
             } else {
                 // Extract correct element

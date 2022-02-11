@@ -95,7 +95,7 @@ class WACCFunction(
     override fun toString(): String {
         return "Function($type) $identifier(${
             params.map { (id, t) -> "($t)$id" }.reduceOrNull { a, b -> "$a, $b" } ?: ""
-        }):\n${"   ".prependIndent(INDENT)}"
+        })"
     }
 }
 
@@ -125,7 +125,7 @@ class FunctionCall(
         }
         if (func.params.size != params.size) {
             semanticErrorMessage
-                .functionArgumentCountMismatch()
+                .functionArgumentCountMismatch(func.params.size, params.size)
                 .buildAndPrint()
             throw SemanticException("Argument count does not match up with expected count for function $identifier")
         }
@@ -290,7 +290,7 @@ class BinaryOperation(
         }
         if (operationTypeNotValid) {
             semanticErrorMessage
-                .binOpInvalidType(left.type)
+                .binOpInvalidType(left.type, op.toString())
                 .buildAndPrint()
             throw SemanticException("Attempted to call binary operation $op on operands of invalid type: ${left.type} ")
         }
@@ -332,7 +332,7 @@ class UnaryOperation(
         }
         if (typeIsIncorrect) {
             semanticErrorMessage
-                .unOpInvalidType(operand.type)
+                .unOpInvalidType(operand.type, op.toString())
                 .buildAndPrint()
             throw SemanticException("Attempted to call $op operation on invalid type: ${operand.type}")
         }
