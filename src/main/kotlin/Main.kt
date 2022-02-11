@@ -1,36 +1,24 @@
 import antlr.WACCLexer
 import antlr.WACCParser
-import org.antlr.v4.runtime.*
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
 import semantic.ASTVisitor
 import symbolTable.ParentRefSymbolTable
+import syntax.SyntaxErrBuilderErrorListener
 import utils.ExitCode
 import utils.SemanticException
-import utils.SyntaxErrorMessageBuilder
-import waccType.WArray
-import waccType.WInt
-import waccType.WStr
-import waccType.typesAreEqual
 import java.io.File
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-
+    if (args.isEmpty()) {
+        throw IllegalArgumentException("Please provide filepath as argument.")
+    }
     println("You have passed in: ${args.joinToString()}")
-    val file =
-        File(args.getOrNull(0) ?: "wacc_test/sample_programs/invalid/semanticErr/array/arrayTypeClash.wacc")
+    val file = File(args[0])
     println("Opening file: $file\n")
 
     val input = CharStreams.fromFileName(file.absolutePath)
-//    val input = CharStreams.fromString(
-//        """
-//        begin
-//            int x = 5;
-//            int y = "hi";
-//            exit 2
-//        end
-//
-//    """.trimIndent()
-//    )
 
     val lexer = WACCLexer(input)
 
@@ -40,33 +28,14 @@ fun main(args: Array<String>) {
 
     // setting the only listeners to our custom listener
     parser.removeErrorListeners()
-    parser.addErrorListener(object : BaseErrorListener() {
-        override fun syntaxError(
-            recognizer: Recognizer<*, *>?,
-            offendingSymbol: Any?,
-            line: Int,
-            charPositionInLine: Int,
-            msg: String?,
-            e: RecognitionException?
-        ) {
-            SyntaxErrorMessageBuilder()
-                .provideStart(line, charPositionInLine, getErrorLine(line))
-                .appendCustomErrorMessage(msg!!)
-                .buildAndPrint()
-            exitProcess(ExitCode.SYNTAX_ERROR)
-        }
-
-        fun getErrorLine(line: Int): String = input.toString().split("\n")[line - 1]
-    })
+    parser.addErrorListener(SyntaxErrBuilderErrorListener(file))
 
     val tree = parser.program()
     try {
-        val res = ASTVisitor(ParentRefSymbolTable()).visit(tree)
+        val res = ASTVisitor(ParentRefSymbolTable(file.absolutePath)).visit(tree)
         println(res)
     } catch (e: SemanticException) {
-        println("-----------SEMANTIC ERROR-----------")
-        println(e.message)
+        println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
-
 }
