@@ -6,20 +6,14 @@ import ast.*
 import symbolTable.SymbolTable
 import utils.*
 import waccType.*
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.exitProcess
 
 class ASTVisitor(
     private val st: SymbolTable,
 ) : WACCParserBaseVisitor<AST>() {
 
-    class BooleanReference(private var flag: Boolean = false) {
-        fun set(newValue: Boolean) {
-            flag = newValue
-        }
-        fun get() = flag
-    }
-
-    private var semanticErrorOccurred: BooleanReference = BooleanReference(false)
+    private var semanticErrorCount: AtomicInteger = AtomicInteger(0)
 
     /**
      * Wrapper around try-catch block to write less repetitive code
@@ -31,7 +25,7 @@ class ASTVisitor(
         return try {
             block.invoke()
         } catch (e: SemanticException) {
-            semanticErrorOccurred.set(true)
+            semanticErrorCount.incrementAndGet()
             default
         }
     }
@@ -39,8 +33,8 @@ class ASTVisitor(
     /**
      * Used for transferring the Boolean value of the fact of semantic error occurrence
      */
-    private constructor(st: SymbolTable, errorAlreadyOccurred: BooleanReference) : this(st) {
-        semanticErrorOccurred = errorAlreadyOccurred
+    private constructor(st: SymbolTable, errorAlreadyOccurred: AtomicInteger) : this(st) {
+        semanticErrorCount = errorAlreadyOccurred
     }
 
     override fun visitProgram(ctx: WACCParser.ProgramContext): Stat {
@@ -74,9 +68,10 @@ class ASTVisitor(
         // This scope is still 'global'
         val childScope = st.createChildScope()
         childScope.isGlobal = true
-        val programAST = ASTVisitor(childScope, semanticErrorOccurred).visit(ctx.stat()) as Stat
-        if (semanticErrorOccurred.get()) {
-            throw SemanticException("At least one SemanticError occurred")
+        val programAST = ASTVisitor(childScope, semanticErrorCount).visit(ctx.stat()) as Stat
+        val totalSemanticErrors = semanticErrorCount.get()
+        if (totalSemanticErrors > 0) {
+            throw SemanticException("Semantic errors detected: $totalSemanticErrors, compilation aborted.")
         }
         return programAST
     }
@@ -321,7 +316,7 @@ class ASTVisitor(
     override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): WhileStat {
         val conditionExpr = this.visit(ctx.whileCond) as Expr
         val loopBodyStat = catchAsManySemanticErrorAsPossible(SkipStat(st)) {
-            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.doBlock)
+            ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.doBlock)
         } as Stat
         return WhileStat(st, conditionExpr, loopBodyStat, ctx)
     }
@@ -331,7 +326,7 @@ class ASTVisitor(
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
-        return ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.stat())
+        return ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.stat())
     }
 
     override fun visitStatFree(ctx: WACCParser.StatFreeContext): FreeStat {
@@ -376,10 +371,10 @@ class ASTVisitor(
 
     override fun visitStatIfThenElse(ctx: WACCParser.StatIfThenElseContext): IfThenStat {
         val thenStat = catchAsManySemanticErrorAsPossible(SkipStat(st)) {
-            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.thenBlock)
+            ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.thenBlock)
         } as Stat
         val elseStat = catchAsManySemanticErrorAsPossible(SkipStat(st)) {
-            ASTVisitor(st.createChildScope(), semanticErrorOccurred).visit(ctx.elseBlock)
+            ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.elseBlock)
         } as Stat
         val cond = this.visit(ctx.ifCond) as Expr
         return IfThenStat(st, cond, thenStat, elseStat, ctx)
@@ -427,7 +422,7 @@ class ASTVisitor(
                 function.st,
                 function.identifier,
                 function.params,
-                ASTVisitor(function.st, semanticErrorOccurred).visit(ctx.stat()) as Stat,
+                ASTVisitor(function.st, semanticErrorCount).visit(ctx.stat()) as Stat,
                 function.type
             )
         } as WACCFunction
