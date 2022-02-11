@@ -18,7 +18,7 @@ class SyntaxErrBuilderErrorListener(val sourceFile: File) : BaseErrorListener() 
         e: RecognitionException?
     ) {
         SyntaxErrorMessageBuilder()
-            .provideStart(line - 1, charPositionInLine)
+            .provideStart(line, charPositionInLine)
             .setLineTextFromSrcFile(sourceFile.absolutePath)
             .appendCustomErrorMessage(msg ?: "Null message")
             .buildAndPrint()

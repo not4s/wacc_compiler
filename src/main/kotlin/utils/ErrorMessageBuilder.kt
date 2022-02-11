@@ -104,6 +104,12 @@ abstract class ErrorMessageBuilder {
      */
     open fun setLineTextFromSrcFile(srcFilePath: String): ErrorMessageBuilder {
         val safeStart = start ?: throw IllegalStateException(UNINITIALIZED_START)
-        return setLineText(File(srcFilePath).readLines()[safeStart.lineNumber - 1])
+        val lines = File(srcFilePath).readLines()
+        // sanity check against out of bounds errors
+        return if (safeStart.lineNumber <= lines.size) {
+            setLineText(lines[safeStart.lineNumber - 1])
+        } else {
+            setLineText(lines.last())
+        }
     }
 }
