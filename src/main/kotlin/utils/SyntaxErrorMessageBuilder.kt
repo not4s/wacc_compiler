@@ -4,8 +4,8 @@ class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
 
     override val prefix = "SYNTAX ERROR"
 
-    override fun provideStart(lineNumber: Int, columnNumber: Int, lineText: String): SyntaxErrorMessageBuilder {
-        return super.provideStart(lineNumber, columnNumber, lineText) as SyntaxErrorMessageBuilder
+    override fun provideStart(lineNumber: Int, columnNumber: Int): SyntaxErrorMessageBuilder {
+        return super.provideStart(lineNumber, columnNumber) as SyntaxErrorMessageBuilder
     }
 
     override fun provideStart(startProvided: PositionedError): SyntaxErrorMessageBuilder {
@@ -18,6 +18,14 @@ class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
 
     override fun appendSpecificErrorMessage(msg: String): SyntaxErrorMessageBuilder {
         return super.appendSpecificErrorMessage(msg) as SyntaxErrorMessageBuilder
+    }
+
+    override fun setLineText(codeText: String): SyntaxErrorMessageBuilder {
+        return super.setLineText(codeText) as SyntaxErrorMessageBuilder
+    }
+
+    override fun setLineTextFromSrcFile(srcFilePath: String): SyntaxErrorMessageBuilder {
+        return super.setLineTextFromSrcFile(srcFilePath) as SyntaxErrorMessageBuilder
     }
 
     fun generalSyntaxErrorMessage(): SyntaxErrorMessageBuilder {

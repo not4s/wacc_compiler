@@ -29,10 +29,6 @@ arrayLiter
   : SYM_SQ_LBRACKET (expr (SYM_COMMA expr)*)? SYM_SQ_RBRACKET # arrayLiterAssignRhs
   ;
 
-pairLiter
-  : KW_NULL
-  ;
-
 pairElem
   : KW_FST expr #pairElemFst
   | KW_SND expr #pairElemSnd

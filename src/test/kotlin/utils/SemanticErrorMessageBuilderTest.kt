@@ -1,7 +1,7 @@
 package utils
 
 import org.junit.Test
-import waccType.WAny
+import utils.ErrorMessageBuilder.Companion.UNINITIALIZED_START
 import waccType.WInt
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -20,7 +20,7 @@ class SemanticErrorMessageBuilderTest {
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
                 .functionRedefineError()
-                .functionArgumentCountMismatch()
+                .functionArgumentCountMismatch(3, 5)
                 .freeNonPair()
                 .build()
             fail("Should not allow multiple errors here")
@@ -34,8 +34,9 @@ class SemanticErrorMessageBuilderTest {
         try {
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
+                .setLineText(lineText)
                 .appendCustomErrorMessage("prefix")
-                .functionArgumentCountMismatch()
+                .functionArgumentCountMismatch(1, 2)
                 .appendCustomErrorMessage("suffix")
                 .build()
         } catch (e: Exception) {
@@ -49,7 +50,7 @@ class SemanticErrorMessageBuilderTest {
         try {
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
-                .provideStart(lineNum, columnNum, customMsg)
+                .provideStart(lineNum, columnNum)
                 .appendCustomErrorMessage("some message")
                 .build()
             fail("Start should be set once")
@@ -68,7 +69,7 @@ class SemanticErrorMessageBuilderTest {
                 .build()
             fail("Somehow managed to build ErrorMessage without start")
         } catch (e: IllegalStateException) {
-            assertEquals(ErrorMessageBuilder.UNINITIALIZED_START, e.message)
+            assertEquals(UNINITIALIZED_START, e.message)
         }
     }
 
@@ -78,41 +79,63 @@ class SemanticErrorMessageBuilderTest {
             // Calling specific error message without arguments
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
+                .setLineText(lineText)
                 .freeNonPair(WInt())
                 .build()
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
+                .setLineText(lineText)
                 .whileStatConditionHasNonBooleanType()
                 .build()
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
+                .setLineText(lineText)
                 .ifStatConditionHasNonBooleanType()
                 .build()
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
-                .functionArgumentCountMismatch()
+                .setLineText(lineText)
+                .functionArgumentCountMismatch(1, 2)
                 .build()
 
-            // Calling specific error message witharguments
+            // Calling specific error message with arguments
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
+                .setLineText(lineText)
                 .freeNonPair(WInt())
                 .build()
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
+                .setLineText(lineText)
                 .whileStatConditionHasNonBooleanType(WInt())
                 .build()
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
+                .setLineText(lineText)
                 .ifStatConditionHasNonBooleanType(WInt())
                 .build()
             SemanticErrorMessageBuilder()
                 .provideStart(positionedError)
-                .functionArgumentCountMismatch(5)
+                .setLineText(lineText)
+                .functionArgumentCountMismatch(5,7)
                 .build()
         } catch (e: IllegalStateException) {
             e.printStackTrace()
             fail("Should not result into an error")
+        }
+    }
+
+    @Test
+    fun doesNotAllowToSetLineTextWhenStartIsNotProvided() {
+        try {
+            SemanticErrorMessageBuilder()
+                .setLineText(lineText)
+                .provideStart(positionedError)
+                .whileStatConditionHasNonBooleanType(WInt())
+                .build()
+            fail("Cannot set lineText when start is not initialized")
+        } catch (e: IllegalStateException) {
+            assertEquals(UNINITIALIZED_START, e.message)
         }
     }
 }
