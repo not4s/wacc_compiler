@@ -75,7 +75,6 @@ class ASTVisitor(
         val childScope = st.createChildScope()
         childScope.isGlobal = true
         val programAST = ASTVisitor(childScope, semanticErrorOccurred).visit(ctx.stat()) as Stat
-        println(semanticErrorOccurred)
         if (semanticErrorOccurred.get()) {
             throw SemanticException("At least one SemanticError occurred")
         }

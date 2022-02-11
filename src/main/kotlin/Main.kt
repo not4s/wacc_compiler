@@ -59,8 +59,7 @@ fun main(args: Array<String>) {
         val res = ASTVisitor(ParentRefSymbolTable(file.absolutePath)).visit(tree)
         println(res)
     } catch (e: SemanticException) {
-        println("-----------SEMANTIC ERROR-----------")
-        println(e.message)
+        println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
 

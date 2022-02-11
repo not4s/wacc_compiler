@@ -58,7 +58,7 @@ data class ErrorMessage(
     }
 }
 
-class SemanticException(private val reason: String) : Exception() {
+class SemanticException(val reason: String) : Exception() {
     override val message: String
         get() = "Semantic error!\n$reason"
 }
