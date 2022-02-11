@@ -3,12 +3,14 @@ package ast
 import ast.BinOperator.*
 import ast.UnOperator.*
 import org.antlr.v4.runtime.ParserRuleContext
+import org.intellij.lang.annotations.Identifier
 import symbolTable.SymbolTable
 import utils.ExitCode
 import utils.PositionedError
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
+import kotlin.math.exp
 import kotlin.system.exitProcess
 
 const val INDENT = "  | "
@@ -115,11 +117,18 @@ class FunctionCall(
             return
         }
         if (func.params.size != params.size) {
+            semanticErrorMessage
+                .functionArgumentCountMismatch()
+                .buildAndPrint()
             throw SemanticException("Argument count does not match up with expected count for function $identifier")
         }
         func.params.onEachIndexed { i, (_, v) ->
             if (!typesAreEqual(v, params[i].type)) {
-                throw SemanticException("Mismatching types for function $identifier call: expected $v, got ${params[i].type}")
+                val actualType = params[i].type
+                semanticErrorMessage
+                    .functionArgumentTypeMismatch(v, actualType)
+                    .buildAndPrint()
+                throw SemanticException("Mismatching types for function $identifier call: expected $v, got $actualType")
             }
         }
     }
@@ -204,7 +213,7 @@ class WACCType(override val st: SymbolTable, override val type: WAny) : Typed {
  **/
 class PairLiteral(
     override val st: SymbolTable,
-    override val type: WPair,
+    override val type: WPairNull,
 ) : Expr {
     override fun check() {
     }
@@ -223,9 +232,6 @@ class NewPairRHS(
     val right: Expr,
     override val type: WPair,
 ) : RHS {
-    override fun check() {
-        TODO("Not yet implemented")
-    }
 
     override fun toString(): String {
         return "NEWPAIR:\n  (scope:$st)\nleft:\n${
@@ -261,6 +267,7 @@ class BinaryOperation(
         if (!typesAreEqual(left.type, right.type)) {
             semanticErrorMessage
                 .operandTypeMismatch(left.type, right.type)
+                .appendCustomErrorMessage("Binary operation cannot be executed correctly")
                 .buildAndPrint()
             throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
         }
@@ -341,7 +348,7 @@ class UnaryOperation(
  **/
 class Declaration(
     override val st: SymbolTable,
-    val decType: WAny,
+    var decType: WAny,
     val identifier: String,
     val rhs: RHS,
     parserCtx: ParserRuleContext,
@@ -359,8 +366,10 @@ class Declaration(
         if (!typesAreEqual(decType, rhs.type)) {
             semanticErrorMessage
                 .operandTypeMismatch(decType, rhs.type)
+                .appendCustomErrorMessage(
+                    "The type of variable $identifier and the evaluated expression do not match")
                 .buildAndPrint()
-            throw SemanticException("Attempted to declare variable $decType $identifier to ${rhs.type}")
+            throw SemanticException("Attempted to declare variable $identifier of type $decType to ${rhs.type}")
         }
     }
 
@@ -467,6 +476,8 @@ class IdentifierGet(
         if (!typesAreEqual(st.get(identifier), type)) {
             semanticErrorMessage
                 .operandTypeMismatch(st.get(identifier), type)
+                .appendCustomErrorMessage(
+                    "$identifier has a type which does not match with the type of the right hand side.")
                 .buildAndPrint()
             throw SemanticException("Attempted to use variable of type ${st.get(identifier)} as $type")
         }
@@ -677,25 +688,27 @@ class PairElement(
     parserCtx: ParserRuleContext,
 ) : LHS, RHS {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder
+    private var actualType: WAny? = null
+
+    val semanticErrorMessage: SemanticErrorMessageBuilder
         = SemanticErrorMessageBuilder().provideStart(PositionedError(parserCtx))
 
     init {
         check()
     }
     override fun check() {
+        if (expr.type is WPairKW) {
+            return
+        }
         if (expr.type !is WPair) {
             semanticErrorMessage
                 .pairElementInvalidType()
                 .buildAndPrint()
-            throw SemanticException("Cannot call fst/snd on non-pair type: ${expr.type}")
+            throw SemanticException("Cannot call 'fst' or 'snd' on non-pair type: ${expr.type}")
         }
         // Check null
         if (expr is PairLiteral) {
-            semanticErrorMessage
-                .pairElementInvalidType()
-                .buildAndPrint()
-            throw SemanticException("NULL POINTER EXCEPTION! Can't dereference null.")
+            throwNullDereferenceSemanticException()
         }
     }
 
@@ -708,9 +721,30 @@ class PairElement(
 
     override val type: WAny
         get() {
+            val safeActualType = actualType
+            safeActualType?.run {
+                return safeActualType
+            }
+            if (expr.type is WPairNull) {
+                throwNullDereferenceSemanticException()
+            }
+            if (expr.type is WPairKW) {
+                return WUnknown()
+            }
             val pair = expr.type as WPair
             return if (first) pair.leftType else pair.rightType
         }
+
+    private fun throwNullDereferenceSemanticException() {
+        semanticErrorMessage
+            .pairElementInvalidType()
+            .buildAndPrint()
+        throw SemanticException("NULL POINTER EXCEPTION! Can't dereference null.")
+    }
+
+    fun updateType(type: WAny) {
+        actualType = type
+    }
 }
 
 /**

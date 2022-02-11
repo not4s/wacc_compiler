@@ -13,7 +13,8 @@ class ASTVisitor(
 ) : WACCParserBaseVisitor<AST>() {
 
     override fun visitProgram(ctx: WACCParser.ProgramContext): Stat {
-        // This adds functions to st
+        // This adds functions to symbol table
+        val waccFunctions: MutableList<Pair<WACCParser.FuncContext, WACCFunction>> = mutableListOf()
         for (f in ctx.func()) {
             val id = f.IDENTIFIER().text
             if (id in st.getMap()) {
@@ -23,13 +24,15 @@ class ASTVisitor(
                     .buildAndPrint()
                 throw SemanticException("Cannot redefine function $id")
             }
+            val bodyLessFunction = visitFuncParams(f)
             st.declare(
                 symbol = id,
-                value = WACCFunction(st, id, mapOf(), SkipStat(st), WUnknown())
+                value = bodyLessFunction
             )
+            waccFunctions.add(Pair(f, bodyLessFunction))
         }
-        ctx.func()
-            .map { this.visit(it) as WACCFunction }
+        waccFunctions
+            .map { (ctx, waccFunction) -> visitFuncBody(waccFunction, ctx) }
             .forEach { st.reassign(it.identifier, it) }
 
         // Explicitly call checks after defining all functions
@@ -82,10 +85,6 @@ class ASTVisitor(
         return ArrayLiteral(st, elements)
     }
 
-    override fun visitPairLiter(ctx: WACCParser.PairLiterContext): PairLiteral {
-        return PairLiteral(st, WPair(WUnknown(), WUnknown()))
-    }
-
     override fun visitPairElemFst(ctx: WACCParser.PairElemFstContext): AST {
         val expr = this.visit(ctx.expr()) as Expr
         return PairElement(st, true, expr, ctx)
@@ -111,7 +110,7 @@ class ASTVisitor(
     }
 
     override fun visitPairElemTypeKwPair(ctx: WACCParser.PairElemTypeKwPairContext): WACCType {
-        return WACCType(st, WPair(WUnknown(), WUnknown()))
+        return WACCType(st, WPairKW())
     }
 
     override fun visitBaseTypeInt(ctx: WACCParser.BaseTypeIntContext): WACCType {
@@ -130,8 +129,10 @@ class ASTVisitor(
         return WACCType(st, WStr())
     }
 
+    /**
+     * Ensures that the integer literal is within the bounds (-2^32, 2^32 - 1)
+     */
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext): Literal {
-        // make sure int is within bounds immediately
         try {
             Integer.parseInt(ctx.text)
         } catch (e: java.lang.NumberFormatException) {
@@ -157,7 +158,7 @@ class ASTVisitor(
     }
 
     override fun visitLiteralPair(ctx: WACCParser.LiteralPairContext): PairLiteral {
-        return PairLiteral(st, WPair(WUnknown(), WUnknown()))
+        return PairLiteral(st, WPairNull())
     }
 
     override fun visitExprBracket(ctx: WACCParser.ExprBracketContext): Expr {
@@ -205,7 +206,7 @@ class ASTVisitor(
                 WACCParser.OP_SUBT -> UnOperator.SUB
                 else -> throw Exception("Unknown unary operand")
             },
-            ctx
+            parserCtx = ctx
         )
     }
 
@@ -238,16 +239,22 @@ class ASTVisitor(
     }
 
     override fun visitAssignRhsNewPair(ctx: WACCParser.AssignRhsNewPairContext): NewPairRHS {
-        return NewPairRHS(
-            st,
-            this.visit(ctx.left) as Expr,
-            this.visit(ctx.right) as Expr,
-            WPair(WUnknown(), WUnknown())
-        )
+        val leftExpr = this.visit(ctx.left) as Expr
+        val rightExpr = this.visit(ctx.right) as Expr
+        val type = WPair(leftExpr.type, rightExpr.type)
+        return NewPairRHS(st, leftExpr, rightExpr, type)
     }
 
     override fun visitAssignRhsPairElem(ctx: WACCParser.AssignRhsPairElemContext): RHS {
-        return this.visit(ctx.pairElem()) as RHS
+        val rhs = this.visit(ctx.pairElem()) as RHS
+        if (rhs.type is WPairKW) {
+            if (rhs is PairElement && rhs.expr is IdentifierGet) {
+                val rhsType = st.get(rhs.expr.identifier) as WPair
+                val newType = if (rhs.first) rhsType.leftType else rhsType.rightType
+                rhs.updateType(newType)
+            }
+        }
+        return rhs
     }
 
     override fun visitAssignRhsCall(ctx: WACCParser.AssignRhsCallContext): FunctionCall {
@@ -268,13 +275,11 @@ class ASTVisitor(
     }
 
     override fun visitStatInit(ctx: WACCParser.StatInitContext): Declaration {
-        return Declaration(
-            st,
-            (this.visit(ctx.type()) as Typed).type,
-            ctx.IDENTIFIER().text,
-            this.visit(ctx.assignRhs()) as RHS,
-            ctx
-        )
+        val decType = (this.visit(ctx.type()) as Typed).type
+        val rhs = this.visit(ctx.assignRhs()) as RHS
+        val identifier = ctx.IDENTIFIER().text
+        val declaration = Declaration(st, decType, identifier, rhs, ctx)
+        return declaration
     }
 
     override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): WhileStat {
@@ -350,7 +355,12 @@ class ASTVisitor(
         throw Exception("Don't call me!")
     }
 
-    override fun visitFunc(ctx: WACCParser.FuncContext): WACCFunction {
+    /**
+     * Visiting the function parameters to add its type signature later
+     * @return WACCFunction which has all the fields but the Abstract
+     * Syntax tree corresponding to the body of that function
+     */
+    private fun visitFuncParams(ctx: WACCParser.FuncContext): WACCFunction {
         val params: MutableMap<String, WAny> = mutableMapOf()
         val funScope = st.createChildScope()
         if (ctx.paramList() != null) {
@@ -364,9 +374,30 @@ class ASTVisitor(
         return WACCFunction(
             funScope,
             ctx.IDENTIFIER().text,
-            params.toMap(),
-            ASTVisitor(funScope).visit(ctx.stat()) as Stat,
+            params,
+            SkipStat(st),
             (this.visit(ctx.type()) as WACCType).type
         )
+    }
+
+    /**
+     * Visit the function body after the function type and params were already visited
+     */
+    private fun visitFuncBody(function: WACCFunction, ctx: WACCParser.FuncContext): WACCFunction {
+        return WACCFunction(
+            function.st,
+            function.identifier,
+            function.params,
+            ASTVisitor(function.st).visit(ctx.stat()) as Stat,
+            function.type
+        )
+    }
+
+    /**
+     * The following function is not used, because the function is visited by parts.
+     * First, its type and parameters are visited and then its body using two functions.
+     */
+    override fun visitFunc(ctx: WACCParser.FuncContext): WACCFunction {
+        throw Exception("Don't call me!")
     }
 }

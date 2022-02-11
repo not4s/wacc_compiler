@@ -1,12 +1,12 @@
 package waccType
 
-import utils.SemanticException
-
-
 interface WAny
 
 interface WBase : WAny
 
+/**
+ * Used as a type for empty array literals
+ */
 class WUnknown : WAny {
     override fun toString(): String {
         return "Unknown"
@@ -59,7 +59,11 @@ class WArray(val elemType: WAny) : WAny {
 
 }
 
-class WPair(val leftType: WAny, val rightType: WAny) : WAny {
+class WPair(
+    val leftType: WAny,
+    val rightType: WAny
+) : WAny {
+
     override fun toString(): String {
         return "Pair($leftType, $rightType)"
     }
@@ -82,20 +86,62 @@ class WPair(val leftType: WAny, val rightType: WAny) : WAny {
         return result
     }
 
+    fun displayAsLispTree(): String {
+        val leftStr = if (leftType is WPair) leftType.displayAsLispTree() else leftType.toString()
+        val rightStr = if (rightType is WPair) rightType.displayAsLispTree() else rightType.toString()
+        return "Pair($leftStr, $rightStr)"
+    }
 }
 
+/**
+ * Used to check type validity when keyword 'pair' is used in variable declaration
+ */
+abstract class IncompleteWPair : WAny {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
+    }
+}
+
+/**
+ * Used to check type validity when keyword 'pair' is used in variable declaration
+ */
+class WPairKW : IncompleteWPair() {
+
+    override fun toString(): String {
+        return "pair"
+    }
+}
+
+/**
+ * Used to check type validity when keyword 'pair' is used in variable declaration
+ */
+class WPairNull: IncompleteWPair() {
+
+    override fun toString(): String {
+        return "null"
+    }
+}
+
+/**
+ * For pairs this function allows subclasses of IncompleteWPair,
+ * such as WPairKW and WPairNull have the same type as complete WPair
+ */
 fun typesAreEqual(x: WAny, y: WAny): Boolean {
+    if (x is WPair && y is IncompleteWPair
+        || y is WPair && x is IncompleteWPair
+        || x is IncompleteWPair && y is IncompleteWPair) {
+        return true
+    }
     return if (x !is WArray && x !is WPair) {
         (x::class == y::class || x is WUnknown || y is WUnknown)
     } else {
-        (x::class == y::class && x == y || x is WUnknown || y is WUnknown)
+        (x::class == y::class && x == y) || y is WUnknown
     }
 }
-
-fun assertEqualTypes(x: WAny, y: WAny) {
-    if (!typesAreEqual(x, y)) {
-        throw SemanticException("")
-    }
-}
-
-

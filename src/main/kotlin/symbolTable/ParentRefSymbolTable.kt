@@ -112,15 +112,16 @@ class ParentRefSymbolTable(private val parentTable: ParentRefSymbolTable?, isGlo
         val prev = dict[pairSym]
         // Make sure this is a pair.
         if (prev != null) {
+            if (prev is WPairKW) {
+                val newType = if (fst) WPair(value, WUnknown()) else WPair(WUnknown(), value)
+                dict[pairSym] = newType
+                return
+            }
             if (prev !is WPair) {
-                throw SemanticException("Cannot destructure(fst/snd) type: $prev")
+                throw SemanticException("Cannot obtain (fst/snd) from type: $prev")
             } else {
                 // Extract correct element
-                val elemT: WAny = if (fst) {
-                    prev.leftType
-                } else {
-                    prev.rightType
-                }
+                val elemT: WAny = if (fst) prev.leftType else prev.rightType
                 // Make sure matching type
                 if (typesAreEqual(elemT, value)) {
                     // TODO: BACK-END: Reassign value
