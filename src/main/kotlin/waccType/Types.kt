@@ -7,7 +7,7 @@ interface WBase : WAny
 /**
  * Used as a type for empty array literals
  */
-class WUnknown : WAny {
+class WUnknown : WAny, WBase {
     override fun toString(): String {
         return "Unknown"
     }

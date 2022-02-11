@@ -46,8 +46,10 @@ interface Expr : AST, Typed, RHS
 
 interface Stat : AST
 
-fun builderTemplateFromContext(parserCtx: ParserRuleContext,
-                               st: SymbolTable): SemanticErrorMessageBuilder {
+fun builderTemplateFromContext(
+    parserCtx: ParserRuleContext,
+    st: SymbolTable
+): SemanticErrorMessageBuilder {
     return SemanticErrorMessageBuilder()
         .provideStart(PositionedError(parserCtx))
         .setLineTextFromSrcFile(st.srcFilePath)
@@ -77,8 +79,9 @@ class WACCFunction(
     val params: Map<String, WAny>,
     val body: Stat,
     override val type: WAny,
+    parserCtx: ParserRuleContext
 ) : AST, Typed, WAny {
-
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
     override fun check() {
         // TODO: Param checking?
         body.check()
@@ -86,7 +89,7 @@ class WACCFunction(
             println("Function $identifier does not return on every branch.")
             exitProcess(ExitCode.SYNTAX_ERROR)
         }
-        checkReturnType(body, type)
+        checkReturnType(body, type, semanticErrorMessage)
     }
 
     override fun toString(): String {
@@ -114,7 +117,7 @@ class FunctionCall(
 
     override fun check() {
         // Check params against st
-        val func = st.get(identifier) as WACCFunction
+        val func = st.get(identifier, semanticErrorMessage) as WACCFunction
 
         // If function is not yet defined, just return
         if (func.body is SkipStat && func.params.isEmpty() && func.type is WUnknown) {
@@ -148,7 +151,7 @@ class FunctionCall(
     }
 
     override val type: WAny
-        get() = (st.get(identifier) as WACCFunction).type
+        get() = (st.get(identifier, semanticErrorMessage) as WACCFunction).type
 }
 
 /**
@@ -171,10 +174,14 @@ class Literal(
 class ArrayLiteral(
     override val st: SymbolTable,
     val values: Array<WAny>,
+    parserCtx: ParserRuleContext
 ) : Expr, RHS {
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
+
     init {
         check()
     }
+
     override fun check() {
         type
     }
@@ -184,9 +191,10 @@ class ArrayLiteral(
             if (values.isEmpty()) {
                 WArray(WUnknown())
             } else {
-            val expType : WAny = values.first()
+                val expType: WAny = values.first()
                 for (elem in values) {
                     if (!typesAreEqual(elem, expType)) {
+                        semanticErrorMessage.arrayEntriesTypeClash().buildAndPrint()
                         throw SemanticException("Types in array are not equal: $elem, $expType")
                     }
                 }
@@ -274,13 +282,12 @@ class BinaryOperation(
                 .buildAndPrint()
             throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
         }
-        val operationTypeNotValid: Boolean
-            = when (op) {
-                MUL, DIV, MOD, ADD, BinOperator.SUB -> !typesAreEqual(left.type, WInt())
-                GT, GEQ, LT, LEQ -> !typesAreEqual(left.type, WInt()) && !typesAreEqual(left.type, WChar())
-                EQ, NEQ -> false
-                AND, OR -> !typesAreEqual(left.type, WBool())
-            }
+        val operationTypeNotValid: Boolean = when (op) {
+            MUL, DIV, MOD, ADD, BinOperator.SUB -> !typesAreEqual(left.type, WInt())
+            GT, GEQ, LT, LEQ -> !typesAreEqual(left.type, WInt()) && !typesAreEqual(left.type, WChar())
+            EQ, NEQ -> false
+            AND, OR -> !typesAreEqual(left.type, WBool())
+        }
         if (operationTypeNotValid) {
             semanticErrorMessage
                 .binOpInvalidType(left.type)
@@ -317,7 +324,7 @@ class UnaryOperation(
     private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     override fun check() {
-        val typeIsIncorrect: Boolean = when(op) {
+        val typeIsIncorrect: Boolean = when (op) {
             NOT -> operand.type !is WBool
             ORD -> operand.type !is WChar
             LEN -> operand.type !is WArray
@@ -360,7 +367,7 @@ class Declaration(
 
     init {
         check()
-        st.declare(identifier, decType)
+        st.declare(identifier, decType, semanticErrorMessage)
     }
 
     override fun check() {
@@ -368,7 +375,8 @@ class Declaration(
             semanticErrorMessage
                 .operandTypeMismatch(decType, rhs.type)
                 .appendCustomErrorMessage(
-                    "The type of variable $identifier and the evaluated expression do not match")
+                    "The type of variable $identifier and the evaluated expression do not match"
+                )
                 .buildAndPrint()
             throw SemanticException("Attempted to declare variable $identifier of type $decType to ${rhs.type}")
         }
@@ -377,8 +385,8 @@ class Declaration(
     override fun toString(): String {
         return "Declaration:\n" +
                 "  (scope:$st)\n${("of: $identifier").prependIndent(INDENT)}\n${
-            ("to: $rhs").toString().prependIndent(INDENT)
-        }"
+                    ("to: $rhs").toString().prependIndent(INDENT)
+                }"
     }
 }
 
@@ -406,9 +414,10 @@ class Assignment(
             throw SemanticException("Cannot assign ${rhs.type} to ${lhs.type}")
         }
         when (lhs) {
-            is IdentifierSet -> st.reassign(lhs.identifier, rhs.type)
+            is IdentifierSet -> st.reassign(lhs.identifier, rhs.type, semanticErrorMessage)
             is ArrayElement -> {
-                val indices: Array<WInt> = lhs.indices.map { it.type as? WInt
+                val indices: Array<WInt> = lhs.indices.map {
+                    it.type as? WInt
                         ?: run {
                             semanticErrorMessage
                                 .arrayIndexInvalidType()
@@ -416,7 +425,7 @@ class Assignment(
                             throw SemanticException("Non-int index in array ${it.type}")
                         }
                 }.toTypedArray()
-                st.reassign(lhs.identifier, indices, rhs.type)
+                st.reassign(lhs.identifier, indices, rhs.type, semanticErrorMessage)
             }
             is PairElement -> {
                 // Make sure this is: fst <identifier> = blah. Otherwise invalid.
@@ -426,7 +435,7 @@ class Assignment(
                         .buildAndPrint()
                     throw SemanticException("Cannot refer to ${lhs.type} with fst/snd")
                 }
-                st.reassign(lhs.expr.identifier, lhs.first, rhs.type)
+                st.reassign(lhs.expr.identifier, lhs.first, rhs.type, semanticErrorMessage)
             }
         }
     }
@@ -444,8 +453,9 @@ class Assignment(
 class IdentifierSet(
     override val st: SymbolTable,
     val identifier: String,
+    parserCtx: ParserRuleContext
 ) : LHS {
-
+    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
     override fun toString(): String {
         return "IdentifierSet:\n" + "  (scope:$st)\n${("identifier: $identifier").prependIndent(INDENT)}\n${
             ("type: $type").prependIndent(INDENT)
@@ -453,12 +463,12 @@ class IdentifierSet(
     }
 
     override val type: WAny
-        get() = st.get(identifier)
+        get() = st.get(identifier, semanticErrorMessage)
 }
 
 /**
-* The AST Node for Getting Identifiers
-**/
+ * The AST Node for Getting Identifiers
+ **/
 class IdentifierGet(
     override val st: SymbolTable,
     val identifier: String,
@@ -472,13 +482,21 @@ class IdentifierGet(
     }
 
     override fun check() {
-        if (!typesAreEqual(st.get(identifier), type)) {
+        if (!typesAreEqual(st.get(identifier, semanticErrorMessage), type)) {
             semanticErrorMessage
-                .operandTypeMismatch(st.get(identifier), type)
+                .operandTypeMismatch(st.get(identifier, semanticErrorMessage), type)
                 .appendCustomErrorMessage(
-                    "$identifier has a type which does not match with the type of the right hand side.")
+                    "$identifier has a type which does not match with the type of the right hand side."
+                )
                 .buildAndPrint()
-            throw SemanticException("Attempted to use variable of type ${st.get(identifier)} as $type")
+            throw SemanticException(
+                "Attempted to use variable of type ${
+                    st.get(
+                        identifier,
+                        semanticErrorMessage
+                    )
+                } as $type"
+            )
         }
     }
 
@@ -489,7 +507,7 @@ class IdentifierGet(
     }
 
     override val type: WAny
-        get() = st.get(identifier)
+        get() = st.get(identifier, semanticErrorMessage)
 }
 
 /**
@@ -537,7 +555,7 @@ class ArrayElement(
                         .buildAndPrint()
                     throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
                 }
-        }.toTypedArray())
+        }.toTypedArray(), semanticErrorMessage)
 }
 
 /**
@@ -690,6 +708,7 @@ class PairElement(
     init {
         check()
     }
+
     override fun check() {
         if (expr.type is WPairKW) {
             return
@@ -708,7 +727,8 @@ class PairElement(
 
     override fun toString(): String {
         return "Pair element:\n" + "  (scope:$st)\n${
-            ("${if (first) "FST" else "SND"
+            ("${
+                if (first) "FST" else "SND"
             }:\n${expr.toString().prependIndent(INDENT)}").prependIndent(INDENT)
         }"
     }
@@ -894,19 +914,20 @@ fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
  * @param expected : expected type to be matched
  * @exception SemanticException
  **/
-fun checkReturnType(stat: Stat, expected: WAny) {
+fun checkReturnType(stat: Stat, expected: WAny, errBuilder: SemanticErrorMessageBuilder) {
     when (stat) {
         is ReturnStat -> if (!typesAreEqual(stat.type, expected)) {
+            errBuilder.functionReturnStatTypeMismatch(expected, stat.type).buildAndPrint()
             throw SemanticException("Mismatching return type for function, expected: $expected, got: ${stat.type} ")
         }
         is JoinStat -> {
-            checkReturnType(stat.first, expected)
-            checkReturnType(stat.second, expected)
+            checkReturnType(stat.first, expected, errBuilder)
+            checkReturnType(stat.second, expected, errBuilder)
         }
         is IfThenStat -> {
-            checkReturnType(stat.thenStat, expected)
-            checkReturnType(stat.elseStat, expected)
+            checkReturnType(stat.thenStat, expected, errBuilder)
+            checkReturnType(stat.elseStat, expected, errBuilder)
         }
-        is WhileStat -> checkReturnType(stat.doBlock, expected)
+        is WhileStat -> checkReturnType(stat.doBlock, expected, errBuilder)
     }
 }
