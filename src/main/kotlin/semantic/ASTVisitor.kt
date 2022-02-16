@@ -5,10 +5,10 @@ import antlr.WACCParserBaseVisitor
 import ast.*
 import ast.statement.*
 import symbolTable.SymbolTable
+import syntax.SyntaxChecker
 import utils.*
 import waccType.*
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.system.exitProcess
 
 class ASTVisitor(
     private val st: SymbolTable,
@@ -186,20 +186,8 @@ class ASTVisitor(
         return WACCType(st, WStr())
     }
 
-    /**
-     * Ensures that the integer literal is within the bounds (-2^32, 2^32 - 1)
-     */
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext): Literal {
-        try {
-            Integer.parseInt(ctx.text)
-        } catch (e: java.lang.NumberFormatException) {
-            SyntaxErrorMessageBuilder()
-                .provideStart(PositionedError(ctx))
-                .setLineTextFromSrcFile(st.srcFilePath)
-                .appendCustomErrorMessage("Attempted to parse a very big int ${ctx.text}!")
-                .buildAndPrint()
-            exitProcess(ExitCode.SYNTAX_ERROR)
-        }
+        SyntaxChecker.assertIntFitsTheRange(ctx, st)
         return Literal(st, WInt())
     }
 

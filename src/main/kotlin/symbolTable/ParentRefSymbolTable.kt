@@ -1,5 +1,6 @@
 package symbolTable
 
+import semantic.SemanticChecker
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
@@ -17,18 +18,17 @@ class ParentRefSymbolTable(
     private val dict = mutableMapOf<String, WAny>()
 
     override fun get(symbol: String, errBuilder: SemanticErrorMessageBuilder): WAny {
-        // Flashbacks to Haskell's >>=
-        return dict[symbol] ?: parentTable?.get(symbol, errBuilder)
-        ?: run {
-            errBuilder.variableNotInScope(symbol).buildAndPrint()
-            throw SemanticException("Attempted to get undeclared variable $symbol")
-        }
+        val valueGot = dict[symbol] ?: parentTable?.get(symbol, errBuilder)
+        SemanticChecker.checkIfTheVariableIsInScope(valueGot, symbol, errBuilder)
+        return valueGot
+            ?: throw Exception("Semantic checker didn't throw SemanticException on null value of the symbol")
     }
 
     override fun get(arrSym: String, indices: Array<WInt>, errBuilder: SemanticErrorMessageBuilder): WAny {
         val prev = dict[arrSym]
         // Make sure this is array.
         if (prev != null) {
+            SemanticChecker
             if (prev !is WArray) {
                 errBuilder.nonArrayTypeElemAccess(prev).buildAndPrint()
                 throw SemanticException("Cannot access index elements of non-array type: $prev")
@@ -47,12 +47,9 @@ class ParentRefSymbolTable(
                 return curr
             }
         } else {
-            if (parentTable == null) {
-                errBuilder.variableNotInScope(arrSym).buildAndPrint()
-                throw SemanticException("Attempted to reassign undeclared variable.")
-            } else {
-                return parentTable.get(arrSym, indices, errBuilder)
-            }
+            SemanticChecker.checkParentTableIsNotNull(parentTable, arrSym, errBuilder)
+            return parentTable?.get(arrSym, indices, errBuilder)
+                ?: throw Exception("Semantic checker failed to detect null parent table")
         }
     }
 
@@ -61,10 +58,8 @@ class ParentRefSymbolTable(
     }
 
     override fun declare(symbol: String, value: WAny, errBuilder: SemanticErrorMessageBuilder) {
-        if (dict.putIfAbsent(symbol, value) != null) {
-            errBuilder.variableRedeclaration(symbol).buildAndPrint()
-            throw SemanticException("Attempted to redeclare variable $symbol")
-        }
+        val prev = dict.putIfAbsent(symbol, value)
+        SemanticChecker.checkIfRedeclarationHappens(prev, symbol, errBuilder)
     }
 
     override fun reassign(symbol: String, value: WAny, errBuilder: SemanticErrorMessageBuilder) {
@@ -80,13 +75,8 @@ class ParentRefSymbolTable(
                 throw SemanticException("Attempted to reassign type of declared $prev to $value")
             }
         } else {
-            // Doesn't exist, so check parent
-            if (parentTable == null) {
-                errBuilder.variableNotInScope(symbol).buildAndPrint()
-                throw SemanticException("Attempted to reassign undeclared variable.")
-            } else {
-                parentTable.reassign(symbol, value, errBuilder)
-            }
+            SemanticChecker.checkParentTableIsNotNull(parentTable, symbol, errBuilder)
+            parentTable?.reassign(symbol, value, errBuilder)
         }
     }
 
@@ -119,12 +109,8 @@ class ParentRefSymbolTable(
                 }
             }
         } else {
-            if (parentTable == null) {
-                errBuilder.variableNotInScope(arrSym).buildAndPrint()
-                throw SemanticException("Attempted to reassign undeclared variable.")
-            } else {
-                parentTable.reassign(arrSym, indices, value, errBuilder)
-            }
+            SemanticChecker.checkParentTableIsNotNull(parentTable, arrSym, errBuilder)
+            parentTable?.reassign(arrSym, indices, value, errBuilder)
         }
     }
 
@@ -159,12 +145,8 @@ class ParentRefSymbolTable(
                 }
             }
         } else {
-            if (parentTable == null) {
-                errBuilder.variableNotInScope(pairSym).buildAndPrint()
-                throw SemanticException("Attempted to reassign undeclared variable.")
-            } else {
-                parentTable.reassign(pairSym, fst, value, errBuilder)
-            }
+            SemanticChecker.checkParentTableIsNotNull(parentTable, pairSym, errBuilder)
+            parentTable?.reassign(pairSym, fst, value, errBuilder)
         }
     }
 
