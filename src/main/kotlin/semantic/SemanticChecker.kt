@@ -15,20 +15,28 @@ import waccType.typesAreEqual
  * @exception SemanticException is thrown in every method if the check is not passed
  *
  * Common params for many methods are the following:
- * symbol :: is the name of the variable or function.
- * errBuilder :: is the incomplete SemanticErrorMessageBuilder which is built in case of error
+ * > symbol     :: is the name of the variable or function.
+ * > errBuilder :: is the incomplete SemanticErrorMessageBuilder which is built in case of error
  */
 class SemanticChecker {
     companion object {
 
+        /**
+         * Prints error and quits if the type of the value is not a WPair
+         * @param isFirst is the flag which says whether 'fst' or 'snd' is called on pair.
+         * It is used for the error message builder
+         */
         fun checkThatTheValueIsPair(valueType: WAny, isFirst: Boolean, errBuilder: SemanticErrorMessageBuilder) {
             if (valueType !is WPair) {
                 val pairElemGetter = if (isFirst) "fst" else "snd"
                 errBuilder.unOpInvalidType(valueType, pairElemGetter).buildAndPrint()
-                throw SemanticException("Cannot obtain (fst/snd) from type: $valueType")
+                throw SemanticException("Cannot obtain $pairElemGetter from type: $valueType")
             }
         }
 
+        /**
+         * Prints error and quits if the type of the value is not a WArray
+         */
         fun checkThatTheValueIsWArray(valueType: WAny, errBuilder: SemanticErrorMessageBuilder) {
             if (valueType !is WArray) {
                 errBuilder.nonArrayTypeElemAccess(valueType).buildAndPrint()
@@ -39,7 +47,6 @@ class SemanticChecker {
         /**
          * Ensuring that declaration variable is not declared already
          * @param prev is the previous type of the symbol table. Must be null in a valid program case.
-         * @throws SemanticException if the variable was declared, i.e. the symbol already a key in symbol table
          */
         fun checkIfRedeclarationHappens(prev: WAny?, symbol: String, errBuilder: SemanticErrorMessageBuilder) {
             if (prev != null) {
@@ -51,7 +58,6 @@ class SemanticChecker {
         /**
          * Prints error message if the parent table is not present, which means that symbol will not be found
          * @param parentTable is the parent table in a tree of ParentRefSymbolTable's.
-         * @throws SemanticException if there's no parent table which may contain the desired symbol
          */
         fun checkParentTableIsNotNull(
             parentTable: ParentRefSymbolTable?,
@@ -67,7 +73,6 @@ class SemanticChecker {
         /**
          * Checks if the value obtained from the table is null or not
          * @param valueGot is the type of the symbol queried earlier
-         * @throws SemanticException if the value is null which means that no such symbol in the table
          */
         fun checkIfTheVariableIsInScope(valueGot: WAny?, symbol: String, errBuilder: SemanticErrorMessageBuilder) {
             if (valueGot == null) {
@@ -76,6 +81,12 @@ class SemanticChecker {
             }
         }
 
+        /**
+         * Compares two types and ensures they are equal
+         * @param firstType and
+         * @param secondType are the types to be compared
+         * @param failMessage is the optional message for the SemanticException to be thrown
+         */
         fun checkThatTypesMatch(
             firstType: WAny,
             secondType: WAny,
