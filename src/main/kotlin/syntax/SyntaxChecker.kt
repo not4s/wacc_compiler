@@ -29,7 +29,7 @@ class SyntaxChecker {
             }
         }
 
-        fun checkFuncitonHavingReturn(body: Stat, identifier: String) {
+        fun checkFunctionHavingReturn(body: Stat, identifier: String) {
             if (!hasReturn(body, true)) {
                 println("Function $identifier does not return on every branch.")
                 exitProcess(ExitCode.SYNTAX_ERROR)

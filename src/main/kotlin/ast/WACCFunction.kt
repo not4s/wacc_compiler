@@ -21,7 +21,7 @@ class WACCFunction(
     private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
     override fun check() {
         body.check()
-        SyntaxChecker.checkFuncitonHavingReturn(body, identifier)
+        SyntaxChecker.checkFunctionHavingReturn(body, identifier)
         checkReturnType(body, type, semanticErrorMessage)
     }
 

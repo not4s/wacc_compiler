@@ -188,19 +188,23 @@ class ASTVisitor(
 
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext): Literal {
         SyntaxChecker.assertIntFitsTheRange(ctx, st)
-        return Literal(st, WInt())
+        val value: Int = Integer.parseInt(ctx.text)
+        return Literal(st, WInt(value))
     }
 
     override fun visitLiteralBoolean(ctx: WACCParser.LiteralBooleanContext): Literal {
-        return Literal(st, WBool())
+        val value: Boolean = ctx.value.type == WACCParser.KW_TRUE
+        return Literal(st, WBool(value))
     }
 
     override fun visitLiteralChar(ctx: WACCParser.LiteralCharContext): Literal {
-        return Literal(st, WChar())
+        val value: Char = ctx.CHAR().text[1]
+        return Literal(st, WChar(value))
     }
 
     override fun visitLiteralString(ctx: WACCParser.LiteralStringContext): Literal {
-        return Literal(st, WStr())
+        val value: String = ctx.STRING().text.substring(1, ctx.STRING().text.length - 1)
+        return Literal(st, WStr(value))
     }
 
     override fun visitLiteralPair(ctx: WACCParser.LiteralPairContext): PairLiteral {
