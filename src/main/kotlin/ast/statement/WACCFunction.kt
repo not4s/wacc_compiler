@@ -3,6 +3,7 @@ package ast.statement
 import ast.*
 import org.antlr.v4.runtime.ParserRuleContext
 import symbolTable.SymbolTable
+import syntax.SyntaxChecker
 import utils.ExitCode
 import utils.SemanticErrorMessageBuilder
 import waccType.WAny
@@ -23,10 +24,7 @@ class WACCFunction(
     private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
     override fun check() {
         body.check()
-        if (!hasReturn(body, true)) {
-            println("Function $identifier does not return on every branch.")
-            exitProcess(ExitCode.SYNTAX_ERROR)
-        }
+        SyntaxChecker.checkFuncitonHavingReturn(body, identifier)
         checkReturnType(body, type, semanticErrorMessage)
     }
 

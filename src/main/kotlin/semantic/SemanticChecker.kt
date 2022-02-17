@@ -3,6 +3,7 @@ package semantic
 import ast.Expr
 import ast.IdentifierGet
 import symbolTable.ParentRefSymbolTable
+import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
@@ -141,6 +142,53 @@ class SemanticChecker {
             return expr.type as? WInt ?: run {
                 errorMessageBuilder.arrayIndexInvalidType().buildAndPrint()
                 throw SemanticException("Non-int index in array ${expr.type}")
+            }
+        }
+
+        fun checkExprTypeIsWInt(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+            if (type !is WInt) {
+                errorMessageBuilder.nonIntExpressionExit(type).buildAndPrint()
+                throw SemanticException(failMessage)
+            }
+        }
+
+        fun checkExprTypeIsWPair(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+            if (type !is WPair) {
+                errorMessageBuilder.freeNonPair().buildAndPrint()
+                throw SemanticException(failMessage)
+            }
+        }
+
+        fun checkExprTypeIsWBool(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+            if (type !is WBool) {
+                errorMessageBuilder.ifStatConditionHasNonBooleanType(type).buildAndPrint()
+                throw SemanticException(failMessage)
+            }
+        }
+
+        fun checkReadType(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+            if (type !is WChar && type !is WInt) {
+                errorMessageBuilder.readTypeIsIncorrect(type).buildAndPrint()
+                throw SemanticException(failMessage)
+            }
+        }
+
+        fun checkGlobalScope(st: SymbolTable, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+            if (st.isGlobal) {
+                errorMessageBuilder.returnFromGlobalScope().buildAndPrint()
+                throw SemanticException("Cannot return out of global scope.")
+            }
+        }
+
+        fun typeThatReturnTypeMatch(
+            firstType: WAny,
+            secondType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            failMessage: String
+        ) {
+            if (!typesAreEqual(firstType, secondType)) {
+                errorMessageBuilder.functionReturnStatTypeMismatch(firstType, secondType).buildAndPrint()
+                throw SemanticException(failMessage)
             }
         }
     }

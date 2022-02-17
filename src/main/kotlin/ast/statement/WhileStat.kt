@@ -5,10 +5,9 @@ import ast.INDENT
 import ast.Stat
 import ast.builderTemplateFromContext
 import org.antlr.v4.runtime.ParserRuleContext
+import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
-import utils.SemanticException
-import waccType.WBool
 
 /**
  * The AST Node for While Statements
@@ -20,19 +19,18 @@ class WhileStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
+    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
     }
 
     override fun check() {
-        if (condition.type !is WBool) {
-            semanticErrorMessage
-                .whileStatConditionHasNonBooleanType(condition.type)
-                .buildAndPrint()
-            throw SemanticException("While loop has non-bool condition, actual: ${condition.type}")
-        }
+        SemanticChecker.checkExprTypeIsWBool(
+            type = condition.type,
+            errorMessageBuilder = errorMessageBuilder,
+            failMessage = "While loop has non-bool condition, actual: ${condition.type}"
+        )
         doBlock.check()
     }
 

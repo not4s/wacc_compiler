@@ -2,13 +2,14 @@ package ast
 
 import ast.statement.*
 import org.antlr.v4.runtime.ParserRuleContext
+import semantic.SemanticChecker
 import symbolTable.SymbolTable
+import syntax.SyntaxChecker
 import utils.ExitCode
 import utils.PositionedError
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
-import kotlin.system.exitProcess
 
 const val INDENT = "  | "
 
@@ -132,18 +133,12 @@ class NewPairRHS(
  * Checks whether the given statement has a proper return statement by matching patterns recursively
  * @param stat : statement to be checked
  * @param inOuterFuncScope : examines the scope to check context
- * @exception ExitCode.SYNTAX_ERROR
  **/
 fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
     return when (stat) {
         is ReturnStat -> true
         is ExitStat -> true
-        is JoinStat -> if (hasReturn(stat.first, true) && !hasReturn(stat.second, false) && inOuterFuncScope) {
-            println("Should not have return before another non-return statement.")
-            exitProcess(ExitCode.SYNTAX_ERROR)
-        } else {
-            hasReturn(stat.second, true)
-        }
+        is JoinStat -> SyntaxChecker.unreachableCodeCheck(stat, inOuterFuncScope)
         is IfThenStat -> hasReturn(stat.thenStat, false) && hasReturn(stat.elseStat, false)
         is WhileStat -> hasReturn(stat.doBlock, false)
         else -> false
@@ -155,22 +150,24 @@ fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
  * throws a semantic exception if the type does not match the expected
  * @param stat : return type to be checked
  * @param expected : expected type to be matched
- * @exception SemanticException
+ * @param errorMessageBuilder : incomplete semantic error message builder which is built in error case
  **/
-fun checkReturnType(stat: Stat, expected: WAny, errBuilder: SemanticErrorMessageBuilder) {
+fun checkReturnType(stat: Stat, expected: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
     when (stat) {
-        is ReturnStat -> if (!typesAreEqual(stat.type, expected)) {
-            errBuilder.functionReturnStatTypeMismatch(expected, stat.type).buildAndPrint()
-            throw SemanticException("Mismatching return type for function, expected: $expected, got: ${stat.type} ")
-        }
+        is ReturnStat -> SemanticChecker.typeThatReturnTypeMatch(
+            firstType = expected,
+            secondType = stat.type,
+            errorMessageBuilder = errorMessageBuilder,
+            failMessage = "Mismatching return type for function, expected: $expected, got: ${stat.type}"
+        )
         is JoinStat -> {
-            checkReturnType(stat.first, expected, errBuilder)
-            checkReturnType(stat.second, expected, errBuilder)
+            checkReturnType(stat.first, expected, errorMessageBuilder)
+            checkReturnType(stat.second, expected, errorMessageBuilder)
         }
         is IfThenStat -> {
-            checkReturnType(stat.thenStat, expected, errBuilder)
-            checkReturnType(stat.elseStat, expected, errBuilder)
+            checkReturnType(stat.thenStat, expected, errorMessageBuilder)
+            checkReturnType(stat.elseStat, expected, errorMessageBuilder)
         }
-        is WhileStat -> checkReturnType(stat.doBlock, expected, errBuilder)
+        is WhileStat -> checkReturnType(stat.doBlock, expected, errorMessageBuilder)
     }
 }
