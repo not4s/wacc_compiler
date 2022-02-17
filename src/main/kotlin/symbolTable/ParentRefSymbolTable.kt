@@ -72,8 +72,9 @@ class ParentRefSymbolTable(
             parentTable.reassign(symbol, value, errBuilder)
             return
         }
-        SemanticChecker.checkThatTypesMatch(prev, value, errBuilder,
-            failMessage = "Attempted to reassign type of declared $prev to $value")
+        SemanticChecker.checkThatAssignmentTypesMatch(prev, value, errBuilder,
+            failMessage = "Attempted to reassign type of declared $prev to $value"
+        )
         dict[symbol] = value
     }
 
@@ -86,7 +87,7 @@ class ParentRefSymbolTable(
             return
         }
         val arrayType: WAny = arrayTypeChecking(prev, indices, errBuilder)
-        SemanticChecker.checkThatTypesMatch(arrayType, value, errBuilder)
+        SemanticChecker.checkThatAssignmentTypesMatch(arrayType, value, errBuilder)
     }
 
     override fun reassign(pairSym: String, fst: Boolean, value: WAny, errBuilder: SemanticErrorMessageBuilder) {
@@ -103,7 +104,7 @@ class ParentRefSymbolTable(
         SemanticChecker.checkThatTheValueIsPair(prev, fst, errBuilder)
         prev as WPair
         val elemT: WAny = if (fst) prev.leftType else prev.rightType
-        SemanticChecker.checkThatTypesMatch(elemT, value, errBuilder)
+        SemanticChecker.checkThatAssignmentTypesMatch(elemT, value, errBuilder)
     }
 
     override fun createChildScope(): SymbolTable {

@@ -1,12 +1,11 @@
 package semantic
 
+import ast.Expr
+import ast.IdentifierGet
 import symbolTable.ParentRefSymbolTable
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
-import waccType.WAny
-import waccType.WArray
-import waccType.WPair
-import waccType.typesAreEqual
+import waccType.*
 
 /**
  * Collection of static methods which perform semantic error checks of all sorts
@@ -15,8 +14,9 @@ import waccType.typesAreEqual
  * @exception SemanticException is thrown in every method if the check is not passed
  *
  * Common params for many methods are the following:
- * > symbol     :: is the name of the variable or function.
- * > errBuilder :: is the incomplete SemanticErrorMessageBuilder which is built in case of error
+ * > symbol      :: is the name of the variable or function.
+ * > errBuilder  :: is the incomplete SemanticErrorMessageBuilder which is built in case of error
+ * > failMessage :: is the optional message for the SemanticException to be thrown
  */
 class SemanticChecker {
     companion object {
@@ -82,20 +82,65 @@ class SemanticChecker {
         }
 
         /**
-         * Compares two types and ensures they are equal
+         * Compares two types and ensures they are equal in variable Assignment
          * @param firstType and
          * @param secondType are the types to be compared
-         * @param failMessage is the optional message for the SemanticException to be thrown
          */
-        fun checkThatTypesMatch(
+        fun checkThatAssignmentTypesMatch(
             firstType: WAny,
             secondType: WAny,
             errBuilder: SemanticErrorMessageBuilder,
-            failMessage: String = "Type Mismatch"
+            failMessage: String = "Assignment Type Mismatch"
         ) {
             if (!typesAreEqual(firstType, secondType)) {
                 errBuilder.assignmentTypeMismatch(firstType, secondType).buildAndPrint()
                 throw SemanticException(failMessage)
+            }
+        }
+
+        /**
+         * Compares two types of operands and ensures they are equal in expression
+         * @param firstType and
+         * @param secondType are the types to be compared
+         */
+        fun checkThatOperandTypesMatch(
+            firstType: WAny,
+            secondType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            extraMessage: String? = null,
+            failMessage: String = "Operand Type Mismatch"
+        ) {
+            if (!typesAreEqual(firstType, secondType)) {
+                errorMessageBuilder.operandTypeMismatch(firstType, secondType)
+                    .apply {
+                        extraMessage?.run { appendCustomErrorMessage(extraMessage) }
+                    }
+                    .buildAndPrint()
+                throw SemanticException(failMessage)
+            }
+        }
+
+        fun checkThatLhsPairExpressionIsIdentifier(
+            expr: Expr,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            extraMessage: String? = null,
+            failMessage: String = "Not an identifier"
+        ) {
+            if (expr is IdentifierGet) {
+                return
+            }
+            errorMessageBuilder.pairElementInvalidType()
+                .apply {
+                    extraMessage?.run { appendCustomErrorMessage(extraMessage) }
+                }
+                .buildAndPrint()
+            throw SemanticException(failMessage)
+        }
+
+        fun takeExprTypeAsWIntWithCheck(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder): WInt {
+            return expr.type as? WInt ?: run {
+                errorMessageBuilder.arrayIndexInvalidType().buildAndPrint()
+                throw SemanticException("Non-int index in array ${expr.type}")
             }
         }
     }

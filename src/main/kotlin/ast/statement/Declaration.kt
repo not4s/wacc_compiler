@@ -5,11 +5,10 @@ import ast.RHS
 import ast.Stat
 import ast.builderTemplateFromContext
 import org.antlr.v4.runtime.ParserRuleContext
+import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
-import utils.SemanticException
 import waccType.WAny
-import waccType.typesAreEqual
 
 /**
  * The AST Node for Declarations
@@ -22,23 +21,21 @@ class Declaration(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
+    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
-        st.declare(identifier, decType, semanticErrorMessage)
+        st.declare(identifier, decType, errorMessageBuilder)
     }
 
     override fun check() {
-        if (!typesAreEqual(decType, rhs.type)) {
-            semanticErrorMessage
-                .operandTypeMismatch(decType, rhs.type)
-                .appendCustomErrorMessage(
-                    "The type of variable $identifier and the evaluated expression do not match"
-                )
-                .buildAndPrint()
-            throw SemanticException("Attempted to declare variable $identifier of type $decType to ${rhs.type}")
-        }
+        SemanticChecker.checkThatOperandTypesMatch(
+            firstType = decType,
+            secondType = rhs.type,
+            errorMessageBuilder = errorMessageBuilder,
+            extraMessage = "The type of variable $identifier and the evaluated expression do not match",
+            failMessage = "Attempted to declare variable $identifier of type $decType to ${rhs.type}"
+        )
     }
 
     override fun toString(): String {
