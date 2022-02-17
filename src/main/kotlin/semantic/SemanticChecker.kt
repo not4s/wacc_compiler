@@ -4,6 +4,9 @@ import symbolTable.ParentRefSymbolTable
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.WAny
+import waccType.WArray
+import waccType.WPair
+import waccType.typesAreEqual
 
 /**
  * Collection of static methods which perform semantic error checks of all sorts
@@ -12,11 +15,26 @@ import waccType.WAny
  * @exception SemanticException is thrown in every method if the check is not passed
  *
  * Common params for many methods are the following:
- * @param symbol is the name of the variable or function.
- * @param errBuilder is the incomplete SemanticErrorMessageBuilder which is built in case of error
+ * symbol :: is the name of the variable or function.
+ * errBuilder :: is the incomplete SemanticErrorMessageBuilder which is built in case of error
  */
 class SemanticChecker {
     companion object {
+
+        fun checkThatTheValueIsPair(valueType: WAny, isFirst: Boolean, errBuilder: SemanticErrorMessageBuilder) {
+            if (valueType !is WPair) {
+                val pairElemGetter = if (isFirst) "fst" else "snd"
+                errBuilder.unOpInvalidType(valueType, pairElemGetter).buildAndPrint()
+                throw SemanticException("Cannot obtain (fst/snd) from type: $valueType")
+            }
+        }
+
+        fun checkThatTheValueIsWArray(valueType: WAny, errBuilder: SemanticErrorMessageBuilder) {
+            if (valueType !is WArray) {
+                errBuilder.nonArrayTypeElemAccess(valueType).buildAndPrint()
+                throw SemanticException("Cannot access index elements of non-array type: $valueType")
+            }
+        }
 
         /**
          * Ensuring that declaration variable is not declared already
@@ -55,6 +73,18 @@ class SemanticChecker {
             if (valueGot == null) {
                 errBuilder.variableNotInScope(symbol).buildAndPrint()
                 throw SemanticException("Attempted to get undeclared variable $symbol")
+            }
+        }
+
+        fun checkThatTypesMatch(
+            firstType: WAny,
+            secondType: WAny,
+            errBuilder: SemanticErrorMessageBuilder,
+            failMessage: String = "Type Mismatch"
+        ) {
+            if (!typesAreEqual(firstType, secondType)) {
+                errBuilder.assignmentTypeMismatch(firstType, secondType).buildAndPrint()
+                throw SemanticException(failMessage)
             }
         }
     }
