@@ -39,7 +39,7 @@ class ArrayLiteral(
             }
             val expType: WAny = values.first()
             values.forEach {
-                SemanticChecker.checkThatArrayElementsTypeMactch(it, expType, errorMessageBuilder)
+                SemanticChecker.checkThatArrayElementsTypeMatch(it, expType, errorMessageBuilder)
             }
             return WArray(expType)
         }

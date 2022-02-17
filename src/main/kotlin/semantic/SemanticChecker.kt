@@ -14,32 +14,61 @@ import waccType.*
  * @exception SemanticException is thrown in every method if the check is not passed
  *
  * Common params for many methods are the following:
- * > symbol      :: is the name of the variable or function.
- * > errBuilder  :: is the incomplete SemanticErrorMessageBuilder which is built in case of error
- * > failMessage :: is the optional message for the SemanticException to be thrown
+ * > symbol              :: is the name of the variable or function.
+ * > errorMessageBuilder :: is the incomplete SemanticErrorMessageBuilder which is built in case of error
+ * > extraMessage        :: Some additional information which is added using appendCustomErrorMessage() method
+ * > failMessage         :: is the optional message for the SemanticException to be thrown
  */
 class SemanticChecker {
     companion object {
+
+        /**
+         * Generalization of a common pattern then the condition is checked,
+         * builder is constructed if the condition holds and exception is thrown
+         * @param condition if true, then the error is raised
+         * @param building is a method on the builder which should call method which appends specific error message
+         *
+         *        Example building = { builder -> builder.pairElementInvalidType() }
+         */
+        private fun perform(
+            condition: Boolean,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            extraMessage: String? = null,
+            failMessage: String = "Semantic Error!",
+            building: (SemanticErrorMessageBuilder) -> SemanticErrorMessageBuilder
+        ) {
+            if (!condition) {
+                return
+            }
+            errorMessageBuilder.apply {
+                building.invoke(this)
+                extraMessage?.run { appendCustomErrorMessage(extraMessage) }
+            }.buildAndPrint()
+            throw SemanticException(failMessage)
+        }
 
         /**
          * Prints error and quits if the type of the value is not a WPair
          * @param isFirst is the flag which says whether 'fst' or 'snd' is called on pair.
          * It is used for the error message builder
          */
-        fun checkThatTheValueIsPair(valueType: WAny, isFirst: Boolean, errBuilder: SemanticErrorMessageBuilder) {
-            if (valueType !is WPair) {
+        fun checkThatTheValueIsPair(
+            valueType: WAny,
+            isFirst: Boolean,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
+            perform(valueType !is WPair, errorMessageBuilder) {
                 val pairElemGetter = if (isFirst) "fst" else "snd"
-                errBuilder.unOpInvalidType(valueType, pairElemGetter).buildAndPrint()
-                throw SemanticException("Cannot obtain $pairElemGetter from type: $valueType")
+                it.unOpInvalidType(valueType, pairElemGetter)
             }
         }
 
         /**
          * Prints error and quits if the type of the value is not a WArray
          */
-        fun checkThatTheValueIsWArray(valueType: WAny, errBuilder: SemanticErrorMessageBuilder) {
+        fun checkThatTheValueIsWArray(valueType: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
             if (valueType !is WArray) {
-                errBuilder.nonArrayTypeElemAccess(valueType).buildAndPrint()
+                errorMessageBuilder.nonArrayTypeElemAccess(valueType).buildAndPrint()
                 throw SemanticException("Cannot access index elements of non-array type: $valueType")
             }
         }
@@ -48,9 +77,9 @@ class SemanticChecker {
          * Ensuring that declaration variable is not declared already
          * @param prev is the previous type of the symbol table. Must be null in a valid program case.
          */
-        fun checkIfRedeclarationHappens(prev: WAny?, symbol: String, errBuilder: SemanticErrorMessageBuilder) {
+        fun checkIfRedeclarationHappens(prev: WAny?, symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder) {
             if (prev != null) {
-                errBuilder.variableRedeclaration(symbol).buildAndPrint()
+                errorMessageBuilder.variableRedeclaration(symbol).buildAndPrint()
                 throw SemanticException("Attempted to redeclare variable $symbol")
             }
         }
@@ -62,10 +91,10 @@ class SemanticChecker {
         fun checkParentTableIsNotNull(
             parentTable: ParentRefSymbolTable?,
             symbol: String,
-            errBuilder: SemanticErrorMessageBuilder
+            errorMessageBuilder: SemanticErrorMessageBuilder
         ) {
             if (parentTable == null) {
-                errBuilder.variableNotInScope(symbol).buildAndPrint()
+                errorMessageBuilder.variableNotInScope(symbol).buildAndPrint()
                 throw SemanticException("Attempted to modify undeclared symbol.")
             }
         }
@@ -74,9 +103,9 @@ class SemanticChecker {
          * Checks if the value obtained from the table is null or not
          * @param valueGot is the type of the symbol queried earlier
          */
-        fun checkIfTheVariableIsInScope(valueGot: WAny?, symbol: String, errBuilder: SemanticErrorMessageBuilder) {
+        fun checkIfTheVariableIsInScope(valueGot: WAny?, symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder) {
             if (valueGot == null) {
-                errBuilder.variableNotInScope(symbol).buildAndPrint()
+                errorMessageBuilder.variableNotInScope(symbol).buildAndPrint()
                 throw SemanticException("Attempted to get undeclared variable $symbol")
             }
         }
@@ -89,11 +118,11 @@ class SemanticChecker {
         fun checkThatAssignmentTypesMatch(
             firstType: WAny,
             secondType: WAny,
-            errBuilder: SemanticErrorMessageBuilder,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
             failMessage: String = "Assignment Type Mismatch"
         ) {
             if (!typesAreEqual(firstType, secondType)) {
-                errBuilder.assignmentTypeMismatch(firstType, secondType).buildAndPrint()
+                errorMessageBuilder.assignmentTypeMismatch(firstType, secondType).buildAndPrint()
                 throw SemanticException(failMessage)
             }
         }
@@ -110,13 +139,8 @@ class SemanticChecker {
             extraMessage: String? = null,
             failMessage: String = "Operand Type Mismatch"
         ) {
-            if (!typesAreEqual(firstType, secondType)) {
-                errorMessageBuilder.operandTypeMismatch(firstType, secondType)
-                    .apply {
-                        extraMessage?.run { appendCustomErrorMessage(extraMessage) }
-                    }
-                    .buildAndPrint()
-                throw SemanticException(failMessage)
+            perform(!typesAreEqual(firstType, secondType), errorMessageBuilder, extraMessage, failMessage) {
+                it.operandTypeMismatch(firstType, secondType)
             }
         }
 
@@ -126,15 +150,9 @@ class SemanticChecker {
             extraMessage: String? = null,
             failMessage: String = "Not an identifier"
         ) {
-            if (expr is IdentifierGet) {
-                return
+            perform(expr !is IdentifierGet, errorMessageBuilder, extraMessage, failMessage) {
+                it.pairElementInvalidType()
             }
-            errorMessageBuilder.pairElementInvalidType()
-                .apply {
-                    extraMessage?.run { appendCustomErrorMessage(extraMessage) }
-                }
-                .buildAndPrint()
-            throw SemanticException(failMessage)
         }
 
         fun takeExprTypeAsWIntWithCheck(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder): WInt {
@@ -191,7 +209,7 @@ class SemanticChecker {
             }
         }
 
-        fun checkThatArrayElementsTypeMactch(
+        fun checkThatArrayElementsTypeMatch(
             elemType: WAny,
             expType: WAny,
             errorMessageBuilder: SemanticErrorMessageBuilder
@@ -276,15 +294,14 @@ class SemanticChecker {
             errorMessageBuilder: SemanticErrorMessageBuilder,
         ) {
             val expectedType = st.get(identifier, errorMessageBuilder)
-            if (typesAreEqual(expectedType, type)) {
-                return
+            perform(
+                condition = !typesAreEqual(expectedType, type),
+                errorMessageBuilder = errorMessageBuilder,
+                extraMessage = "$identifier has a type which does not match with the type of the right hand side.",
+                failMessage = "Attempted to use variable of type $expectedType as $type"
+            ) {
+                it.operandTypeMismatch(expectedType, type)
             }
-            errorMessageBuilder
-                .operandTypeMismatch(expectedType, type)
-                .appendCustomErrorMessage(
-                    "$identifier has a type which does not match with the type of the right hand side.")
-                .buildAndPrint()
-            throw SemanticException("Attempted to use variable of type $expectedType as $type")
         }
 
         fun checkNullDereference(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder) {
