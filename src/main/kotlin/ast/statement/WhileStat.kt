@@ -26,7 +26,7 @@ class WhileStat(
     }
 
     override fun check() {
-        SemanticChecker.checkExprTypeIsWBool(
+        SemanticChecker.checkWhileCondIsWBool(
             type = condition.type,
             errorMessageBuilder = errorMessageBuilder,
             failMessage = "While loop has non-bool condition, actual: ${condition.type}"

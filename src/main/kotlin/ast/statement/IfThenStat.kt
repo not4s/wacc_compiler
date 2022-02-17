@@ -8,8 +8,6 @@ import org.antlr.v4.runtime.ParserRuleContext
 import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
-import utils.SemanticException
-import waccType.WBool
 
 /**
  * The AST Node for If then Statements
@@ -29,7 +27,7 @@ class IfThenStat(
     }
 
     override fun check() {
-        SemanticChecker.checkExprTypeIsWBool(
+        SemanticChecker.checkIfCondIsWBool(
             type = condition.type,
             errorMessageBuilder = errorMessageBuilder,
             failMessage = "If statement has non-bool condition, actual: ${condition.type}"

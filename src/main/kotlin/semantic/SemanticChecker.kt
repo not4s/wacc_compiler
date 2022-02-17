@@ -162,24 +162,38 @@ class SemanticChecker {
             }
         }
 
+        private fun checkExprTypeIs(
+            type: WAny,
+            expectedType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            failMessage: String,
+            building: (SemanticErrorMessageBuilder) -> SemanticErrorMessageBuilder
+        ) {
+            perform(
+                condition = expectedType::class != type::class,
+                errorMessageBuilder = errorMessageBuilder,
+                failMessage = failMessage,
+                building = building
+            )
+        }
+
         fun checkExprTypeIsWInt(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
-            if (type !is WInt) {
-                errorMessageBuilder.nonIntExpressionExit(type).buildAndPrint()
-                throw SemanticException(failMessage)
-            }
+            checkExprTypeIs(type, WInt(), errorMessageBuilder, failMessage) { it.nonIntExpressionExit(type) }
         }
 
         fun checkExprTypeIsWPair(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
-            if (type !is WPair) {
-                errorMessageBuilder.freeNonPair().buildAndPrint()
-                throw SemanticException(failMessage)
+            checkExprTypeIs(type, WPair.ofWUnknowns(), errorMessageBuilder, failMessage) { it.freeNonPair(type) }
+        }
+
+        fun checkIfCondIsWBool(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+            checkExprTypeIs(type, WBool(), errorMessageBuilder, failMessage) {
+                it.ifStatConditionHasNonBooleanType(type)
             }
         }
 
-        fun checkExprTypeIsWBool(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
-            if (type !is WBool) {
-                errorMessageBuilder.ifStatConditionHasNonBooleanType(type).buildAndPrint()
-                throw SemanticException(failMessage)
+        fun checkWhileCondIsWBool(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+            checkExprTypeIs(type, WBool(), errorMessageBuilder, failMessage) {
+                it.whileStatConditionHasNonBooleanType(type)
             }
         }
 
@@ -252,9 +266,7 @@ class SemanticChecker {
                 UnOperator.CHR, UnOperator.SUB -> operandType !is WInt
             }
             if (typeIsIncorrect) {
-                errorMessageBuilder
-                    .unOpInvalidType(operandType, operation.toString())
-                    .buildAndPrint()
+                errorMessageBuilder.unOpInvalidType(operandType, operation.toString()).buildAndPrint()
                 throw SemanticException("Attempted to call $operation operation on invalid type: $operandType")
             }
         }
@@ -266,9 +278,7 @@ class SemanticChecker {
             identifier: String
         ) {
             if (func.params.size != params.size) {
-                errorMessageBuilder
-                    .functionArgumentCountMismatch(func.params.size, params.size)
-                    .buildAndPrint()
+                errorMessageBuilder.functionArgumentCountMismatch(func.params.size, params.size).buildAndPrint()
                 throw SemanticException(
                     "Argument count does not match up with expected count for function $identifier")
             }
@@ -306,9 +316,7 @@ class SemanticChecker {
 
         fun checkNullDereference(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder) {
             if (expr is PairLiteral || expr.type is WPairNull) {
-                errorMessageBuilder
-                    .pairElementInvalidType()
-                    .buildAndPrint()
+                errorMessageBuilder.pairElementInvalidType().buildAndPrint()
                 throw SemanticException("NULL POINTER EXCEPTION! Can't dereference null.")
             }
         }
