@@ -2,9 +2,9 @@ package ast.statement
 
 import ast.*
 import org.antlr.v4.runtime.ParserRuleContext
+import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
-import utils.SemanticException
 import waccType.WAny
 
 /**
@@ -16,7 +16,7 @@ class ReturnStat(
     parserCtx: ParserRuleContext,
 ) : Stat, Typed {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
+    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -29,12 +29,7 @@ class ReturnStat(
      * Checks the scope
      */
     override fun check() {
-        if (st.isGlobal) {
-            semanticErrorMessage
-                .returnFromGlobalScope()
-                .buildAndPrint()
-            throw SemanticException("Cannot return out of global scope.")
-        }
+        SemanticChecker.checkReturnFromGlobalScope(st, errorMessageBuilder)
     }
 
     override fun toString(): String {

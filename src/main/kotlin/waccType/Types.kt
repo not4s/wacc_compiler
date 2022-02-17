@@ -85,6 +85,12 @@ class WPair(
         result = 31 * result + rightType.hashCode()
         return result
     }
+
+    companion object {
+        fun ofWUnknowns(): WPair{
+            return WPair(WUnknown(), WUnknown())
+        }
+    }
 }
 
 /**
