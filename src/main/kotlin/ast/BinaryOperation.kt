@@ -1,6 +1,7 @@
 package ast
 
 import org.antlr.v4.runtime.ParserRuleContext
+import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
@@ -17,7 +18,7 @@ class BinaryOperation(
     parserCtx: ParserRuleContext,
 ) : Expr {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
+    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -26,28 +27,20 @@ class BinaryOperation(
     /**
      * Check that operands have the same type
      * Then checks that binary operation can be applied to operands of such types
-     * @throws SemanticException whenever any of those checks fails
      */
     override fun check() {
-        if (!typesAreEqual(left.type, right.type)) {
-            semanticErrorMessage
-                .operandTypeMismatch(left.type, right.type)
-                .appendCustomErrorMessage("Binary operation cannot be executed correctly")
-                .buildAndPrint()
-            throw SemanticException("Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}")
-        }
-        val operationTypeNotValid: Boolean = when (op) {
-            BinOperator.MUL, BinOperator.DIV, BinOperator.MOD, BinOperator.ADD, BinOperator.SUB -> !typesAreEqual(left.type, WInt())
-            BinOperator.GT, BinOperator.GEQ, BinOperator.LT, BinOperator.LEQ -> !typesAreEqual(left.type, WInt()) && !typesAreEqual(left.type, WChar())
-            BinOperator.EQ, BinOperator.NEQ -> false
-            BinOperator.AND, BinOperator.OR -> !typesAreEqual(left.type, WBool())
-        }
-        if (operationTypeNotValid) {
-            semanticErrorMessage
-                .binOpInvalidType(left.type, op.toString())
-                .buildAndPrint()
-            throw SemanticException("Attempted to call binary operation $op on operands of invalid type: ${left.type} ")
-        }
+        SemanticChecker.checkThatOperandTypesMatch(
+            firstType = left.type,
+            secondType = right.type,
+            errorMessageBuilder= errorMessageBuilder,
+            extraMessage = "Binary operation cannot be executed correctly",
+            failMessage = "Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}"
+        )
+        SemanticChecker.checkThatOperationTypeIsValid(
+            operandType = left.type,
+            errorMessageBuilder = errorMessageBuilder,
+            operation = op
+        )
     }
 
     override fun toString(): String {

@@ -1,6 +1,7 @@
 package ast
 
 import org.antlr.v4.runtime.ParserRuleContext
+import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
@@ -19,7 +20,7 @@ class ArrayElement(
     parserCtx: ParserRuleContext,
 ) : LHS, Expr {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
+    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -44,13 +45,11 @@ class ArrayElement(
     }
 
     override val type: WAny
-        get() = st.get(identifier, indices.map { e ->
-            e.type as? WInt
-                ?: run {
-                    semanticErrorMessage
-                        .arrayIndexInvalidType()
-                        .buildAndPrint()
-                    throw SemanticException("Cannot use non-int index for array, actual: ${e.type}")
-                }
-        }.toTypedArray(), semanticErrorMessage)
+        get() = st.get(
+            arrSym = identifier,
+            indices = indices.map { expr ->
+                SemanticChecker.takeExprTypeAsWIntWithCheck(expr, errorMessageBuilder)
+            }.toTypedArray(),
+            errorMessageBuilder = errorMessageBuilder
+        )
 }

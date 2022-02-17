@@ -1,5 +1,6 @@
 package semantic
 
+import ast.BinOperator
 import ast.Expr
 import ast.IdentifierGet
 import symbolTable.ParentRefSymbolTable
@@ -141,7 +142,7 @@ class SemanticChecker {
         fun takeExprTypeAsWIntWithCheck(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder): WInt {
             return expr.type as? WInt ?: run {
                 errorMessageBuilder.arrayIndexInvalidType().buildAndPrint()
-                throw SemanticException("Non-int index in array ${expr.type}")
+                throw SemanticException("Cannot use non-int index for array, actual: ${expr.type}")
             }
         }
 
@@ -180,7 +181,7 @@ class SemanticChecker {
             }
         }
 
-        fun typeThatReturnTypeMatch(
+        fun checkThatReturnTypeMatch(
             firstType: WAny,
             secondType: WAny,
             errorMessageBuilder: SemanticErrorMessageBuilder,
@@ -189,6 +190,37 @@ class SemanticChecker {
             if (!typesAreEqual(firstType, secondType)) {
                 errorMessageBuilder.functionReturnStatTypeMismatch(firstType, secondType).buildAndPrint()
                 throw SemanticException(failMessage)
+            }
+        }
+
+        fun checkThatArrayElementsTypeMactch(
+            elemType: WAny,
+            expType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
+            if (!typesAreEqual(elemType, expType)) {
+                errorMessageBuilder.arrayEntriesTypeClash().buildAndPrint()
+                throw SemanticException("Types in array are not equal: $elemType, $expType")
+            }
+        }
+
+        fun checkThatOperationTypeIsValid(
+            operandType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            operation: BinOperator,
+        ) {
+            val operationTypeNotValid: Boolean = when {
+                BinOperator.isForInt(operation) -> !typesAreEqual(operandType, WInt())
+                BinOperator.isOrdering(operation) ->
+                    !typesAreEqual(operandType, WInt()) && !typesAreEqual(operandType, WChar())
+                BinOperator.isForAnyType(operation) -> false
+                BinOperator.isForBool(operation) -> !typesAreEqual(operandType, WBool())
+                else -> throw Exception("Unknown BinOperator value!")
+            }
+            if (operationTypeNotValid) {
+                errorMessageBuilder.binOpInvalidType(operandType, operation.toString()).buildAndPrint()
+                throw SemanticException(
+                    "Attempted to call binary operation $operation on operands of invalid type: $operandType")
             }
         }
     }

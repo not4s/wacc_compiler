@@ -1,13 +1,10 @@
-package ast.statement
+package ast
 
-import ast.*
 import org.antlr.v4.runtime.ParserRuleContext
 import symbolTable.SymbolTable
 import syntax.SyntaxChecker
-import utils.ExitCode
 import utils.SemanticErrorMessageBuilder
 import waccType.WAny
-import kotlin.system.exitProcess
 
 /**
  * The AST Node for Functions

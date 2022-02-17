@@ -56,7 +56,7 @@ class ASTVisitor(
                 st.declare(
                     symbol = id,
                     value = bodyLessFunction,
-                    errBuilder = builderTemplateFromContext(ctx, st)
+                    errorMessageBuilder = builderTemplateFromContext(ctx, st)
                 )
             } catch (e: SemanticException) {
                 semanticErrorCount.incrementAndGet()

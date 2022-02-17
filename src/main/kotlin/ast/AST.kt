@@ -5,7 +5,6 @@ import org.antlr.v4.runtime.ParserRuleContext
 import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import syntax.SyntaxChecker
-import utils.ExitCode
 import utils.PositionedError
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
@@ -65,6 +64,29 @@ fun builderTemplateFromContext(
  **/
 enum class BinOperator {
     MUL, DIV, MOD, ADD, SUB, GT, GEQ, LT, LEQ, EQ, NEQ, AND, OR;
+
+    companion object {
+
+        fun isForInt(it: BinOperator): Boolean = when (it) {
+            MUL, DIV, MOD, ADD, SUB -> true
+            else -> false
+        }
+
+        fun isOrdering(it: BinOperator): Boolean = when (it) {
+            GT, GEQ, LT, LEQ -> true
+            else -> false
+        }
+
+        fun isForAnyType(it: BinOperator): Boolean = when (it) {
+            EQ, NEQ -> true
+            else -> false
+        }
+
+        fun isForBool(it: BinOperator): Boolean = when (it) {
+            AND, OR -> true
+            else -> false
+        }
+    }
 }
 
 /**
@@ -154,7 +176,7 @@ fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
  **/
 fun checkReturnType(stat: Stat, expected: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
     when (stat) {
-        is ReturnStat -> SemanticChecker.typeThatReturnTypeMatch(
+        is ReturnStat -> SemanticChecker.checkThatReturnTypeMatch(
             firstType = expected,
             secondType = stat.type,
             errorMessageBuilder = errorMessageBuilder,

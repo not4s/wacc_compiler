@@ -1,7 +1,6 @@
 package ast
 
 import ast.statement.SkipStat
-import ast.statement.WACCFunction
 import org.antlr.v4.runtime.ParserRuleContext
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder

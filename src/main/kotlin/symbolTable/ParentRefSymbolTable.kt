@@ -36,75 +36,75 @@ class ParentRefSymbolTable(
         return curr
     }
 
-    override fun get(symbol: String, errBuilder: SemanticErrorMessageBuilder): WAny {
-        val valueGot = dict[symbol] ?: parentTable?.get(symbol, errBuilder)
-        SemanticChecker.checkIfTheVariableIsInScope(valueGot, symbol, errBuilder)
+    override fun get(symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder): WAny {
+        val valueGot = dict[symbol] ?: parentTable?.get(symbol, errorMessageBuilder)
+        SemanticChecker.checkIfTheVariableIsInScope(valueGot, symbol, errorMessageBuilder)
         return valueGot
             ?: throw Exception("Semantic checker didn't throw SemanticException on null value of the symbol")
     }
 
-    override fun get(arrSym: String, indices: Array<WInt>, errBuilder: SemanticErrorMessageBuilder): WAny {
+    override fun get(arrSym: String, indices: Array<WInt>, errorMessageBuilder: SemanticErrorMessageBuilder): WAny {
         val prev = dict[arrSym]
 
         if (prev == null) {
-            SemanticChecker.checkParentTableIsNotNull(parentTable, arrSym, errBuilder)
-            return parentTable?.get(arrSym, indices, errBuilder)
+            SemanticChecker.checkParentTableIsNotNull(parentTable, arrSym, errorMessageBuilder)
+            return parentTable?.get(arrSym, indices, errorMessageBuilder)
                 ?: throw Exception("Semantic checker failed to detect null parent table")
         }
-        return arrayTypeChecking(prev, indices, errBuilder)
+        return arrayTypeChecking(prev, indices, errorMessageBuilder)
     }
 
     override fun getMap(): Map<String, WAny> {
         return dict
     }
 
-    override fun declare(symbol: String, value: WAny, errBuilder: SemanticErrorMessageBuilder) {
+    override fun declare(symbol: String, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
         val prev = dict.putIfAbsent(symbol, value)
-        SemanticChecker.checkIfRedeclarationHappens(prev, symbol, errBuilder)
+        SemanticChecker.checkIfRedeclarationHappens(prev, symbol, errorMessageBuilder)
     }
 
-    override fun reassign(symbol: String, value: WAny, errBuilder: SemanticErrorMessageBuilder) {
+    override fun reassign(symbol: String, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
         val prev = dict[symbol]
 
         if (prev == null) {
-            SemanticChecker.checkParentTableIsNotNull(parentTable, symbol, errBuilder)
+            SemanticChecker.checkParentTableIsNotNull(parentTable, symbol, errorMessageBuilder)
             parentTable ?: throw Exception("SemanticChecker failed to detect null parent table")
-            parentTable.reassign(symbol, value, errBuilder)
+            parentTable.reassign(symbol, value, errorMessageBuilder)
             return
         }
-        SemanticChecker.checkThatAssignmentTypesMatch(prev, value, errBuilder,
+        SemanticChecker.checkThatAssignmentTypesMatch(prev, value, errorMessageBuilder,
             failMessage = "Attempted to reassign type of declared $prev to $value"
         )
         dict[symbol] = value
     }
 
-    override fun reassign(arrSym: String, indices: Array<WInt>, value: WAny, errBuilder: SemanticErrorMessageBuilder) {
+    override fun reassign(arrSym: String, indices: Array<WInt>, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
         val prev = dict[arrSym]
 
         if (prev == null) {
-            SemanticChecker.checkParentTableIsNotNull(parentTable, arrSym, errBuilder)
-            parentTable?.reassign(arrSym, indices, value, errBuilder)
+            SemanticChecker.checkParentTableIsNotNull(parentTable, arrSym, errorMessageBuilder)
+            parentTable?.reassign(arrSym, indices, value, errorMessageBuilder)
             return
         }
-        val arrayType: WAny = arrayTypeChecking(prev, indices, errBuilder)
-        SemanticChecker.checkThatAssignmentTypesMatch(arrayType, value, errBuilder)
+        val arrayType: WAny = arrayTypeChecking(prev, indices, errorMessageBuilder)
+        SemanticChecker.checkThatAssignmentTypesMatch(arrayType, value, errorMessageBuilder)
     }
 
-    override fun reassign(pairSym: String, fst: Boolean, value: WAny, errBuilder: SemanticErrorMessageBuilder) {
+    override fun reassign(pairSym: String, fst: Boolean, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
         val prev = dict[pairSym]
         if (prev is WPairKW) {
             dict[pairSym] = if (fst) WPair(value, WUnknown()) else WPair(WUnknown(), value)
             return
         }
         if (prev == null) {
-            SemanticChecker.checkParentTableIsNotNull(parentTable, pairSym, errBuilder)
-            parentTable?.reassign(pairSym, fst, value, errBuilder)
+            SemanticChecker.checkParentTableIsNotNull(parentTable, pairSym, errorMessageBuilder)
+            parentTable?.reassign(pairSym, fst, value, errorMessageBuilder)
             return
         }
-        SemanticChecker.checkThatTheValueIsPair(prev, fst, errBuilder)
+        SemanticChecker.checkThatTheValueIsPair(prev, fst, errorMessageBuilder)
         prev as WPair
         val elemT: WAny = if (fst) prev.leftType else prev.rightType
-        SemanticChecker.checkThatAssignmentTypesMatch(elemT, value, errBuilder)
+        SemanticChecker.checkThatAssignmentTypesMatch(elemT, value, errorMessageBuilder)
     }
 
     override fun createChildScope(): SymbolTable {

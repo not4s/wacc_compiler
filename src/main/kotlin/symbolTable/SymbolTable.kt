@@ -9,14 +9,14 @@ abstract class SymbolTable(
     var isGlobal : Boolean,
     val srcFilePath: String
 ) {
-    abstract fun get(symbol: String, errBuilder: SemanticErrorMessageBuilder): WAny
+    abstract fun get(symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder): WAny
 
-    abstract fun get(arrSym: String, indices: Array<WInt>, errBuilder: SemanticErrorMessageBuilder): WAny
+    abstract fun get(arrSym: String, indices: Array<WInt>, errorMessageBuilder: SemanticErrorMessageBuilder): WAny
 
     abstract fun getMap() : Map<String, WAny>
 
-    inline fun <reified T : WAny> getAndCast(symbol: String, errBuilder: SemanticErrorMessageBuilder) : T {
-        val value = this.get(symbol, errBuilder)
+    inline fun <reified T : WAny> getAndCast(symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder) : T {
+        val value = this.get(symbol, errorMessageBuilder)
         if (value is T) {
             return value
         } else {
@@ -24,22 +24,22 @@ abstract class SymbolTable(
         }
     }
 
-    abstract fun declare(symbol: String, value: WAny, errBuilder: SemanticErrorMessageBuilder)
+    abstract fun declare(symbol: String, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder)
 
     /**
      * Reassignment for base types
      */
-    abstract fun reassign(symbol: String, value: WAny, errBuilder: SemanticErrorMessageBuilder)
+    abstract fun reassign(symbol: String, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder)
 
     /**
      * Reassignment for arrays
      */
-    abstract fun reassign(arrSym: String, indices: Array<WInt>, value: WAny, errBuilder: SemanticErrorMessageBuilder)
+    abstract fun reassign(arrSym: String, indices: Array<WInt>, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder)
 
     /**
      * Reassignment for pairs
      */
-    abstract fun reassign(pairSym: String, fst: Boolean, value: WAny, errBuilder: SemanticErrorMessageBuilder)
+    abstract fun reassign(pairSym: String, fst: Boolean, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder)
 
     abstract fun createChildScope(): SymbolTable
 }
