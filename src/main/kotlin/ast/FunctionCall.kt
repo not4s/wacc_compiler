@@ -1,12 +1,11 @@
 package ast
 
-import ast.statement.SkipStat
 import org.antlr.v4.runtime.ParserRuleContext
+import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.WAny
-import waccType.WUnknown
 import waccType.typesAreEqual
 
 /**
@@ -19,34 +18,22 @@ class FunctionCall(
     parserCtx: ParserRuleContext,
 ) : RHS {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
+    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
     }
 
+    /**
+     * Checks that the argument count is correct.
+     * Then checks each argument type.
+     */
     override fun check() {
-        // Check params against st
-        val func = st.get(identifier, semanticErrorMessage) as WACCFunction
-
-        // If function is not yet defined, just return
-        if (func.body is SkipStat && func.params.isEmpty() && func.type is WUnknown) {
-            return
-        }
-        if (func.params.size != params.size) {
-            semanticErrorMessage
-                .functionArgumentCountMismatch(func.params.size, params.size)
-                .buildAndPrint()
-            throw SemanticException("Argument count does not match up with expected count for function $identifier")
-        }
-        func.params.onEachIndexed { i, (_, v) ->
-            if (!typesAreEqual(v, params[i].type)) {
-                val actualType = params[i].type
-                semanticErrorMessage
-                    .functionArgumentTypeMismatch(v, actualType)
-                    .buildAndPrint()
-                throw SemanticException("Mismatching types for function $identifier call: expected $v, got $actualType")
-            }
+        val func = st.get(identifier, errorMessageBuilder) as WACCFunction
+        SemanticChecker.checkFunctionParamsCount(func, params, errorMessageBuilder, identifier)
+        func.params.onEachIndexed { index, (_, vType) ->
+            SemanticChecker
+                .checkFunctionArgumentsTypeMatch(vType, params[index].type, errorMessageBuilder, identifier)
         }
     }
 
@@ -61,5 +48,5 @@ class FunctionCall(
     }
 
     override val type: WAny
-        get() = (st.get(identifier, semanticErrorMessage) as WACCFunction).type
+        get() = (st.get(identifier, errorMessageBuilder) as WACCFunction).type
 }

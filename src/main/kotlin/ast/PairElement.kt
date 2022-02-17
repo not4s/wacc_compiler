@@ -1,10 +1,13 @@
 package ast
 
 import org.antlr.v4.runtime.ParserRuleContext
+import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
-import utils.SemanticException
-import waccType.*
+import waccType.WAny
+import waccType.WPair
+import waccType.WPairKW
+import waccType.WUnknown
 
 /**
  * The AST Node for Pair Elements
@@ -20,7 +23,7 @@ class PairElement(
 
     private var actualType: WAny? = null
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
+    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
@@ -30,16 +33,8 @@ class PairElement(
         if (expr.type is WPairKW) {
             return
         }
-        if (expr.type !is WPair) {
-            semanticErrorMessage
-                .pairElementInvalidType()
-                .buildAndPrint()
-            throw SemanticException("Cannot call 'fst' or 'snd' on non-pair type: ${expr.type}")
-        }
-        // Check null
-        if (expr is PairLiteral) {
-            throwNullDereferenceSemanticException()
-        }
+        SemanticChecker.checkThatTheValueIsPair(expr.type, first, errorMessageBuilder)
+        SemanticChecker.checkNullDereference(expr, errorMessageBuilder)
     }
 
     override fun toString(): String {
@@ -56,22 +51,13 @@ class PairElement(
             safeActualType?.run {
                 return safeActualType
             }
-            if (expr.type is WPairNull) {
-                throwNullDereferenceSemanticException()
-            }
+            SemanticChecker.checkNullDereference(expr, errorMessageBuilder)
             if (expr.type is WPairKW) {
                 return WUnknown()
             }
             val pair = expr.type as WPair
             return if (first) pair.leftType else pair.rightType
         }
-
-    private fun throwNullDereferenceSemanticException() {
-        semanticErrorMessage
-            .pairElementInvalidType()
-            .buildAndPrint()
-        throw SemanticException("NULL POINTER EXCEPTION! Can't dereference null.")
-    }
 
     fun updateType(type: WAny) {
         actualType = type

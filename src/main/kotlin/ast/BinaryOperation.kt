@@ -4,7 +4,6 @@ import org.antlr.v4.runtime.ParserRuleContext
 import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
-import utils.SemanticException
 import waccType.*
 
 /**
@@ -50,10 +49,5 @@ class BinaryOperation(
     }
 
     override val type: WAny
-        get() = when (op) {
-            BinOperator.MUL, BinOperator.DIV, BinOperator.MOD, BinOperator.ADD, BinOperator.SUB -> WInt()
-            BinOperator.GT, BinOperator.GEQ, BinOperator.LT, BinOperator.LEQ -> WBool()
-            BinOperator.EQ, BinOperator.NEQ -> WBool()
-            BinOperator.AND, BinOperator.OR -> WBool()
-        }
+        get() = if (BinOperator.isForInt(op)) WInt() else WBool()
 }

@@ -1,8 +1,6 @@
 package semantic
 
-import ast.BinOperator
-import ast.Expr
-import ast.IdentifierGet
+import ast.*
 import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
@@ -174,7 +172,7 @@ class SemanticChecker {
             }
         }
 
-        fun checkGlobalScope(st: SymbolTable, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+        fun checkGlobalScope(st: SymbolTable, errorMessageBuilder: SemanticErrorMessageBuilder) {
             if (st.isGlobal) {
                 errorMessageBuilder.returnFromGlobalScope().buildAndPrint()
                 throw SemanticException("Cannot return out of global scope.")
@@ -221,6 +219,80 @@ class SemanticChecker {
                 errorMessageBuilder.binOpInvalidType(operandType, operation.toString()).buildAndPrint()
                 throw SemanticException(
                     "Attempted to call binary operation $operation on operands of invalid type: $operandType")
+            }
+        }
+
+        fun checkThatOperationTypeIsValid(
+            operandType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            operation: UnOperator,
+        ) {
+            val typeIsIncorrect: Boolean = when (operation) {
+                UnOperator.NOT -> operandType !is WBool
+                UnOperator.ORD -> operandType !is WChar
+                UnOperator.LEN -> operandType !is WArray
+                UnOperator.CHR, UnOperator.SUB -> operandType !is WInt
+            }
+            if (typeIsIncorrect) {
+                errorMessageBuilder
+                    .unOpInvalidType(operandType, operation.toString())
+                    .buildAndPrint()
+                throw SemanticException("Attempted to call $operation operation on invalid type: $operandType")
+            }
+        }
+
+        fun checkFunctionParamsCount(
+            func: WACCFunction,
+            params: Array<Expr>,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            identifier: String
+        ) {
+            if (func.params.size != params.size) {
+                errorMessageBuilder
+                    .functionArgumentCountMismatch(func.params.size, params.size)
+                    .buildAndPrint()
+                throw SemanticException(
+                    "Argument count does not match up with expected count for function $identifier")
+            }
+        }
+
+        fun checkFunctionArgumentsTypeMatch(
+            expectedType: WAny,
+            actualType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            identifier: String
+        ) {
+            if (!typesAreEqual(expectedType, actualType)) {
+                errorMessageBuilder.functionArgumentTypeMismatch(expectedType, actualType).buildAndPrint()
+                throw SemanticException(
+                    "Mismatching types for function $identifier call: expected $expectedType, got $actualType")
+            }
+        }
+
+        fun checkIdentifierExpressionType(
+            type: WAny,
+            st: SymbolTable,
+            identifier: String,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+        ) {
+            val expectedType = st.get(identifier, errorMessageBuilder)
+            if (typesAreEqual(expectedType, type)) {
+                return
+            }
+            errorMessageBuilder
+                .operandTypeMismatch(expectedType, type)
+                .appendCustomErrorMessage(
+                    "$identifier has a type which does not match with the type of the right hand side.")
+                .buildAndPrint()
+            throw SemanticException("Attempted to use variable of type $expectedType as $type")
+        }
+
+        fun checkNullDereference(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder) {
+            if (expr is PairLiteral || expr.type is WPairNull) {
+                errorMessageBuilder
+                    .pairElementInvalidType()
+                    .buildAndPrint()
+                throw SemanticException("NULL POINTER EXCEPTION! Can't dereference null.")
             }
         }
     }
