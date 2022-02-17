@@ -5,10 +5,10 @@ import antlr.WACCParserBaseVisitor
 import ast.*
 import ast.statement.*
 import symbolTable.SymbolTable
+import syntax.SyntaxChecker
 import utils.*
 import waccType.*
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.system.exitProcess
 
 class ASTVisitor(
     private val st: SymbolTable,
@@ -56,7 +56,7 @@ class ASTVisitor(
                 st.declare(
                     symbol = id,
                     value = bodyLessFunction,
-                    errBuilder = builderTemplateFromContext(ctx, st)
+                    errorMessageBuilder = builderTemplateFromContext(ctx, st)
                 )
             } catch (e: SemanticException) {
                 semanticErrorCount.incrementAndGet()
@@ -137,8 +137,8 @@ class ASTVisitor(
     }
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
-        val elements: Array<WAny> =
-            ctx.expr().map { e -> (safeVisit(Literal(st, WUnknown())) { this.visit(e) } as Expr).type }.toTypedArray()
+        val elements: Array<Expr> =
+            ctx.expr().map { e -> (safeVisit(Literal(st, WUnknown())) { this.visit(e) } as Expr) }.toTypedArray()
         return ArrayLiteral(st, elements, ctx)
     }
 
@@ -186,33 +186,25 @@ class ASTVisitor(
         return WACCType(st, WStr())
     }
 
-    /**
-     * Ensures that the integer literal is within the bounds (-2^32, 2^32 - 1)
-     */
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext): Literal {
-        try {
-            Integer.parseInt(ctx.text)
-        } catch (e: java.lang.NumberFormatException) {
-            SyntaxErrorMessageBuilder()
-                .provideStart(PositionedError(ctx))
-                .setLineTextFromSrcFile(st.srcFilePath)
-                .appendCustomErrorMessage("Attempted to parse a very big int ${ctx.text}!")
-                .buildAndPrint()
-            exitProcess(ExitCode.SYNTAX_ERROR)
-        }
-        return Literal(st, WInt())
+        SyntaxChecker.assertIntFitsTheRange(ctx, st)
+        val value: Int = Integer.parseInt(ctx.text)
+        return Literal(st, WInt(value))
     }
 
     override fun visitLiteralBoolean(ctx: WACCParser.LiteralBooleanContext): Literal {
-        return Literal(st, WBool())
+        val value: Boolean = ctx.value.type == WACCParser.KW_TRUE
+        return Literal(st, WBool(value))
     }
 
     override fun visitLiteralChar(ctx: WACCParser.LiteralCharContext): Literal {
-        return Literal(st, WChar())
+        val value: Char = ctx.CHAR().text[1]
+        return Literal(st, WChar(value))
     }
 
     override fun visitLiteralString(ctx: WACCParser.LiteralStringContext): Literal {
-        return Literal(st, WStr())
+        val value: String = ctx.STRING().text.substring(1, ctx.STRING().text.length - 1)
+        return Literal(st, WStr(value))
     }
 
     override fun visitLiteralPair(ctx: WACCParser.LiteralPairContext): PairLiteral {
@@ -305,16 +297,15 @@ class ASTVisitor(
 
     override fun visitAssignRhsPairElem(ctx: WACCParser.AssignRhsPairElemContext): RHS {
         val rhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.pairElem()) } as RHS
-        if (rhs.type is WPairKW) {
-            if (rhs is PairElement && rhs.expr is IdentifierGet) {
-                val rhsType = st.get(
-                    rhs.expr.identifier,
-                    builderTemplateFromContext(ctx, st)
-                ) as WPair
-                val newType = if (rhs.first) rhsType.leftType else rhsType.rightType
-                rhs.updateType(newType)
-            }
+        if (rhs.type !is WPairKW || !(rhs is PairElement && rhs.expr is IdentifierGet)) {
+            return rhs
         }
+        val rhsType = st.get(
+            rhs.expr.identifier,
+            builderTemplateFromContext(ctx, st)
+        ) as WPair
+        val newType = if (rhs.first) rhsType.leftType else rhsType.rightType
+        rhs.updateType(newType)
         return rhs
     }
 
@@ -323,13 +314,7 @@ class ASTVisitor(
             ctx.argList()?.expr()?.map { arg -> safeVisit(Literal(st, WUnknown())) { this.visit(arg) } as Expr }
                 ?.toTypedArray()
                 ?: arrayOf()
-
-        return FunctionCall(
-            st,
-            ctx.IDENTIFIER().text,
-            params,
-            ctx
-        )
+        return FunctionCall(st, ctx.IDENTIFIER().text, params, ctx)
     }
 
     override fun visitArgList(ctx: WACCParser.ArgListContext): AST {
@@ -352,11 +337,7 @@ class ASTVisitor(
     }
 
     override fun visitStatRead(ctx: WACCParser.StatReadContext): ReadStat {
-        return ReadStat(
-            st,
-            this.visit(ctx.assignLhs()) as LHS,
-            ctx
-        )
+        return ReadStat(st, this.visit(ctx.assignLhs()) as LHS, ctx)
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
@@ -431,11 +412,7 @@ class ASTVisitor(
                 val id = p.IDENTIFIER().text
                 val ty = (safeVisit(WACCType(st, WUnknown())) { this.visit(p.type()) } as WACCType).type
                 params[id] = ty
-                funScope.declare(
-                    id,
-                    ty,
-                    builderTemplateFromContext(ctx, st)
-                )
+                funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
             }
         }
         return WACCFunction(

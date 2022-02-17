@@ -5,10 +5,9 @@ import ast.INDENT
 import ast.Stat
 import ast.builderTemplateFromContext
 import org.antlr.v4.runtime.ParserRuleContext
+import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
-import utils.SemanticException
-import waccType.WInt
 
 /**
  * The AST Node for Exit Statements
@@ -19,19 +18,18 @@ class ExitStat(
     parserCtx: ParserRuleContext,
 ) : Stat {
 
-    private val semanticErrorMessage: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
+    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
     init {
         check()
     }
 
     override fun check() {
-        if (expression.type !is WInt) {
-            semanticErrorMessage
-                .nonIntExpressionExit(expression.type)
-                .buildAndPrint()
-            throw SemanticException("Cannot exit with non-int expression. Actual: ${expression.type}")
-        }
+        SemanticChecker.checkExprTypeIsWInt(
+            type = expression.type,
+            errorMessageBuilder = errorMessageBuilder,
+            failMessage = "Cannot exit with non-int expression. Actual: ${expression.type}"
+        )
     }
 
     override fun toString(): String {
