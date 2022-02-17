@@ -10,7 +10,7 @@ import waccType.WArray
 import waccType.WUnknown
 
 /**
- *  The AST Node for Array Literals
+ * The AST Node for Array Literals
  **/
 class ArrayLiteral(
     override val st: SymbolTable,
