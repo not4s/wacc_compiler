@@ -29,7 +29,7 @@ class ReturnStat(
      * Checks the scope
      */
     override fun check() {
-        SemanticChecker.checkGlobalScope(st, errorMessageBuilder)
+        SemanticChecker.checkReturnFromGlobalScope(st, errorMessageBuilder)
     }
 
     override fun toString(): String {

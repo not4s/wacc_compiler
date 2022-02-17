@@ -14,10 +14,11 @@ import waccType.*
  * @exception SemanticException is thrown in every method if the check is not passed
  *
  * Common params for many methods are the following:
- * > symbol              :: is the name of the variable or function.
- * > errorMessageBuilder :: is the incomplete SemanticErrorMessageBuilder which is built in case of error
- * > extraMessage        :: Some additional information which is added using appendCustomErrorMessage() method
- * > failMessage         :: is the optional message for the SemanticException to be thrown
+ * > symbol                :: is the name of the variable or function.
+ * > errorMessageBuilder   :: is the incomplete SemanticErrorMessageBuilder which is built in case of error
+ * > extraMessage          :: Some additional information which is added using appendCustomErrorMessage() method
+ * > failMessage           :: is the optional message for the SemanticException to be thrown
+ * > firstType, secondType :: are the types to be compared in type matching functions
  */
 class SemanticChecker {
     companion object {
@@ -111,39 +112,9 @@ class SemanticChecker {
         }
 
         /**
-         * Compares two types and ensures they are equal in variable Assignment
-         * @param firstType and
-         * @param secondType are the types to be compared
+         * Checks that 'fst' or 'snd' are applied to identifiers
+         * @param expr is the expression which is expected to be IdentifierGet
          */
-        fun checkThatAssignmentTypesMatch(
-            firstType: WAny,
-            secondType: WAny,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-            failMessage: String = "Assignment Type Mismatch"
-        ) {
-            if (!typesAreEqual(firstType, secondType)) {
-                errorMessageBuilder.assignmentTypeMismatch(firstType, secondType).buildAndPrint()
-                throw SemanticException(failMessage)
-            }
-        }
-
-        /**
-         * Compares two types of operands and ensures they are equal in expression
-         * @param firstType and
-         * @param secondType are the types to be compared
-         */
-        fun checkThatOperandTypesMatch(
-            firstType: WAny,
-            secondType: WAny,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-            extraMessage: String? = null,
-            failMessage: String = "Operand Type Mismatch"
-        ) {
-            perform(!typesAreEqual(firstType, secondType), errorMessageBuilder, extraMessage, failMessage) {
-                it.operandTypeMismatch(firstType, secondType)
-            }
-        }
-
         fun checkThatLhsPairExpressionIsIdentifier(
             expr: Expr,
             errorMessageBuilder: SemanticErrorMessageBuilder,
@@ -155,6 +126,11 @@ class SemanticChecker {
             }
         }
 
+        /**
+         * Returns the type of Expression, cast as WInt
+         * @param expr is the expression which is expected to be WInt
+         * @throws SemanticException if safe casting did not succeed
+         */
         fun takeExprTypeAsWIntWithCheck(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder): WInt {
             return expr.type as? WInt ?: run {
                 errorMessageBuilder.arrayIndexInvalidType().buildAndPrint()
@@ -162,6 +138,12 @@ class SemanticChecker {
             }
         }
 
+        /**
+         * Checks that the type validity for variety of types
+         * @param type is the type of expression
+         * @param expectedType is a Base type or a Pair of do-not-cares
+         * @param building is a specific action on SemanticErrorMessageBuilder
+         */
         private fun checkExprTypeIs(
             type: WAny,
             expectedType: WAny,
@@ -177,26 +159,41 @@ class SemanticChecker {
             )
         }
 
+        /**
+         * Checks that the type of the expression is WInt
+         */
         fun checkExprTypeIsWInt(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
             checkExprTypeIs(type, WInt(), errorMessageBuilder, failMessage) { it.nonIntExpressionExit(type) }
         }
 
+        /**
+         * Checks that the type of the expression is WPair (of whatever, does not matter)
+         */
         fun checkExprTypeIsWPair(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
             checkExprTypeIs(type, WPair.ofWUnknowns(), errorMessageBuilder, failMessage) { it.freeNonPair(type) }
         }
 
+        /**
+         * Checks that the type of the 'if' statement condition expression is WBool
+         */
         fun checkIfCondIsWBool(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
             checkExprTypeIs(type, WBool(), errorMessageBuilder, failMessage) {
                 it.ifStatConditionHasNonBooleanType(type)
             }
         }
 
+        /**
+         * Checks that the type of the 'while' statement condition expression is WBool
+         */
         fun checkWhileCondIsWBool(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
             checkExprTypeIs(type, WBool(), errorMessageBuilder, failMessage) {
                 it.whileStatConditionHasNonBooleanType(type)
             }
         }
 
+        /**
+         * Checks that the type of the read expression is either WChar or WInt
+         */
         fun checkReadType(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
             if (type !is WChar && type !is WInt) {
                 errorMessageBuilder.readTypeIsIncorrect(type).buildAndPrint()
@@ -204,13 +201,51 @@ class SemanticChecker {
             }
         }
 
-        fun checkGlobalScope(st: SymbolTable, errorMessageBuilder: SemanticErrorMessageBuilder) {
+        /**
+         * Checks that the SymbolTable provided is the root table, i.e. it is the global scope
+         * It is important for the 'return' statement outside a function
+         * @param st is the symbol table which is expected to be global.
+         */
+        fun checkReturnFromGlobalScope(st: SymbolTable, errorMessageBuilder: SemanticErrorMessageBuilder) {
             if (st.isGlobal) {
                 errorMessageBuilder.returnFromGlobalScope().buildAndPrint()
                 throw SemanticException("Cannot return out of global scope.")
             }
         }
 
+        /**
+         * Compares two types and ensures they are equal in variable Assignment
+         */
+        fun checkThatAssignmentTypesMatch(
+            firstType: WAny,
+            secondType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            failMessage: String = "Assignment Type Mismatch"
+        ) {
+            if (!typesAreEqual(firstType, secondType)) {
+                errorMessageBuilder.assignmentTypeMismatch(firstType, secondType).buildAndPrint()
+                throw SemanticException(failMessage)
+            }
+        }
+
+        /**
+         * Compares two types of operands and ensures they are equal in expression
+         */
+        fun checkThatOperandTypesMatch(
+            firstType: WAny,
+            secondType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            extraMessage: String? = null,
+            failMessage: String = "Operand Type Mismatch"
+        ) {
+            perform(!typesAreEqual(firstType, secondType), errorMessageBuilder, extraMessage, failMessage) {
+                it.operandTypeMismatch(firstType, secondType)
+            }
+        }
+
+        /**
+         * Checks type validity for return type, which is expected to be the same as the type in function signature
+         */
         fun checkThatReturnTypeMatch(
             firstType: WAny,
             secondType: WAny,
@@ -223,6 +258,25 @@ class SemanticChecker {
             }
         }
 
+        /**
+         * Checks type validity for function arguments, in function definition and function call
+         */
+        fun checkFunctionArgumentsTypeMatch(
+            expectedType: WAny,
+            actualType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            identifier: String
+        ) {
+            if (!typesAreEqual(expectedType, actualType)) {
+                errorMessageBuilder.functionArgumentTypeMismatch(expectedType, actualType).buildAndPrint()
+                throw SemanticException(
+                    "Mismatching types for function $identifier call: expected $expectedType, got $actualType")
+            }
+        }
+
+        /**
+         * Checking type validity for arrays
+         */
         fun checkThatArrayElementsTypeMatch(
             elemType: WAny,
             expType: WAny,
@@ -234,6 +288,12 @@ class SemanticChecker {
             }
         }
 
+        /**
+         * Checking that the provided BINARY operation and operand types are the same
+         * The precondition is that both operands have the same type
+         * @param operandType is the type of both operands in binary operation
+         * @param operation is the type of BINARY operation
+         */
         fun checkThatOperationTypeIsValid(
             operandType: WAny,
             errorMessageBuilder: SemanticErrorMessageBuilder,
@@ -254,6 +314,9 @@ class SemanticChecker {
             }
         }
 
+        /**
+         * Overloaded version of the same function, but for UNARY operations
+         */
         fun checkThatOperationTypeIsValid(
             operandType: WAny,
             errorMessageBuilder: SemanticErrorMessageBuilder,
@@ -271,6 +334,11 @@ class SemanticChecker {
             }
         }
 
+        /**
+         * Compares the number of arguments in function definition and function call.
+         * @param func is the function definition
+         * @param params are the parameters of the function call
+         */
         fun checkFunctionParamsCount(
             func: WACCFunction,
             params: Array<Expr>,
@@ -284,19 +352,12 @@ class SemanticChecker {
             }
         }
 
-        fun checkFunctionArgumentsTypeMatch(
-            expectedType: WAny,
-            actualType: WAny,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-            identifier: String
-        ) {
-            if (!typesAreEqual(expectedType, actualType)) {
-                errorMessageBuilder.functionArgumentTypeMismatch(expectedType, actualType).buildAndPrint()
-                throw SemanticException(
-                    "Mismatching types for function $identifier call: expected $expectedType, got $actualType")
-            }
-        }
-
+        /**
+         * Ensures that the type of the identifier in the symbol table and the actual type o the expression match
+         * @param type is the actual type of the expression
+         * @param st is the symbol table to be queried for the expected type
+         * @param identifier is the name of the variable
+         */
         fun checkIdentifierExpressionType(
             type: WAny,
             st: SymbolTable,
@@ -314,6 +375,9 @@ class SemanticChecker {
             }
         }
 
+        /**
+         * Ensuring that the 'fst' or 'snd' not applied to null pairs
+         */
         fun checkNullDereference(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder) {
             if (expr is PairLiteral || expr.type is WPairNull) {
                 errorMessageBuilder.pairElementInvalidType().buildAndPrint()
