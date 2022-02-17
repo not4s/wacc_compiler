@@ -14,7 +14,7 @@ import waccType.WUnknown
  **/
 class ArrayLiteral(
     override val st: SymbolTable,
-    private val values: Array<WAny>,
+    private val values: Array<Expr>,
     parserCtx: ParserRuleContext
 ) : Expr, RHS {
 
@@ -37,9 +37,9 @@ class ArrayLiteral(
             if (values.isEmpty()) {
                 return WArray(WUnknown())
             }
-            val expType: WAny = values.first()
+            val expType: WAny = values.first().type
             values.forEach {
-                SemanticChecker.checkThatArrayElementsTypeMatch(it, expType, errorMessageBuilder)
+                SemanticChecker.checkThatArrayElementsTypeMatch(it.type, expType, errorMessageBuilder)
             }
             return WArray(expType)
         }

@@ -137,8 +137,8 @@ class ASTVisitor(
     }
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
-        val elements: Array<WAny> =
-            ctx.expr().map { e -> (safeVisit(Literal(st, WUnknown())) { this.visit(e) } as Expr).type }.toTypedArray()
+        val elements: Array<Expr> =
+            ctx.expr().map { e -> (safeVisit(Literal(st, WUnknown())) { this.visit(e) } as Expr) }.toTypedArray()
         return ArrayLiteral(st, elements, ctx)
     }
 
