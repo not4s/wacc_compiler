@@ -143,7 +143,6 @@ class NewPairRHS(
     private val right: Expr,
     override val type: WPair,
 ) : RHS {
-
     override fun toString(): String {
         return "NEWPAIR:\n  (scope:$st)\nleft:\n${
             left.toString().prependIndent(INDENT)

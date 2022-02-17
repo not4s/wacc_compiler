@@ -1,6 +1,10 @@
 package waccType
 
-interface WAny
+interface WAny {
+    fun justType(): String {
+        return toString()
+    }
+}
 
 interface WBase : WAny
 
@@ -13,33 +17,55 @@ class WUnknown : WAny, WBase {
     }
 }
 
-class WInt : WBase {
+class WInt(
+    val value: Int? = null
+) : WBase {
     override fun toString(): String {
+        return "Int($value)"
+    }
+
+    override fun justType(): String {
         return "Int"
     }
 }
 
-class WStr : WBase {
+class WStr(
+    val value: String? = null
+) : WBase {
     override fun toString(): String {
+        return "String(\"${value}\")"
+    }
+
+    override fun justType(): String {
         return "String"
     }
 }
 
-class WBool : WBase {
+class WBool(
+    val value: Boolean? = null
+) : WBase {
     override fun toString(): String {
+        return "Bool(${value})"
+    }
+    override fun justType(): String {
         return "Bool"
     }
 }
 
-class WChar : WBase {
+class WChar(
+    val value: Char? = null
+) : WBase {
     override fun toString(): String {
+        return "Char(\'${value}\')"
+    }
+    override fun justType(): String {
         return "Char"
     }
 }
 
 class WArray(val elemType: WAny) : WAny {
     override fun toString(): String {
-        return "$elemType[]"
+        return "${elemType.justType()}[]"
     }
 
     override fun equals(other: Any?): Boolean {
