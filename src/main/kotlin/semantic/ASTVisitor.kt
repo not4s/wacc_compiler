@@ -146,14 +146,21 @@ class ASTVisitor(
         return ArrayLiteral(st, elements)
     }
 
-    override fun visitPairElemFst(ctx: WACCParser.PairElemFstContext): AST {
-        val expr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
-        return PairElement(st, true, expr, ctx)
+    /**
+     * Visits the first or second element access of the pair.
+     */
+    private fun visitPair(ctx: WACCParser.PairElemContext, ctxExpr: WACCParser.ExprContext, isFirst: Boolean): PairElement {
+        val expr = safeVisit(Literal(st, WUnknown())) { this.visit(ctxExpr) } as Expr
+        SemanticChecker.checkTheExprIsPairAndNoNullDereference(expr, isFirst, builderTemplateFromContext(ctx, st))
+        return PairElement(st, isFirst, expr, ctx)
     }
 
-    override fun visitPairElemSnd(ctx: WACCParser.PairElemSndContext): AST {
-        val expr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
-        return PairElement(st, false, expr, ctx)
+    override fun visitPairElemFst(ctx: WACCParser.PairElemFstContext): PairElement {
+        return visitPair(ctx, ctx.expr(), isFirst = true)
+    }
+
+    override fun visitPairElemSnd(ctx: WACCParser.PairElemSndContext): PairElement {
+        return visitPair(ctx, ctx.expr(), isFirst = false)
     }
 
     override fun visitPairType(ctx: WACCParser.PairTypeContext): WACCType {

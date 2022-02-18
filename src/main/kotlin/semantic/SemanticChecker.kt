@@ -398,5 +398,17 @@ class SemanticChecker {
                 }
             }
         }
+
+        fun checkTheExprIsPairAndNoNullDereference(
+            expr: Expr,
+            first: Boolean,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
+            if (expr.type is WPairKW) {
+                return
+            }
+            checkThatTheValueIsPair(expr.type, first, errorMessageBuilder)
+            checkNullDereference(expr, errorMessageBuilder)
+        }
     }
 }
