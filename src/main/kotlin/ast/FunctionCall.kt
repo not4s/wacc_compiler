@@ -1,12 +1,9 @@
 package ast
 
 import org.antlr.v4.runtime.ParserRuleContext
-import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
-import utils.SemanticException
 import waccType.WAny
-import waccType.typesAreEqual
 
 /**
  *  The AST Node for Function Calls
@@ -19,17 +16,6 @@ class FunctionCall(
 ) : RHS {
 
     private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
-
-    init {
-        check()
-    }
-
-    /**
-     * Checks that the argument count is correct.
-     * Then checks each argument type.
-     */
-    override fun check() {
-    }
 
     override fun toString(): String {
         return "Calling $identifier with parameters...:\n${

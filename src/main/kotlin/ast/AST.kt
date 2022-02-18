@@ -1,12 +1,9 @@
 package ast
 
 import antlr.WACCParser
-import ast.statement.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
-import semantic.SemanticChecker
 import symbolTable.SymbolTable
-import syntax.SyntaxChecker
 import utils.PositionedError
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
@@ -21,13 +18,6 @@ interface AST {
      *  corresponding to its nearest scope
      */
     val st: SymbolTable
-
-    /**
-     *  Performs semantic analysis on the AST node and throws exceptions if semantic errors are found
-     *  The default implementation does nothing, which means that it always succeeds
-     *  @throws SemanticException if something goes wrong
-     */
-    fun check() {}
 
     /**
      *  Converts the AST node into a string containing the information of that node
@@ -175,48 +165,5 @@ class NewPairRHS(
         return "NEWPAIR:\n  (scope:$st)\nleft:\n${
             left.toString().prependIndent(INDENT)
         }\nright:\n" + right.toString().prependIndent(INDENT)
-    }
-}
-
-/**
- * Checks whether the given statement has a proper return statement by matching patterns recursively
- * @param stat : statement to be checked
- * @param inOuterFuncScope : examines the scope to check context
- **/
-fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
-    return when (stat) {
-        is ReturnStat -> true
-        is ExitStat -> true
-        is JoinStat -> SyntaxChecker.unreachableCodeCheck(stat, inOuterFuncScope)
-        is IfThenStat -> hasReturn(stat.thenStat, false) && hasReturn(stat.elseStat, false)
-        is WhileStat -> hasReturn(stat.doBlock, false)
-        else -> false
-    }
-}
-
-/**
- * Checks the return type of statement by matching patterns recursively and
- * throws a semantic exception if the type does not match the expected
- * @param stat : return type to be checked
- * @param expected : expected type to be matched
- * @param errorMessageBuilder : incomplete semantic error message builder which is built in error case
- **/
-fun checkReturnType(stat: Stat, expected: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
-    when (stat) {
-        is ReturnStat -> SemanticChecker.checkThatReturnTypeMatch(
-            firstType = expected,
-            secondType = stat.type,
-            errorMessageBuilder = errorMessageBuilder,
-            failMessage = "Mismatching return type for function, expected: $expected, got: ${stat.type}"
-        )
-        is JoinStat -> {
-            checkReturnType(stat.first, expected, errorMessageBuilder)
-            checkReturnType(stat.second, expected, errorMessageBuilder)
-        }
-        is IfThenStat -> {
-            checkReturnType(stat.thenStat, expected, errorMessageBuilder)
-            checkReturnType(stat.elseStat, expected, errorMessageBuilder)
-        }
-        is WhileStat -> checkReturnType(stat.doBlock, expected, errorMessageBuilder)
     }
 }

@@ -2,8 +2,7 @@ package syntax
 
 import antlr.WACCParser
 import ast.Stat
-import ast.hasReturn
-import ast.statement.JoinStat
+import ast.statement.*
 import symbolTable.SymbolTable
 import utils.ExitCode
 import utils.PositionedError
@@ -12,7 +11,6 @@ import kotlin.system.exitProcess
 
 class SyntaxChecker {
     companion object {
-
         /**
          * Ensures that the integer literal is within the bounds (-2^32, 2^32 - 1)
          */
@@ -29,14 +27,24 @@ class SyntaxChecker {
             }
         }
 
-        fun checkFunctionHavingReturn(body: Stat, identifier: String) {
-            if (!hasReturn(body, true)) {
-                println("Function $identifier does not return on every branch.")
-                exitProcess(ExitCode.SYNTAX_ERROR)
+        /**
+         * Checks whether the given statement has a proper return statement by matching patterns recursively
+         * @param stat : statement to be checked
+         * @param inOuterFuncScope : examines the scope to check context
+         **/
+        private fun hasReturn(stat: Stat, inOuterFuncScope: Boolean): Boolean {
+            return when (stat) {
+                is ReturnStat -> true
+                is ExitStat -> true
+                is JoinStat -> unreachableCodeCheck(stat, inOuterFuncScope)
+                is IfThenStat -> hasReturn(stat.thenStat, false)
+                        && hasReturn(stat.elseStat, false)
+                is WhileStat -> hasReturn(stat.doBlock, false)
+                else -> false
             }
         }
 
-        fun unreachableCodeCheck(stat: JoinStat, inOuterFuncScope: Boolean): Boolean {
+        private fun unreachableCodeCheck(stat: JoinStat, inOuterFuncScope: Boolean): Boolean {
             val errorCondition= hasReturn(stat.first, true)
                     && !hasReturn(stat.second, false)
                     && inOuterFuncScope
@@ -45,6 +53,13 @@ class SyntaxChecker {
             }
             println("Should not have return before another non-return statement.")
             exitProcess(ExitCode.SYNTAX_ERROR)
+        }
+
+        fun checkFunctionHavingReturn(body: Stat, identifier: String) {
+            if (!hasReturn(body, true)) {
+                println("Function $identifier does not return on every branch.")
+                exitProcess(ExitCode.SYNTAX_ERROR)
+            }
         }
     }
 }
