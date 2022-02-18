@@ -3,6 +3,13 @@ stages:
   - test
   - wacc-test
 
+clean:
+  stage: build
+  artifacts:
+    untracked: true
+  script:
+    - make clean
+
 make:
   stage: build
   artifacts:
