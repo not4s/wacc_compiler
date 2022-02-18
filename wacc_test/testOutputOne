@@ -12,8 +12,8 @@ COMPILED_CODE_DIR = "wacc_test/compiled_code"
 parser=argparse.ArgumentParser(description='Script testing correctness of the compiler output')
 
 parser.add_argument('src_file', help='file destination of the wacc file')
-parser.add_argument('-x', help='compares the output of the file')
-parser.add_argument('-a', help='compares the assembly output of the file')
+parser.add_argument('-x', nargs=None, help='compares the output of the file')
+parser.add_argument('-a', nargs=None, help='compares the assembly output of the file')
 parser.add_argument('-p', type=str, nargs='?', help='optional input into file')
 
 args=vars(parser.parse_args())
@@ -63,8 +63,7 @@ def compareOutput() -> str:
     wacc_emulated_output = stream.read()
     # compare output from refCompile to output from program
     os.chdir("..")
-    stream = os.popen(f'{args["p"]} | ./refCompile {REFCOMPILER_OUTPUT} {path}')
-    print(f'echo \"{args["p"]}\" | ./refCompile {REFCOMPILER_OUTPUT} {path}')
+    stream = os.popen(f'echo {args["p"]} | ./refCompile {REFCOMPILER_OUTPUT} {path}')
     refCompiler_emulated_output = stream.read()
     navigateToDirectory(prevDirectory)
     return compareStrings(refCompiler_emulated_output, wacc_emulated_output)
