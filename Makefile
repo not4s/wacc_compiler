@@ -32,6 +32,7 @@ all:
 # clean up all of the compiled files
 clean:
 	$(RM) $(OUTPUT_DIR) $(SOURCE_DIR)/antlr
+	$(RM) *.s
 	mvn clean
 
 .PHONY: all clean
