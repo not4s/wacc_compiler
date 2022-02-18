@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+from code import compile_command
 from subprocess import Popen, PIPE, STDOUT
 import os, sys, shutil, argparse
 
 NO_OF_ARGS = 1
+ASSEMBLY_CODE_PREFIX = "compiled_code"
+REFCOMPILER_OUTPUT = "-x"
+REFCOMPILER_ASSEMBLY = "-a"
 
 parser=argparse.ArgumentParser(description='Script testing correctness of the compiler output')
 
@@ -10,18 +14,10 @@ parser.add_argument('src_file', help='file destination of the wacc file')
 parser.add_argument('-x', help='compares the output of the file')
 parser.add_argument('-a', help='compares the assembly output of the file')
 
-args=parser.parse_args()
-
-
-# check the number of arguments
-if len(sys.argv) != NO_OF_ARGS + 1:
-    print("Error: Invalid number of arguments")
-    sys.exit()
+args=vars(parser.parse_args())
 
 # tokenize the path given
-path = sys.argv[1]
-file_type = path.split('.')[-1]
-test_name = ''.join(file_type).split('/')[-1]
+path = args["src_file"]
 
 # check if the file Exists
 if not os.path.isfile(path):
@@ -29,35 +25,50 @@ if not os.path.isfile(path):
     sys.exit()
 
 # check the file type
-if file_type != 'wacc':
+if path.split('.')[-1] != 'wacc':
     print("Error: File given is not a wacc file")
-    
-# build path
-path = os.path.abspath(path)
-file_name = os.path.splitext(os.path.basename(path))[0]
-compile_dir = 'compiled_code'
+    sys.exit()
 
-# TODO: output for the .s file
-output = 'TODO'
+test_name = path.split('/')[-1].split('.')[0]
 
-# if compilation directory does not exist, make the directory
-if not os.path.exists(compile_dir):
-    os.makedirs(compile_dir)
+# get assembly from WACC compiler
+os.chdir("..")
+stream = os.popen(f"./compile wacc_test/{path}")
+wacc_assembly = stream.read()
 
-# change dir to the compilation directory
-os.chdir(compile_dir)
+def compareStrings(correct: str, received: str) -> str:
+    compareOutput = ""
+    for c, r in zip(correct, received):
+        if (c == r):
+            compareOutput += f"  {c}\n"
+        else:
+            compareOutput += f"? {c}\n"            
 
-# TODO: we can defo use the bin as the compilation directory
-# but let's use the root directory for now
-# I'm not sure about the conventions
+# check that the output from the program is the same
+def compareOutput() -> str:
+    # os.chdir() #TODO: navigate to correct directory that contains assembly code
+    # emulate WACC assembly code
+    stream = os.popen(f"arm-linux-gnueabi-gcc -o {ASSEMBLY_CODE_PREFIX}{test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {ASSEMBLY_CODE_PREFIX}{test_name}.s")
+    stream = os.popen(f"qemu-arm -L /usr/arm-linux-gnueabi/ {ASSEMBLY_CODE_PREFIX}{test_name}")
+    # get output from program
+    wacc_emulated_output = stream.read()
+    # compare output from refCompile to output from program
+    os.chdir("/wacc_test")
+    stream = os.popen(f"./refCompile {REFCOMPILER_OUTPUT} {path}")
+    refCompiler_emulated_output = stream.read()
+    return compareStrings(refCompiler_emulated_output, wacc_emulated_output)
 
-# write output to .s file in compilation directory
-compiled_fname = file_name + '.s'
-with open(compiled_fname, 'w') as f:
-    f.write(output)
-    f.close()
-    shutil.move(compiled_fname, compile_dir + compiled_fname)
+def compareAssembly() -> str:
+    # get assembly from refCompile
+    stream = os.popen(f"./refCompile {REFCOMPILER_ASSEMBLY} {path}")
+    refCompiler_assembly_output = stream.read()
+    return compareStrings(refCompiler_assembly_output, wacc_assembly)
 
-# prints success if reached
-# print("Compiled successfully")
-print("")
+stringBuffer = "TODO"
+
+if(args["a"] != None):
+    stringBuffer += compareAssembly()
+else: # if no argmuents provided by default compares output
+    stringBuffer += compareOutput()
+
+print("Compile not implemented fully")
