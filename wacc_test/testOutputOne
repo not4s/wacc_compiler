@@ -7,12 +7,14 @@ NO_OF_ARGS = 1
 ASSEMBLY_CODE_PREFIX = "compiled_code"
 REFCOMPILER_OUTPUT = "-x"
 REFCOMPILER_ASSEMBLY = "-a"
+COMPILED_CODE_DIR = "wacc_test/compiled_code"
 
 parser=argparse.ArgumentParser(description='Script testing correctness of the compiler output')
 
 parser.add_argument('src_file', help='file destination of the wacc file')
 parser.add_argument('-x', help='compares the output of the file')
 parser.add_argument('-a', help='compares the assembly output of the file')
+parser.add_argument('-p', type=str, nargs='?', help='optional input into file')
 
 args=vars(parser.parse_args())
 
@@ -43,19 +45,28 @@ def compareStrings(correct: str, received: str) -> str:
             compareOutput += f"  {c}\n"
         else:
             compareOutput += f"? {c}\n"            
+    return compareOutput
+
+# navigates to a valid directory and returns the previous working directory
+def navigateToDirectory(path: str) -> str:
+    curr_directory = os.getcwd()
+    os.chdir(os.path.abspath(path))
+    return curr_directory
 
 # check that the output from the program is the same
 def compareOutput() -> str:
-    # os.chdir() #TODO: navigate to correct directory that contains assembly code
+    prevDirectory = navigateToDirectory(COMPILED_CODE_DIR)
     # emulate WACC assembly code
     stream = os.popen(f"arm-linux-gnueabi-gcc -o {ASSEMBLY_CODE_PREFIX}{test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {ASSEMBLY_CODE_PREFIX}{test_name}.s")
     stream = os.popen(f"qemu-arm -L /usr/arm-linux-gnueabi/ {ASSEMBLY_CODE_PREFIX}{test_name}")
     # get output from program
     wacc_emulated_output = stream.read()
     # compare output from refCompile to output from program
-    os.chdir("/wacc_test")
-    stream = os.popen(f"./refCompile {REFCOMPILER_OUTPUT} {path}")
+    os.chdir("..")
+    stream = os.popen(f'{args["p"]} | ./refCompile {REFCOMPILER_OUTPUT} {path}')
+    print(f'echo \"{args["p"]}\" | ./refCompile {REFCOMPILER_OUTPUT} {path}')
     refCompiler_emulated_output = stream.read()
+    navigateToDirectory(prevDirectory)
     return compareStrings(refCompiler_emulated_output, wacc_emulated_output)
 
 def compareAssembly() -> str:
