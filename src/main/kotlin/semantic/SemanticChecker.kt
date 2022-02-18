@@ -275,20 +275,6 @@ class SemanticChecker {
         }
 
         /**
-         * Checking type validity for arrays
-         */
-        fun checkThatArrayElementsTypeMatch(
-            elemType: WAny,
-            expType: WAny,
-            errorMessageBuilder: SemanticErrorMessageBuilder
-        ) {
-            if (!typesAreEqual(elemType, expType)) {
-                errorMessageBuilder.arrayEntriesTypeClash().buildAndPrint()
-                throw SemanticException("Types in array are not equal: $elemType, $expType")
-            }
-        }
-
-        /**
          * Checking that the provided BINARY operation and operand types are the same
          * The precondition is that both operands have the same type
          * @param operandType is the type of both operands in binary operation
@@ -382,6 +368,34 @@ class SemanticChecker {
             if (expr is PairLiteral || expr.type is WPairNull) {
                 errorMessageBuilder.pairElementInvalidType().buildAndPrint()
                 throw SemanticException("NULL POINTER EXCEPTION! Can't dereference null.")
+            }
+        }
+
+        /**
+         * Ensures that all the indices in arbitrary dimension array ate ints.
+         * @param indices is a collection of N indices o N-dimensional array
+         */
+        fun checkThatAllIndicesAreWInts(indices: Array<Expr>, errorMessageBuilder: SemanticErrorMessageBuilder) {
+            indices.map { expr -> takeExprTypeAsWIntWithCheck(expr, errorMessageBuilder) }
+        }
+
+        /**
+         * Ensures that all the elements in the array are the same.
+         * @param elements is the collection of the elements of the array
+         */
+        fun checkThatAllArrayElementsHaveTheSameType(
+            elements: Array<Expr>,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
+            if (elements.isEmpty()) {
+                return
+            }
+            val expType: WAny = elements.first().type
+            elements.forEach {
+                if (!typesAreEqual(it.type, expType)) {
+                    errorMessageBuilder.arrayEntriesTypeClash().buildAndPrint()
+                    throw SemanticException("Types in array are not equal: ${it.type}, $expType")
+                }
             }
         }
     }

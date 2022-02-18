@@ -17,6 +17,13 @@ class ASTVisitor(
     private var semanticErrorCount: AtomicInteger = AtomicInteger(0)
 
     /**
+     * Used for transferring the Boolean value of the fact of semantic error occurrence
+     */
+    private constructor(st: SymbolTable, errorAlreadyOccurred: AtomicInteger) : this(st) {
+        semanticErrorCount = errorAlreadyOccurred
+    }
+
+    /**
      * Wrapper around try-catch block to write less repetitive code
      * @param default is the AST which is returned if an error occurred
      * @param block is the action to perform inside 'try' clause
@@ -29,13 +36,6 @@ class ASTVisitor(
             semanticErrorCount.incrementAndGet()
             default
         }
-    }
-
-    /**
-     * Used for transferring the Boolean value of the fact of semantic error occurrence
-     */
-    private constructor(st: SymbolTable, errorAlreadyOccurred: AtomicInteger) : this(st) {
-        semanticErrorCount = errorAlreadyOccurred
     }
 
     override fun visitProgram(ctx: WACCParser.ProgramContext): Stat {
@@ -131,15 +131,19 @@ class ASTVisitor(
     }
 
     override fun visitArrayElem(ctx: WACCParser.ArrayElemContext): ArrayElement {
-        val indices: Array<Expr> =
-            ctx.expr().map { e -> safeVisit(Literal(st, WUnknown())) { this.visit(e) } as Expr }.toTypedArray()
+        val indices: Array<Expr> = ctx.expr().map {
+            safeVisit(Literal(st, WUnknown())) { this.visit(it) } as Expr
+        }.toTypedArray()
+        SemanticChecker.checkThatAllIndicesAreWInts(indices, builderTemplateFromContext(ctx, st))
         return ArrayElement(st, ctx.IDENTIFIER().text, indices, ctx)
     }
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
-        val elements: Array<Expr> =
-            ctx.expr().map { e -> (safeVisit(Literal(st, WUnknown())) { this.visit(e) } as Expr) }.toTypedArray()
-        return ArrayLiteral(st, elements, ctx)
+        val elements: Array<Expr> = ctx.expr().map {
+            (safeVisit(Literal(st, WUnknown())) { this.visit(it) } as Expr)
+        }.toTypedArray()
+        SemanticChecker.checkThatAllArrayElementsHaveTheSameType(elements, builderTemplateFromContext(ctx, st))
+        return ArrayLiteral(st, elements)
     }
 
     override fun visitPairElemFst(ctx: WACCParser.PairElemFstContext): AST {
@@ -285,7 +289,7 @@ class ASTVisitor(
     }
 
     override fun visitAssignRhsArrayLiter(ctx: WACCParser.AssignRhsArrayLiterContext): ArrayLiteral {
-        return safeVisit(ArrayLiteral(st, arrayOf(), ctx)) { this.visit(ctx.arrayLiter()) } as ArrayLiteral
+        return safeVisit(ArrayLiteral(st, arrayOf())) { this.visit(ctx.arrayLiter()) } as ArrayLiteral
     }
 
     override fun visitAssignRhsNewPair(ctx: WACCParser.AssignRhsNewPairContext): NewPairRHS {
