@@ -28,7 +28,4 @@ class SyntaxErrorMessageBuilder : ErrorMessageBuilder() {
         return super.setLineTextFromSrcFile(srcFilePath) as SyntaxErrorMessageBuilder
     }
 
-    fun generalSyntaxErrorMessage(): SyntaxErrorMessageBuilder {
-        return appendCustomErrorMessage("Cannot parse the given code!")
-    }
 }
