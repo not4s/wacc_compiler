@@ -1,7 +1,6 @@
 package ast
 
 import org.antlr.v4.runtime.ParserRuleContext
-import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
 import waccType.WAny

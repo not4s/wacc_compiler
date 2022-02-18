@@ -259,22 +259,6 @@ class SemanticChecker {
         }
 
         /**
-         * Checks type validity for function arguments, in function definition and function call
-         */
-        fun checkFunctionArgumentsTypeMatch(
-            expectedType: WAny,
-            actualType: WAny,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-            identifier: String
-        ) {
-            if (!typesAreEqual(expectedType, actualType)) {
-                errorMessageBuilder.functionArgumentTypeMismatch(expectedType, actualType).buildAndPrint()
-                throw SemanticException(
-                    "Mismatching types for function $identifier call: expected $expectedType, got $actualType")
-            }
-        }
-
-        /**
          * Checking that the provided BINARY operation and operand types are the same
          * The precondition is that both operands have the same type
          * @param operandType is the type of both operands in binary operation
@@ -317,47 +301,6 @@ class SemanticChecker {
             if (typeIsIncorrect) {
                 errorMessageBuilder.unOpInvalidType(operandType, operation.toString()).buildAndPrint()
                 throw SemanticException("Attempted to call $operation operation on invalid type: $operandType")
-            }
-        }
-
-        /**
-         * Compares the number of arguments in function definition and function call.
-         * @param func is the function definition
-         * @param params are the parameters of the function call
-         */
-        fun checkFunctionParamsCount(
-            func: WACCFunction,
-            params: Array<Expr>,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-            identifier: String
-        ) {
-            if (func.params.size != params.size) {
-                errorMessageBuilder.functionArgumentCountMismatch(func.params.size, params.size).buildAndPrint()
-                throw SemanticException(
-                    "Argument count does not match up with expected count for function $identifier")
-            }
-        }
-
-        /**
-         * Ensures that the type of the identifier in the symbol table and the actual type o the expression match
-         * @param type is the actual type of the expression
-         * @param st is the symbol table to be queried for the expected type
-         * @param identifier is the name of the variable
-         */
-        fun checkIdentifierExpressionType(
-            type: WAny,
-            st: SymbolTable,
-            identifier: String,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-        ) {
-            val expectedType = st.get(identifier, errorMessageBuilder)
-            perform(
-                condition = !typesAreEqual(expectedType, type),
-                errorMessageBuilder = errorMessageBuilder,
-                extraMessage = "$identifier has a type which does not match with the type of the right hand side.",
-                failMessage = "Attempted to use variable of type $expectedType as $type"
-            ) {
-                it.operandTypeMismatch(expectedType, type)
             }
         }
 
@@ -409,6 +352,35 @@ class SemanticChecker {
             }
             checkThatTheValueIsPair(expr.type, first, errorMessageBuilder)
             checkNullDereference(expr, errorMessageBuilder)
+        }
+
+        /**
+         * Compares the number of arguments in function definition and function call.
+         * Checks type validity for function arguments, in function definition and function call
+         * @param func is the function definition
+         * @param params are the parameters of the function call
+         */
+        fun checkFunctionCall(
+            func: WACCFunction,
+            params: Array<Expr>,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            identifier: String
+        ) {
+            // Checking argument count in function call and in the definition
+            if (func.params.size != params.size) {
+                errorMessageBuilder.functionArgumentCountMismatch(func.params.size, params.size).buildAndPrint()
+                throw SemanticException(
+                    "Argument count does not match up with expected count for function $identifier")
+            }
+            // Checking type validity for each parameter
+            func.params.onEachIndexed { index, (_, expectedType) ->
+                val actualType = params[index].type
+                if (!typesAreEqual(expectedType, actualType)) {
+                    errorMessageBuilder.functionArgumentTypeMismatch(expectedType, actualType).buildAndPrint()
+                    throw SemanticException(
+                        "Mismatching types for function $identifier call: expected $expectedType, got $actualType")
+                }
+            }
         }
     }
 }

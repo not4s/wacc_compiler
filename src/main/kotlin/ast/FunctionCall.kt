@@ -29,12 +29,6 @@ class FunctionCall(
      * Then checks each argument type.
      */
     override fun check() {
-        val func = st.get(identifier, errorMessageBuilder) as WACCFunction
-        SemanticChecker.checkFunctionParamsCount(func, params, errorMessageBuilder, identifier)
-        func.params.onEachIndexed { index, (_, vType) ->
-            SemanticChecker
-                .checkFunctionArgumentsTypeMatch(vType, params[index].type, errorMessageBuilder, identifier)
-        }
     }
 
     override fun toString(): String {

@@ -149,7 +149,11 @@ class ASTVisitor(
     /**
      * Visits the first or second element access of the pair.
      */
-    private fun visitPair(ctx: WACCParser.PairElemContext, ctxExpr: WACCParser.ExprContext, isFirst: Boolean): PairElement {
+    private fun visitPair(
+        ctx: WACCParser.PairElemContext,
+        ctxExpr: WACCParser.ExprContext,
+        isFirst: Boolean
+    ): PairElement {
         val expr = safeVisit(Literal(st, WUnknown())) { this.visit(ctxExpr) } as Expr
         SemanticChecker.checkTheExprIsPairAndNoNullDereference(expr, isFirst, builderTemplateFromContext(ctx, st))
         return PairElement(st, isFirst, expr, ctx)
@@ -231,46 +235,38 @@ class ASTVisitor(
     }
 
     override fun visitExprBinary(ctx: WACCParser.ExprBinaryContext): BinaryOperation {
-        return BinaryOperation(
-            st,
-            safeVisit(Literal(st, WUnknown())) { this.visit(ctx.left) } as Expr,
-            safeVisit(Literal(st, WUnknown())) { this.visit(ctx.right) } as Expr,
-            op = when (ctx.binOp.type) {
-                WACCParser.OP_MULT -> BinOperator.MUL
-                WACCParser.OP_DIV -> BinOperator.DIV
-                WACCParser.OP_MOD -> BinOperator.MOD
-                WACCParser.OP_ADD -> BinOperator.ADD
-                WACCParser.OP_SUBT -> BinOperator.SUB
-                WACCParser.OP_GT -> BinOperator.GT
-                WACCParser.OP_GEQ -> BinOperator.GEQ
-                WACCParser.OP_LT -> BinOperator.LT
-                WACCParser.OP_LEQ -> BinOperator.LEQ
-                WACCParser.OP_EQ -> BinOperator.EQ
-                WACCParser.OP_NEQ -> BinOperator.NEQ
-                WACCParser.OP_AND -> BinOperator.AND
-                WACCParser.OP_OR -> BinOperator.OR
-                else -> throw Exception("Unknown binary operand")
-            },
-            ctx
+        val errorMessageBuilder = builderTemplateFromContext(ctx, st)
+        val left = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.left) } as Expr
+        val right = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.right) } as Expr
+        val op = BinOperator.fromWACCParserContextBinOp(ctx.binOp)
+        SemanticChecker.checkThatOperandTypesMatch(
+            firstType = left.type,
+            secondType = right.type,
+            errorMessageBuilder= errorMessageBuilder,
+            extraMessage = "Binary operation cannot be executed correctly",
+            failMessage = "Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}"
         )
+        SemanticChecker.checkThatOperationTypeIsValid(
+            operandType = left.type,
+            errorMessageBuilder = errorMessageBuilder,
+            operation = op
+        )
+        return BinaryOperation(st, left, right, op)
     }
 
     override fun visitExprUnary(ctx: WACCParser.ExprUnaryContext): UnaryOperation {
-        return UnaryOperation(
-            st,
-            safeVisit(Literal(st, WUnknown())) { this.visit(ctx.operand) } as Expr,
-            op = when (ctx.unOp.type) {
-                WACCParser.OP_NOT -> UnOperator.NOT
-                WACCParser.OP_ORD -> UnOperator.ORD
-                WACCParser.OP_CHR -> UnOperator.CHR
-                WACCParser.OP_LEN -> UnOperator.LEN
-                WACCParser.OP_SUBT -> UnOperator.SUB
-                else -> throw Exception("Unknown unary operand")
-            },
-            parserCtx = ctx
-        )
+        val operandExpr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.operand) } as Expr
+        val unaryOperation = UnOperator.fromWACCParserContextUnOp(ctx.unOp)
+        val errorMessageBuilder = builderTemplateFromContext(ctx, st)
+        SemanticChecker.checkThatOperationTypeIsValid(operandExpr.type, errorMessageBuilder, unaryOperation)
+        return UnaryOperation(st, operandExpr, unaryOperation)
     }
 
+    /**
+     * NOTE:
+     * Here the SemanticChecker statement was removed as redundant. Maybe worth looking at this function
+     * if some unknown bug will show up.
+     */
     override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): IdentifierGet {
         return IdentifierGet(st, ctx.IDENTIFIER().text, ctx)
     }
@@ -306,6 +302,9 @@ class ASTVisitor(
         return NewPairRHS(st, leftExpr, rightExpr, type)
     }
 
+    /**
+     * The following function visits the node but also updates the type of the pair from IncompleteWPair to WPair
+     */
     override fun visitAssignRhsPairElem(ctx: WACCParser.AssignRhsPairElemContext): RHS {
         val rhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.pairElem()) } as RHS
         if (rhs.type !is WPairKW || !(rhs is PairElement && rhs.expr is IdentifierGet)) {
@@ -321,11 +320,16 @@ class ASTVisitor(
     }
 
     override fun visitAssignRhsCall(ctx: WACCParser.AssignRhsCallContext): FunctionCall {
-        val params: Array<Expr> =
-            ctx.argList()?.expr()?.map { arg -> safeVisit(Literal(st, WUnknown())) { this.visit(arg) } as Expr }
-                ?.toTypedArray()
-                ?: arrayOf()
-        return FunctionCall(st, ctx.IDENTIFIER().text, params, ctx)
+        val errorMessageBuilder = builderTemplateFromContext(ctx, st)
+        val params: Array<Expr> = ctx.argList()?.expr()
+            ?.map { arg ->
+                safeVisit(Literal(st, WUnknown())) { this.visit(arg) } as Expr
+            }?.toTypedArray()
+            ?: arrayOf()
+        val identifier: String = ctx.IDENTIFIER().text
+        val func = st.get(identifier, errorMessageBuilder) as WACCFunction
+        SemanticChecker.checkFunctionCall(func, params, errorMessageBuilder, identifier)
+        return FunctionCall(st, identifier, params, ctx)
     }
 
     override fun visitArgList(ctx: WACCParser.ArgListContext): AST {
@@ -336,6 +340,13 @@ class ASTVisitor(
         val decType = (safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.type()) } as Typed).type
         val rhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.assignRhs()) } as RHS
         val identifier = ctx.IDENTIFIER().text
+        SemanticChecker.checkThatOperandTypesMatch(
+            firstType = decType,
+            secondType = rhs.type,
+            errorMessageBuilder = builderTemplateFromContext(ctx, st),
+            extraMessage = "The type of variable $identifier and the evaluated expression do not match",
+            failMessage = "Attempted to declare variable $identifier of type $decType to ${rhs.type}"
+        )
         return Declaration(st, decType, identifier, rhs, ctx)
     }
 
