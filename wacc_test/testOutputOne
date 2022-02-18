@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 from subprocess import Popen, PIPE, STDOUT
-import os, sys, shutil
+import os, sys, shutil, argparse
 
 NO_OF_ARGS = 1
+
+parser=argparse.ArgumentParser(description='Script testing correctness of the compiler output')
+
+parser.add_argument('src_file', help='file destination of the wacc file')
+parser.add_argument('-x', help='compares the output of the file')
+parser.add_argument('-a', help='compares the assembly output of the file')
+
+args=parser.parse_args()
+
 
 # check the number of arguments
 if len(sys.argv) != NO_OF_ARGS + 1:
