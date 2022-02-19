@@ -2,6 +2,7 @@
 from code import compile_command
 from subprocess import Popen, PIPE, STDOUT
 import os, sys, shutil, argparse
+import difflib as dl
 
 NO_OF_ARGS = 1
 ASSEMBLY_CODE_PREFIX = "compiled_code"
@@ -39,13 +40,10 @@ stream = os.popen(f"./compile wacc_test/{path}")
 wacc_assembly = stream.read()
 
 def compareStrings(correct: str, received: str) -> str:
-    compareOutput = ""
-    for c, r in zip(correct, received):
-        if (c == r):
-            compareOutput += f"  {c}\n"
-        else:
-            compareOutput += f"? {c}\n"            
-    return compareOutput
+    differences = ""
+    for diff in list(dl.unified_diff(correct, received)):
+        differences += f"{diff}\n"
+    return differences
 
 # navigates to a valid directory and returns the previous working directory
 def navigateToDirectory(path: str) -> str:
@@ -77,8 +75,16 @@ def compareAssembly() -> str:
 stringBuffer = "TODO"
 
 if(args["a"] != None):
-    stringBuffer += compareAssembly()
+    diff = compareAssembly()
+    if len(diff) != 0:
+        stringBuffer += diff
+    else:
+        stringBuffer += "Assembly code matches\n"
 else: # if no argmuents provided by default compares output
-    stringBuffer += compareOutput()
+    diff = compareOutput()
+    if len(diff) != 0:
+        stringBuffer += diff
+    else:
+        stringBuffer += "Output matches\n"
 
 print("Compile not implemented fully")
