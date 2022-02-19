@@ -1,10 +1,8 @@
 package ast
 
 import org.antlr.v4.runtime.ParserRuleContext
-import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
-import utils.SemanticException
 import waccType.WAny
 import waccType.WInt
 
@@ -22,17 +20,6 @@ class ArrayElement(
 
     private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
 
-    init {
-        check()
-    }
-
-    /**
-     *  Here the semantic analysis is conducted inside getter
-     */
-    override fun check() {
-        this.type
-    }
-
     override fun toString(): String {
         return "ArrayElem:\n" + "  (scope:$st)\n${
             ("array identifier: $identifier\nindex/ices:\n${
@@ -47,9 +34,7 @@ class ArrayElement(
     override val type: WAny
         get() = st.get(
             arrSym = identifier,
-            indices = indices.map { expr ->
-                SemanticChecker.takeExprTypeAsWIntWithCheck(expr, errorMessageBuilder)
-            }.toTypedArray(),
+            indices = indices.map { it.type as? WInt ?: throw Exception("Non-WInt indices") }.toTypedArray(),
             errorMessageBuilder = errorMessageBuilder
         )
 }

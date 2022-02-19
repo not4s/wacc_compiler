@@ -1,7 +1,6 @@
 package ast
 
 import org.antlr.v4.runtime.ParserRuleContext
-import semantic.SemanticChecker
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
 import waccType.WAny
@@ -37,14 +36,6 @@ class IdentifierGet(
 ) : Expr {
 
     private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
-
-    init {
-        check()
-    }
-
-    override fun check() {
-        SemanticChecker.checkIdentifierExpressionType(type, st, identifier, errorMessageBuilder)
-    }
 
     override fun toString(): String {
         return "IdentifierGet:\n" + "  (scope:$st)\n${("identifier: $identifier").prependIndent(INDENT)}\n${

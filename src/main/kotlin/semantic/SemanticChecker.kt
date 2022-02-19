@@ -1,6 +1,10 @@
 package semantic
 
 import ast.*
+import ast.statement.IfThenStat
+import ast.statement.JoinStat
+import ast.statement.ReturnStat
+import ast.statement.WhileStat
 import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
 import utils.SemanticErrorMessageBuilder
@@ -112,33 +116,6 @@ class SemanticChecker {
         }
 
         /**
-         * Checks that 'fst' or 'snd' are applied to identifiers
-         * @param expr is the expression which is expected to be IdentifierGet
-         */
-        fun checkThatLhsPairExpressionIsIdentifier(
-            expr: Expr,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-            extraMessage: String? = null,
-            failMessage: String = "Not an identifier"
-        ) {
-            perform(expr !is IdentifierGet, errorMessageBuilder, extraMessage, failMessage) {
-                it.pairElementInvalidType()
-            }
-        }
-
-        /**
-         * Returns the type of Expression, cast as WInt
-         * @param expr is the expression which is expected to be WInt
-         * @throws SemanticException if safe casting did not succeed
-         */
-        fun takeExprTypeAsWIntWithCheck(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder): WInt {
-            return expr.type as? WInt ?: run {
-                errorMessageBuilder.arrayIndexInvalidType().buildAndPrint()
-                throw SemanticException("Cannot use non-int index for array, actual: ${expr.type}")
-            }
-        }
-
-        /**
          * Checks that the type validity for variety of types
          * @param type is the type of expression
          * @param expectedType is a Base type or a Pair of do-not-cares
@@ -244,51 +221,6 @@ class SemanticChecker {
         }
 
         /**
-         * Checks type validity for return type, which is expected to be the same as the type in function signature
-         */
-        fun checkThatReturnTypeMatch(
-            firstType: WAny,
-            secondType: WAny,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-            failMessage: String
-        ) {
-            if (!typesAreEqual(firstType, secondType)) {
-                errorMessageBuilder.functionReturnStatTypeMismatch(firstType, secondType).buildAndPrint()
-                throw SemanticException(failMessage)
-            }
-        }
-
-        /**
-         * Checks type validity for function arguments, in function definition and function call
-         */
-        fun checkFunctionArgumentsTypeMatch(
-            expectedType: WAny,
-            actualType: WAny,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-            identifier: String
-        ) {
-            if (!typesAreEqual(expectedType, actualType)) {
-                errorMessageBuilder.functionArgumentTypeMismatch(expectedType, actualType).buildAndPrint()
-                throw SemanticException(
-                    "Mismatching types for function $identifier call: expected $expectedType, got $actualType")
-            }
-        }
-
-        /**
-         * Checking type validity for arrays
-         */
-        fun checkThatArrayElementsTypeMatch(
-            elemType: WAny,
-            expType: WAny,
-            errorMessageBuilder: SemanticErrorMessageBuilder
-        ) {
-            if (!typesAreEqual(elemType, expType)) {
-                errorMessageBuilder.arrayEntriesTypeClash().buildAndPrint()
-                throw SemanticException("Types in array are not equal: $elemType, $expType")
-            }
-        }
-
-        /**
          * Checking that the provided BINARY operation and operand types are the same
          * The precondition is that both operands have the same type
          * @param operandType is the type of both operands in binary operation
@@ -335,53 +267,145 @@ class SemanticChecker {
         }
 
         /**
-         * Compares the number of arguments in function definition and function call.
-         * @param func is the function definition
-         * @param params are the parameters of the function call
-         */
-        fun checkFunctionParamsCount(
-            func: WACCFunction,
-            params: Array<Expr>,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-            identifier: String
-        ) {
-            if (func.params.size != params.size) {
-                errorMessageBuilder.functionArgumentCountMismatch(func.params.size, params.size).buildAndPrint()
-                throw SemanticException(
-                    "Argument count does not match up with expected count for function $identifier")
-            }
-        }
-
-        /**
-         * Ensures that the type of the identifier in the symbol table and the actual type o the expression match
-         * @param type is the actual type of the expression
-         * @param st is the symbol table to be queried for the expected type
-         * @param identifier is the name of the variable
-         */
-        fun checkIdentifierExpressionType(
-            type: WAny,
-            st: SymbolTable,
-            identifier: String,
-            errorMessageBuilder: SemanticErrorMessageBuilder,
-        ) {
-            val expectedType = st.get(identifier, errorMessageBuilder)
-            perform(
-                condition = !typesAreEqual(expectedType, type),
-                errorMessageBuilder = errorMessageBuilder,
-                extraMessage = "$identifier has a type which does not match with the type of the right hand side.",
-                failMessage = "Attempted to use variable of type $expectedType as $type"
-            ) {
-                it.operandTypeMismatch(expectedType, type)
-            }
-        }
-
-        /**
          * Ensuring that the 'fst' or 'snd' not applied to null pairs
          */
         fun checkNullDereference(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder) {
             if (expr is PairLiteral || expr.type is WPairNull) {
                 errorMessageBuilder.pairElementInvalidType().buildAndPrint()
                 throw SemanticException("NULL POINTER EXCEPTION! Can't dereference null.")
+            }
+        }
+
+        /**
+         * Ensures that all the indices in arbitrary dimension array ate ints.
+         * @param indices is a collection of N indices o N-dimensional array
+         */
+        fun checkThatAllIndicesAreWInts(indices: Array<Expr>, errorMessageBuilder: SemanticErrorMessageBuilder) {
+            indices.map { expr -> takeExprTypeAsWIntWithCheck(expr, errorMessageBuilder) }
+        }
+
+        /**
+         * Ensures that all the elements in the array are the same.
+         * @param elements is the collection of the elements of the array
+         */
+        fun checkThatAllArrayElementsHaveTheSameType(
+            elements: Array<Expr>,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
+            if (elements.isEmpty()) {
+                return
+            }
+            val expType: WAny = elements.first().type
+            elements.forEach {
+                if (!typesAreEqual(it.type, expType)) {
+                    errorMessageBuilder.arrayEntriesTypeClash().buildAndPrint()
+                    throw SemanticException("Types in array are not equal: ${it.type}, $expType")
+                }
+            }
+        }
+
+        fun checkTheExprIsPairAndNoNullDereference(
+            expr: Expr,
+            first: Boolean,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
+            if (expr.type is WPairKW) {
+                return
+            }
+            checkThatTheValueIsPair(expr.type, first, errorMessageBuilder)
+            checkNullDereference(expr, errorMessageBuilder)
+        }
+
+        /**
+         * Compares the number of arguments in function definition and function call.
+         * Checks type validity for function arguments, in function definition and function call
+         * @param func is the function definition
+         * @param params are the parameters of the function call
+         */
+        fun checkFunctionCall(
+            func: WACCFunction,
+            params: Array<Expr>,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            identifier: String
+        ) {
+            // Checking argument count in function call and in the definition
+            if (func.params.size != params.size) {
+                errorMessageBuilder.functionArgumentCountMismatch(func.params.size, params.size).buildAndPrint()
+                throw SemanticException(
+                    "Argument count does not match up with expected count for function $identifier")
+            }
+            // Checking type validity for each parameter
+            func.params.onEachIndexed { index, (_, expectedType) ->
+                val actualType = params[index].type
+                if (!typesAreEqual(expectedType, actualType)) {
+                    errorMessageBuilder.functionArgumentTypeMismatch(expectedType, actualType).buildAndPrint()
+                    throw SemanticException(
+                        "Mismatching types for function $identifier call: expected $expectedType, got $actualType")
+                }
+            }
+        }
+
+        /**
+         * Returns the type of Expression, cast as WInt
+         * @param expr is the expression which is expected to be WInt
+         * @throws SemanticException if safe casting did not succeed
+         */
+        private fun takeExprTypeAsWIntWithCheck(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder): WInt {
+            return expr.type as? WInt ?: run {
+                errorMessageBuilder.arrayIndexInvalidType().buildAndPrint()
+                throw SemanticException("Cannot use non-int index for array, actual: ${expr.type}")
+            }
+        }
+
+        fun checkAssignment(lhs: LHS, rhs: RHS, st: SymbolTable, errorMessageBuilder: SemanticErrorMessageBuilder) {
+            checkThatOperandTypesMatch(lhs.type, rhs.type, errorMessageBuilder,
+                failMessage = "Cannot assign ${rhs.type} to ${lhs.type}"
+            )
+            // Checking AssignLhs Depending on its type
+            when (lhs) {
+                is IdentifierSet -> st.reassign(lhs.identifier, rhs.type, errorMessageBuilder)
+                is ArrayElement -> {
+                    val indices: Array<WInt> = lhs.indices.map {
+                        takeExprTypeAsWIntWithCheck(it, errorMessageBuilder)
+                    }.toTypedArray()
+                    st.reassign(lhs.identifier, indices, rhs.type, errorMessageBuilder)
+                }
+                is PairElement -> {
+                    val msg = "Cannot refer to ${lhs.type} with fst/snd"
+                    perform(lhs.expr !is IdentifierGet, errorMessageBuilder, msg, msg) { it.pairElementInvalidType() }
+
+                    val identifier = (lhs.expr as IdentifierGet).identifier
+                    st.reassign(identifier, lhs.first, rhs.type, errorMessageBuilder)
+                }
+            }
+        }
+
+        /**
+         * Checks the return type of statement by matching patterns recursively and
+         * throws a semantic exception if the type does not match the expected
+         * @param stat : return type to be checked
+         * @param expected : expected type to be matched
+         * @param errorMessageBuilder : incomplete semantic error message builder which is built in error case
+         **/
+        fun checkReturnType(stat: Stat, expected: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
+            when (stat) {
+                is IfThenStat -> {
+                    checkReturnType(stat.thenStat, expected, errorMessageBuilder)
+                    checkReturnType(stat.elseStat, expected, errorMessageBuilder)
+                }
+                is WhileStat -> checkReturnType(stat.doBlock, expected, errorMessageBuilder)
+                is JoinStat -> {
+                    checkReturnType(stat.first, expected, errorMessageBuilder)
+                    checkReturnType(stat.second, expected, errorMessageBuilder)
+                }
+                is ReturnStat -> {
+                    if (typesAreEqual(expected, stat.type)) {
+                        return
+                    }
+                    errorMessageBuilder.functionReturnStatTypeMismatch(expected, stat.type).buildAndPrint()
+                    throw SemanticException(
+                        "Mismatching return type for function, expected: $expected, got: ${stat.type}")
+                }
             }
         }
     }
