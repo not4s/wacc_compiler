@@ -1,9 +1,6 @@
 package ast
 
-import org.antlr.v4.runtime.ParserRuleContext
-import semantic.SemanticChecker
 import symbolTable.SymbolTable
-import utils.SemanticErrorMessageBuilder
 import waccType.WAny
 import waccType.WBool
 import waccType.WChar
@@ -15,22 +12,15 @@ import waccType.WInt
 class UnaryOperation(
     override val st: SymbolTable,
     private val operand: Expr,
-    val op: UnOperator,
-    parserCtx: ParserRuleContext,
+    private val operation: UnOperator,
 ) : Expr {
 
-    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
-
-    override fun check() {
-        SemanticChecker.checkThatOperationTypeIsValid(operand.type, errorMessageBuilder, op)
-    }
-
     override fun toString(): String {
-        return "$op\n" + "  (scope:$st)\n${operand.toString().prependIndent(INDENT)}"
+        return "$operation\n" + "  (scope:$st)\n${operand.toString().prependIndent(INDENT)}"
     }
 
     override val type: WAny
-        get() = when (op) {
+        get() = when (operation) {
             UnOperator.NOT -> WBool()
             UnOperator.CHR -> WChar()
             else -> WInt()

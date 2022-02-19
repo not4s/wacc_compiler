@@ -34,18 +34,6 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return appendSpecificErrorMessage("The variable $variableName is already declared")
     }
 
-    fun variableRedeclaration(): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage("The variable is already declared")
-    }
-
-    fun nullPointerFstDereference(): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage("The 'snd' operator cannot be applied to a null value")
-    }
-
-    fun nullPointerSndDereference(): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage("The 'snd' operator cannot be applied to a null value")
-    }
-
     fun freeNonPair(): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage("Cannot free a value of non-pair type.")
     }
@@ -114,12 +102,6 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         )
     }
 
-    fun functionCallTypeMismatch(assignLhsType: WAny, functionType: WAny): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage(
-            "Cannot assign function of type $functionType to the variable of type $assignLhsType"
-        )
-    }
-
     fun assignmentTypeMismatch(assignLhsType: WAny, assignRhsType: WAny): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
             "Cannot assign expression type $assignRhsType to the variable of type $assignLhsType"
@@ -132,10 +114,6 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
 
     fun arrayEntriesTypeClash(): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage("The elements of the array have inconsistent types!")
-    }
-
-    fun arrayEntriesTypeMismatch(requiredType: WAny, actualType: WAny): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage("The elements of the array of type $requiredType[] have incorrect type $actualType")
     }
 
     fun nonIntExpressionExit(actualType: WAny): SemanticErrorMessageBuilder {

@@ -13,15 +13,6 @@ class PrintStat(
     private val newlineAfter: Boolean,
     val expr: Expr
 ) : Stat {
-
-    init {
-        check()
-    }
-
-    override fun check() {
-        expr.check()
-    }
-
     override fun toString(): String {
         return "Print:\n" + "  (scope:$st)\n${
             ("withNewline: $newlineAfter").prependIndent(INDENT)
@@ -48,11 +39,6 @@ class JoinStat(
     val first: Stat,
     val second: Stat,
 ) : Stat {
-    override fun check() {
-        first.check()
-        second.check()
-    }
-
     override fun toString(): String {
         return "$first\n$second"
     }

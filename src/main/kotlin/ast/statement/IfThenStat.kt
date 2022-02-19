@@ -3,11 +3,7 @@ package ast.statement
 import ast.Expr
 import ast.INDENT
 import ast.Stat
-import ast.builderTemplateFromContext
-import org.antlr.v4.runtime.ParserRuleContext
-import semantic.SemanticChecker
 import symbolTable.SymbolTable
-import utils.SemanticErrorMessageBuilder
 
 /**
  * The AST Node for If then Statements
@@ -17,25 +13,7 @@ class IfThenStat(
     val condition: Expr,
     val thenStat: Stat,
     val elseStat: Stat,
-    parserCtx: ParserRuleContext,
 ) : Stat {
-
-    private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
-
-    init {
-        check()
-    }
-
-    override fun check() {
-        SemanticChecker.checkIfCondIsWBool(
-            type = condition.type,
-            errorMessageBuilder = errorMessageBuilder,
-            failMessage = "If statement has non-bool condition, actual: ${condition.type}"
-        )
-        thenStat.check()
-        elseStat.check()
-    }
-
     override fun toString(): String {
         return "If-Then-Else:\n" + "  (scope:$st)\n${
             ("if:\n${
