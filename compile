@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-from subprocess import Popen, PIPE, STDOUT
 import os, sys, shutil, argparse
-
-NO_OF_ARGS = 1
 
 parser=argparse.ArgumentParser(description='Script compiling a wacc file')
 
@@ -59,16 +56,6 @@ if(args["o"] != None):
     print("Compiled successfully")
 else:
     # the user has not specified that the output needs to be saved in a file; print output to cmd
-
-    file = args["src_file"]
-    os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {file}")
-    sys.exit()
-
-
-#!/usr/bin/ruby
-# Ruby front-end for your compiler.
-# You are free to change the language used for this script,
-# but do *not* change its name.
-
-#system("java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar #{ARGV[0]}")
-#exit $?.exitstatus
+    errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']}")
+    # On Unix, the return value is a 16-bit number whose high byte is the exit status (if the signal number is zero)
+    sys.exit(errCode >> 8)
