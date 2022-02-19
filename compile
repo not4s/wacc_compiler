@@ -43,8 +43,10 @@ if(options.d):
     # move to correct directory
     os.chdir("wacc_test")
 
+    # TODO: could possibly contain bug where compile_dir doesnt have / between it and path
+    new_dir = f"{COMPILE_DIR}{path[len('wacc_test'):]}".split("/")[:-1]
     # if compilation directory does not exist, make the directory
-    for d in ((f"{COMPILE_DIR}/{path}").split("/")[:-1]):
+    for d in new_dir:
         if not os.path.exists(d):
             os.makedirs(d)
         os.chdir(d)
@@ -54,7 +56,6 @@ if(options.d):
     with open(compiled_fname, 'w') as f:
         f.write(output)
         f.close()
-        shutil.move(compiled_fname, compiled_fname)
 
     # prints success if reached
     print("Compiled successfully")
