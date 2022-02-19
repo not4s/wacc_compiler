@@ -71,16 +71,6 @@ class ASTVisitor(
                 builderTemplateFromContext(funCtx, st)
             )
         }
-        // Explicitly call checks after defining all functions
-        for ((_, f) in st.getMap()) {
-            f as WACCFunction
-            try {
-                f.check()
-            } catch (e: SemanticException) {
-                semanticErrorCount.incrementAndGet()
-            }
-        }
-
         // Create a child scope, functions are now stored in parent table.
         // This scope is still 'global'
         val childScope = st.createChildScope()
@@ -146,14 +136,25 @@ class ASTVisitor(
         return ArrayLiteral(st, elements)
     }
 
-    override fun visitPairElemFst(ctx: WACCParser.PairElemFstContext): AST {
-        val expr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
-        return PairElement(st, true, expr, ctx)
+    /**
+     * Visits the first or second element access of the pair.
+     */
+    private fun visitPair(
+        ctx: WACCParser.PairElemContext,
+        ctxExpr: WACCParser.ExprContext,
+        isFirst: Boolean
+    ): PairElement {
+        val expr = safeVisit(Literal(st, WUnknown())) { this.visit(ctxExpr) } as Expr
+        SemanticChecker.checkTheExprIsPairAndNoNullDereference(expr, isFirst, builderTemplateFromContext(ctx, st))
+        return PairElement(st, isFirst, expr, ctx)
     }
 
-    override fun visitPairElemSnd(ctx: WACCParser.PairElemSndContext): AST {
-        val expr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
-        return PairElement(st, false, expr, ctx)
+    override fun visitPairElemFst(ctx: WACCParser.PairElemFstContext): PairElement {
+        return visitPair(ctx, ctx.expr(), isFirst = true)
+    }
+
+    override fun visitPairElemSnd(ctx: WACCParser.PairElemSndContext): PairElement {
+        return visitPair(ctx, ctx.expr(), isFirst = false)
     }
 
     override fun visitPairType(ctx: WACCParser.PairTypeContext): WACCType {
@@ -224,46 +225,38 @@ class ASTVisitor(
     }
 
     override fun visitExprBinary(ctx: WACCParser.ExprBinaryContext): BinaryOperation {
-        return BinaryOperation(
-            st,
-            safeVisit(Literal(st, WUnknown())) { this.visit(ctx.left) } as Expr,
-            safeVisit(Literal(st, WUnknown())) { this.visit(ctx.right) } as Expr,
-            op = when (ctx.binOp.type) {
-                WACCParser.OP_MULT -> BinOperator.MUL
-                WACCParser.OP_DIV -> BinOperator.DIV
-                WACCParser.OP_MOD -> BinOperator.MOD
-                WACCParser.OP_ADD -> BinOperator.ADD
-                WACCParser.OP_SUBT -> BinOperator.SUB
-                WACCParser.OP_GT -> BinOperator.GT
-                WACCParser.OP_GEQ -> BinOperator.GEQ
-                WACCParser.OP_LT -> BinOperator.LT
-                WACCParser.OP_LEQ -> BinOperator.LEQ
-                WACCParser.OP_EQ -> BinOperator.EQ
-                WACCParser.OP_NEQ -> BinOperator.NEQ
-                WACCParser.OP_AND -> BinOperator.AND
-                WACCParser.OP_OR -> BinOperator.OR
-                else -> throw Exception("Unknown binary operand")
-            },
-            ctx
+        val errorMessageBuilder = builderTemplateFromContext(ctx, st)
+        val left = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.left) } as Expr
+        val right = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.right) } as Expr
+        val op = BinOperator.fromWACCParserContextBinOp(ctx.binOp)
+        SemanticChecker.checkThatOperandTypesMatch(
+            firstType = left.type,
+            secondType = right.type,
+            errorMessageBuilder= errorMessageBuilder,
+            extraMessage = "Binary operation cannot be executed correctly",
+            failMessage = "Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}"
         )
+        SemanticChecker.checkThatOperationTypeIsValid(
+            operandType = left.type,
+            errorMessageBuilder = errorMessageBuilder,
+            operation = op
+        )
+        return BinaryOperation(st, left, right, op)
     }
 
     override fun visitExprUnary(ctx: WACCParser.ExprUnaryContext): UnaryOperation {
-        return UnaryOperation(
-            st,
-            safeVisit(Literal(st, WUnknown())) { this.visit(ctx.operand) } as Expr,
-            op = when (ctx.unOp.type) {
-                WACCParser.OP_NOT -> UnOperator.NOT
-                WACCParser.OP_ORD -> UnOperator.ORD
-                WACCParser.OP_CHR -> UnOperator.CHR
-                WACCParser.OP_LEN -> UnOperator.LEN
-                WACCParser.OP_SUBT -> UnOperator.SUB
-                else -> throw Exception("Unknown unary operand")
-            },
-            parserCtx = ctx
-        )
+        val operandExpr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.operand) } as Expr
+        val unaryOperation = UnOperator.fromWACCParserContextUnOp(ctx.unOp)
+        val errorMessageBuilder = builderTemplateFromContext(ctx, st)
+        SemanticChecker.checkThatOperationTypeIsValid(operandExpr.type, errorMessageBuilder, unaryOperation)
+        return UnaryOperation(st, operandExpr, unaryOperation)
     }
 
+    /**
+     * NOTE:
+     * Here the SemanticChecker statement was removed as redundant. Maybe worth looking at this function
+     * if some unknown bug will show up.
+     */
     override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): IdentifierGet {
         return IdentifierGet(st, ctx.IDENTIFIER().text, ctx)
     }
@@ -299,6 +292,9 @@ class ASTVisitor(
         return NewPairRHS(st, leftExpr, rightExpr, type)
     }
 
+    /**
+     * The following function visits the node but also updates the type of the pair from IncompleteWPair to WPair
+     */
     override fun visitAssignRhsPairElem(ctx: WACCParser.AssignRhsPairElemContext): RHS {
         val rhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.pairElem()) } as RHS
         if (rhs.type !is WPairKW || !(rhs is PairElement && rhs.expr is IdentifierGet)) {
@@ -314,11 +310,16 @@ class ASTVisitor(
     }
 
     override fun visitAssignRhsCall(ctx: WACCParser.AssignRhsCallContext): FunctionCall {
-        val params: Array<Expr> =
-            ctx.argList()?.expr()?.map { arg -> safeVisit(Literal(st, WUnknown())) { this.visit(arg) } as Expr }
-                ?.toTypedArray()
-                ?: arrayOf()
-        return FunctionCall(st, ctx.IDENTIFIER().text, params, ctx)
+        val errorMessageBuilder = builderTemplateFromContext(ctx, st)
+        val params: Array<Expr> = ctx.argList()?.expr()
+            ?.map { arg ->
+                safeVisit(Literal(st, WUnknown())) { this.visit(arg) } as Expr
+            }?.toTypedArray()
+            ?: arrayOf()
+        val identifier: String = ctx.IDENTIFIER().text
+        val func = st.get(identifier, errorMessageBuilder) as WACCFunction
+        SemanticChecker.checkFunctionCall(func, params, errorMessageBuilder, identifier)
+        return FunctionCall(st, identifier, params, ctx)
     }
 
     override fun visitArgList(ctx: WACCParser.ArgListContext): AST {
@@ -329,6 +330,13 @@ class ASTVisitor(
         val decType = (safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.type()) } as Typed).type
         val rhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.assignRhs()) } as RHS
         val identifier = ctx.IDENTIFIER().text
+        SemanticChecker.checkThatOperandTypesMatch(
+            firstType = decType,
+            secondType = rhs.type,
+            errorMessageBuilder = builderTemplateFromContext(ctx, st),
+            extraMessage = "The type of variable $identifier and the evaluated expression do not match",
+            failMessage = "Attempted to declare variable $identifier of type $decType to ${rhs.type}"
+        )
         return Declaration(st, decType, identifier, rhs, ctx)
     }
 
@@ -337,11 +345,22 @@ class ASTVisitor(
         val loopBodyStat = safeVisit(SkipStat(st)) {
             ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.doBlock)
         } as Stat
-        return WhileStat(st, conditionExpr, loopBodyStat, ctx)
+        SemanticChecker.checkWhileCondIsWBool(
+            type = conditionExpr.type,
+            errorMessageBuilder = builderTemplateFromContext(ctx, st),
+            failMessage = "While loop has non-bool condition, actual: ${conditionExpr.type}"
+        )
+        return WhileStat(st, conditionExpr, loopBodyStat)
     }
 
     override fun visitStatRead(ctx: WACCParser.StatReadContext): ReadStat {
-        return ReadStat(st, this.visit(ctx.assignLhs()) as LHS, ctx)
+        val lhs = this.visit(ctx.assignLhs()) as LHS
+        SemanticChecker.checkReadType(
+            type = lhs.type,
+            errorMessageBuilder = builderTemplateFromContext(ctx, st),
+            failMessage = "Cannot read into non-char or non-int variable, actual: ${lhs.type}"
+        )
+        return ReadStat(st, lhs)
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
@@ -349,7 +368,13 @@ class ASTVisitor(
     }
 
     override fun visitStatFree(ctx: WACCParser.StatFreeContext): FreeStat {
-        return FreeStat(st, safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr, ctx)
+        val expression = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
+        SemanticChecker.checkExprTypeIsWPair(
+            type = expression.type,
+            errorMessageBuilder = builderTemplateFromContext(ctx, st),
+            failMessage = "This isn't C, you can't free a $expression"
+        )
+        return FreeStat(st, expression)
     }
 
     override fun visitStatPrint(ctx: WACCParser.StatPrintContext): PrintStat {
@@ -361,13 +386,21 @@ class ASTVisitor(
     }
 
     override fun visitStatExit(ctx: WACCParser.StatExitContext): ExitStat {
-        return ExitStat(st, safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr, ctx)
+        val expression = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
+        SemanticChecker.checkExprTypeIsWInt(
+            type = expression.type,
+            errorMessageBuilder = builderTemplateFromContext(ctx, st),
+            failMessage = "Cannot exit with non-int expression. Actual: ${expression.type}"
+        )
+        return ExitStat(st, expression)
     }
 
     override fun visitStatStore(ctx: WACCParser.StatStoreContext): Assignment {
-        val assignLhs = this.visit(ctx.assignLhs()) as LHS
-        val assignRhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.assignRhs()) } as RHS
-        return Assignment(st, assignLhs, assignRhs, ctx)
+        val lhs = this.visit(ctx.assignLhs()) as LHS
+        val rhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.assignRhs()) } as RHS
+        val errorMessageBuilder = builderTemplateFromContext(ctx, st)
+        SemanticChecker.checkAssignment(lhs, rhs, st, errorMessageBuilder)
+        return Assignment(st, lhs, rhs)
     }
 
     override fun visitStatJoin(ctx: WACCParser.StatJoinContext): JoinStat {
@@ -381,7 +414,8 @@ class ASTVisitor(
     }
 
     override fun visitStatReturn(ctx: WACCParser.StatReturnContext): ReturnStat {
-        return ReturnStat(st, safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr, ctx)
+        SemanticChecker.checkReturnFromGlobalScope(st, builderTemplateFromContext(ctx, st))
+        return ReturnStat(st, safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr)
     }
 
     override fun visitStatIfThenElse(ctx: WACCParser.StatIfThenElseContext): IfThenStat {
@@ -391,8 +425,13 @@ class ASTVisitor(
         val elseStat = safeVisit(SkipStat(st)) {
             ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.elseBlock)
         } as Stat
-        val cond = safeVisit(Literal(st, WBool())) { this.visit(ctx.ifCond) } as Expr
-        return IfThenStat(st, cond, thenStat, elseStat, ctx)
+        val condition = safeVisit(Literal(st, WBool())) { this.visit(ctx.ifCond) } as Expr
+        SemanticChecker.checkIfCondIsWBool(
+            type = condition.type,
+            errorMessageBuilder = builderTemplateFromContext(ctx, st),
+            failMessage = "If statement has non-bool condition, actual: ${condition.type}"
+        )
+        return IfThenStat(st, condition, thenStat, elseStat)
     }
 
     override fun visitParam(ctx: WACCParser.ParamContext): AST {
@@ -424,8 +463,7 @@ class ASTVisitor(
             ctx.IDENTIFIER().text,
             params,
             SkipStat(st),
-            (safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.type()) } as WACCType).type,
-            ctx
+            (safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.type()) } as WACCType).type
         )
     }
 
@@ -433,18 +471,14 @@ class ASTVisitor(
      * Visit the function body after the function type and params were already visited
      */
     private fun visitFuncBody(function: WACCFunction, ctx: WACCParser.FuncContext): WACCFunction {
-        return safeVisit(function) {
-            WACCFunction(
-                function.st,
-                function.identifier,
-                function.params,
-                safeVisit(SkipStat(st)) {
-                    ASTVisitor(function.st, semanticErrorCount).visit(ctx.stat())
-                } as Stat,
-                function.type,
-                ctx
-            )
-        } as WACCFunction
+        val functionBody =
+            safeVisit(SkipStat(st)) {
+                ASTVisitor(function.st, semanticErrorCount).visit(ctx.stat())
+            } as Stat
+        SemanticChecker.checkReturnType(functionBody, function.type, builderTemplateFromContext(ctx, st))
+        SyntaxChecker.checkFunctionHavingReturn(functionBody, function.identifier)
+
+        return WACCFunction(function.st, function.identifier, function.params, functionBody, function.type)
     }
 
     /**

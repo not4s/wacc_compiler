@@ -16,7 +16,7 @@ import waccType.WUnknown
  **/
 class PairElement(
     override val st: SymbolTable,
-    val first: Boolean, // true = fst, false = snd
+    val first: Boolean,
     val expr: Expr,
     parserCtx: ParserRuleContext,
 ) : LHS, RHS {
@@ -24,18 +24,6 @@ class PairElement(
     private var actualType: WAny? = null
 
     private val errorMessageBuilder: SemanticErrorMessageBuilder = builderTemplateFromContext(parserCtx, st)
-
-    init {
-        check()
-    }
-
-    override fun check() {
-        if (expr.type is WPairKW) {
-            return
-        }
-        SemanticChecker.checkThatTheValueIsPair(expr.type, first, errorMessageBuilder)
-        SemanticChecker.checkNullDereference(expr, errorMessageBuilder)
-    }
 
     override fun toString(): String {
         return "Pair element:\n" + "  (scope:$st)\n${
