@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-from subprocess import Popen, PIPE, STDOUT
-import os, sys, shutil
+import os, sys, shutil, argparse
 
-NO_OF_ARGS = 1
+parser=argparse.ArgumentParser(description='Script compiling a wacc file')
 
-# check the number of arguments
-if len(sys.argv) != NO_OF_ARGS + 1:
-    print("Error: Invalid number of arguments")
-    sys.exit()
+parser.add_argument('src_file', help='file destination of the wacc file')
+parser.add_argument('-o', nargs='?', help='flag indicating the user\'s wish to save the output in a file. If left empty it will save it in the default file locaiton wacc_test/compiled_code/')
+
+args=vars(parser.parse_args())
 
 # tokenize the path given
 path = sys.argv[1]
@@ -22,32 +21,41 @@ if not os.path.isfile(path):
 # check the file type
 if file_type != 'wacc':
     print("Error: File given is not a wacc file")
+    sys.exit()
 
 # build path
 path = os.path.abspath(path)
 file_name = os.path.splitext(os.path.basename(path))[0]
 compile_dir = 'compiled_code'
 
-# TODO: output for the .s file
-output = 'TODO'
+if(args["o"] != None):
+    # the user wants to save the output of the file 
 
-# if compilation directory does not exist, make the directory
-if not os.path.exists(compile_dir):
-    os.makedirs(compile_dir)
+    # TODO: output for the .s file
+    output = 'TODO'
 
-# change dir to the compilation directory
-os.chdir(compile_dir)
+    # if compilation directory does not exist, make the directory
+    if not os.path.exists(compile_dir):
+        os.makedirs(compile_dir)
 
-# TODO: we can defo use the bin as the compilation directory
-# but let's use the root directory for now
-# I'm not sure about the conventions
+    # change dir to the compilation directory
+    os.chdir(compile_dir)
 
-# write output to .s file in compilation directory
-compiled_fname = file_name + '.s'
-with open(compiled_fname, 'w') as f:
-    f.write(output)
-    f.close()
-    shutil.move(compiled_fname, compile_dir + compiled_fname)
+    # TODO: we can defo use the bin as the compilation directory
+    # but let's use the root directory for now
+    # I'm not sure about the conventions
 
-# prints success if reached
-print("Compiled successfully")
+    # write output to .s file in compilation directory
+    compiled_fname = file_name + '.s'
+    with open(compiled_fname, 'w') as f:
+        f.write(output)
+        f.close()
+        shutil.move(compiled_fname, compile_dir + compiled_fname)
+
+    # prints success if reached
+    print("Compiled successfully")
+else:
+    # the user has not specified that the output needs to be saved in a file; print output to cmd
+    errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']}")
+    # On Unix, the return value is a 16-bit number whose high byte is the exit status (if the signal number is zero)
+    sys.exit(errCode >> 8)
