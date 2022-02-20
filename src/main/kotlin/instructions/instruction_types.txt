@@ -15,18 +15,26 @@ SUB:
 
 
 Move Instructions
-MOV
+MOV:
+    MOV<c> <Rd>,#<imm8>       // immediate
+    MOV{S}<c>.W <Rd>,<Rm>     // register
+    MOV{S} <Rd>,<Rm>,ROR #<n> // shifted immediate
+    MOV{S} <Rd>,<Rm>,ROR <Rs> // shifted register
+    MOVS instruction not seen in reference compiler yet, no need for flags
+    Have not seen shifts yet
 MOVLT
 MOVLTE
 MOVEQ
 MOVGT
 MOVGE
 MOVNE
+    Same as MOV but with additional info to take into account the condition
 
 
-Stack Instructions:
+Stack Instructions
 PUSH
 POP
+    PUSH/POP {reg}
 Label?
 
 
