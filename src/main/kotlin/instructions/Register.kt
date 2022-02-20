@@ -26,6 +26,7 @@ class Register {
     override fun toString(): String {
         when {
             rName.equals("r13") -> return "sp"
+            rName.equals("r14") -> return "lr"
             rName.equals("r15") -> return "pc"
             else                -> return rName
         }
