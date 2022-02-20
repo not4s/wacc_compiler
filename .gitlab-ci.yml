@@ -1,7 +1,9 @@
 stages:
   - build
   - test
+  - front-end
   - back-end
+  - all-tests
 
 clean:
   stage: build
@@ -623,7 +625,7 @@ valid/while:
 
 ########## ALL TESTS ##########
 
-scalable_tests:
+.scalable_tests:
   stage: all-tests
   interruptible: true
   script:
