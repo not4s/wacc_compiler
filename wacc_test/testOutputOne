@@ -128,7 +128,7 @@ if(options.a):
 
 # if no argmuents provided by default compares output
 if(options.x or (not options.x and not options.x)):
-    stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
+    stringBuffer += f"\n{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
     diff = compareOutput()
     if len(diff) != 0:
         fail = True
