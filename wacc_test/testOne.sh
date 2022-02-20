@@ -2,7 +2,7 @@
 
 # Run our ./compile, get output and error code
 cd ..
-actualStd=$(./compile wacc_test/$1)
+actualStd=$(./compile  wacc_test/$1)
 actualErr=$?
 cd wacc_test
 

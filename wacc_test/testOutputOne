@@ -7,6 +7,10 @@ REFCOMPILER_ASSEMBLY = "-a"
 COMPILED_CODE_DIR = "wacc_test/compiled_code"
 REFCOMPILER_SPLIT = "==========================================================="
 
+red="\033[0;31m"
+green="\033[0;32m"
+clear="\033[0m"
+
 # navigates to a valid directory and returns the previous working directory
 def navigateToDirectory(path: str) -> str:
     curr_directory = os.getcwd()
@@ -78,7 +82,10 @@ os.chdir("..")
 # check if the test has already been compiled
 # if it hasn't compile it and read the file
 if not os.path.isfile(f"{test_name}.s"):
-    stream = os.system(f"./compile wacc_test/{path} -d")
+    errCode = os.system(f"./compile wacc_test/{path} -d")
+    if (errCode >> 8 != 0):
+        os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
+        sys.exit(errCode >> 8)
 
 # change directory to directory with .s file
 getToTestDir(path_to_assembly)
@@ -139,10 +146,6 @@ if(options.x or (not options.x and not options.x)):
 with open(test_name + '.output', 'w') as f:
     f.write(stringBuffer)
     f.close()
-
-red="\033[0;31m"
-green="\033[0;32m"
-clear="\033[0m"
 
 if(fail):
     os.system(f"echo \"{red}FAIL {path}{clear} output doesn't match\"")
