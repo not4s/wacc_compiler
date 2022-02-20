@@ -2,6 +2,23 @@
 import os, sys, shutil, argparse
 
 COMPILE_DIR = 'compiled_code'
+BIN_DIR = 'wacc_test/compiled_code'
+BIN_FILE = 'bin'
+
+def createRemoteFile(path: str, file_name:str, content=""):
+    prevDir = os.getcwd()
+    # if compilation directory does not exist, make the directory
+    for d in path.split("/"):
+        if not os.path.exists(d):
+            os.makedirs(d)
+        os.chdir(d)
+
+    # write output
+    with open(file_name, 'w') as f:
+        f.write(content)
+        f.close()
+
+    os.chdir(prevDir)
 
 parser=argparse.ArgumentParser(description='Script compiling a wacc file')
 
@@ -16,7 +33,7 @@ path = args["src_file"]
 
 # check if the file Exists
 if not os.path.isfile(path):
-    print("Error: Program not found at {path}")
+    print(f"Error: Program not found at {path}")
     sys.exit()
 
 file_type = path.split('.')[-1]
@@ -27,11 +44,13 @@ if file_type != 'wacc':
 
 # build path
 file_name = os.path.splitext(os.path.basename(path))[0]
-test_name = ''.join(file_type).split('/')[-1]
 
 if(options.d):
+    if not os.path.isfile(f"{BIN_DIR}/{BIN_FILE}"):
+        createRemoteFile(BIN_DIR, BIN_FILE)
+
     # the user wants to save the output of the file 
-    errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']}")
+    errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']} > {BIN_DIR}/{BIN_FILE}")
     # On Unix, the return value is a 16-bit number whose high byte is the exit status (if the signal number is zero)
     if(errCode >> 8 != 0):
         sys.exit(errCode >> 8)
@@ -39,25 +58,12 @@ if(options.d):
     # TODO: figure out a better way rather than repeating twice
     stream = os.popen(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']}")
     output = stream.read()
-    
-    # move to correct directory
+
+    # move to wacc_test directory
     os.chdir("wacc_test")
 
-    # if compilation directory does not exist, make the directory
-    for d in ((f"{COMPILE_DIR}/{path}").split("/")[:-1]):
-        if not os.path.exists(d):
-            os.makedirs(d)
-        os.chdir(d)
-
-    # write output to .s file in compilation directory
-    compiled_fname = file_name + '.s'
-    with open(compiled_fname, 'w') as f:
-        f.write(output)
-        f.close()
-        shutil.move(compiled_fname, compiled_fname)
-
-    # prints success if reached
-    print("Compiled successfully")
+    # TODO: could possibly contain bug where compile_dir doesnt have / between it and path
+    createRemoteFile(f"{COMPILE_DIR}{path[len('wacc_test'):-len(f'/{file_name}.wacc')]}", file_name + '.s', output)
 else:
     # the user has not specified that the output needs to be saved in a file; print output to cmd
     errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']}")

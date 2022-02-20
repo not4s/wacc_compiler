@@ -1,23 +1,63 @@
 #!/usr/bin/env python3
-from code import compile_command
-from subprocess import Popen, PIPE, STDOUT
-import os, sys, shutil, argparse
+import os, sys, argparse
 import difflib as dl
 
-NO_OF_ARGS = 1
-ASSEMBLY_CODE_PREFIX = "compiled_code"
 REFCOMPILER_OUTPUT = "-x"
 REFCOMPILER_ASSEMBLY = "-a"
 COMPILED_CODE_DIR = "wacc_test/compiled_code"
+REFCOMPILER_SPLIT = "==========================================================="
+
+red="\033[0;31m"
+green="\033[0;32m"
+clear="\033[0m"
+
+# navigates to a valid directory and returns the previous working directory
+def navigateToDirectory(path: str) -> str:
+    curr_directory = os.getcwd()
+    os.chdir(os.path.abspath(path))
+    return curr_directory
+
+# intelligently compares two strings displaying - or + where lines are missed or added
+def compareStrings(correct: str, received: str) -> str:
+    correct_list = list(filter(lambda a: a != "", correct.split("\n")))
+    result_list = list(filter(lambda a: a != "", received.split("\n")))
+    differences = ""
+    for diff in list(dl.unified_diff(correct_list, result_list))[3:]:
+        differences += f"{diff}\n"
+    return differences[:-1]
+
+# goes to the wacc_test directory and returns the previous working directory 
+# assumes that wacc_test is a parent on the cwd
+def goToWaccTestDir() -> str:
+    currentDir = os.getcwd()
+    pathToGoDown = currentDir[currentDir.index("wacc_test") + len("wacc_test/"):].split("/")
+    pathToWaccTest = len(pathToGoDown) * "../"
+    os.chdir(pathToWaccTest)
+    return currentDir
+
+# goes to the directory that the .s file is located in and returns the previous working directory
+def getToTestDir(path: str) -> str:
+    currentDir = os.getcwd()
+    if(path[-len(".wacc"):] == ".wacc"):
+        test_name = path.split('/')[-1].split('.')[0]
+        getToTestDir(path[:-len(test_name)-len(".wacc")])
+    else:
+        os.chdir(f"{COMPILED_CODE_DIR}/{path}")
+    return currentDir
+
+# extracts the expected output from inbetween the ======= in the refCompiler
+def extractGoodStuffFromRefCompile(refCompileOutput: str):
+    return refCompileOutput.split(REFCOMPILER_SPLIT)[1]
 
 parser=argparse.ArgumentParser(description='Script testing correctness of the compiler output')
 
 parser.add_argument('src_file', help='file destination of the wacc file')
-parser.add_argument('-x', nargs=None, help='compares the output of the file')
-parser.add_argument('-a', nargs=None, help='compares the assembly output of the file')
-parser.add_argument('-p',default="default_input", type=str, nargs=1, help='optional input into file (by default set to \"defulat_input\")')
+parser.add_argument('-x', action="store_true", help='compares the output of the file')
+parser.add_argument('-a', action="store_true", help='compares the assembly output of the file')
+parser.add_argument('-p', default="default_input", type=str, nargs=1, help='optional input into file (by default set to \"defulat_input\")')
 
-args=vars(parser.parse_args())
+options = parser.parse_args()
+args = vars(options)
 
 # tokenize the path given
 path = args["src_file"]
@@ -33,58 +73,81 @@ if path.split('.')[-1] != 'wacc':
     sys.exit()
 
 test_name = path.split('/')[-1].split('.')[0]
+path_to_assembly = path[:-len(test_name)-len(".wacc")]
+
+# change directory to WACC_06/
+os.chdir("..")
 
 # get assembly from WACC compiler
-os.chdir("..")
-stream = os.popen(f"./compile wacc_test/{path}")
-wacc_assembly = stream.read()
+# check if the test has already been compiled
+# if it hasn't compile it and read the file
+if not os.path.isfile(f"{test_name}.s"):
+    errCode = os.system(f"./compile wacc_test/{path} -d")
+    if (errCode >> 8 != 0):
+        os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
+        sys.exit(errCode >> 8)
 
-def compareStrings(correct: str, received: str) -> str:
-    differences = ""
-    for diff in list(dl.unified_diff(correct, received)):
-        differences += f"{diff}\n"
-    return differences
+# change directory to directory with .s file
+getToTestDir(path_to_assembly)
 
-# navigates to a valid directory and returns the previous working directory
-def navigateToDirectory(path: str) -> str:
-    curr_directory = os.getcwd()
-    os.chdir(os.path.abspath(path))
-    return curr_directory
+with open(test_name + '.s', 'r') as f:
+    wacc_assembly = f.read()
+    f.close()
 
 # check that the output from the program is the same
 def compareOutput() -> str:
-    prevDirectory = navigateToDirectory(COMPILED_CODE_DIR)
     # emulate WACC assembly code
-    stream = os.popen(f"arm-linux-gnueabi-gcc -o {ASSEMBLY_CODE_PREFIX}{test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {ASSEMBLY_CODE_PREFIX}{test_name}.s")
-    stream = os.popen(f"qemu-arm -L /usr/arm-linux-gnueabi/ {ASSEMBLY_CODE_PREFIX}{test_name}")
+    stream = os.popen(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s")
+    stream = os.popen(f"qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}")
+    
     # get output from program
     wacc_emulated_output = stream.read()
-    # compare output from refCompile to output from program
-    os.chdir("..")
-    stream = os.popen(f'echo {args["p"]} | ./refCompile {REFCOMPILER_OUTPUT} {path}')
-    refCompiler_emulated_output = stream.read()
+    
+    # compare output from refCompile to output from program; go into refCompile's directory
+    prevDirectory = goToWaccTestDir()
+    stream = os.popen(f'echo {args["p"]} | ./refCompile  {REFCOMPILER_OUTPUT} {path}')
+    refCompiler_emulated_output = extractGoodStuffFromRefCompile(stream.read())
     navigateToDirectory(prevDirectory)
+
     return compareStrings(refCompiler_emulated_output, wacc_emulated_output)
 
 def compareAssembly() -> str:
     # get assembly from refCompile
+    prevDirectory = goToWaccTestDir()
     stream = os.popen(f"./refCompile {REFCOMPILER_ASSEMBLY} {path}")
-    refCompiler_assembly_output = stream.read()
+    refCompiler_assembly_output = extractGoodStuffFromRefCompile(stream.read())
+    navigateToDirectory(prevDirectory)
+
     return compareStrings(refCompiler_assembly_output, wacc_assembly)
 
-stringBuffer = "TODO"
+stringBuffer = ""
+fail: bool = False
 
-if(args["a"] != None):
+# cwd = directory of .s file
+if(options.a):
+    stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in assembly\n{REFCOMPILER_SPLIT}\n"
     diff = compareAssembly()
     if len(diff) != 0:
+        fail = True
         stringBuffer += diff
     else:
         stringBuffer += "Assembly code matches\n"
-else: # if no argmuents provided by default compares output
+
+# if no argmuents provided by default compares output
+if(options.x or (not options.x and not options.x)):
+    stringBuffer += f"\n{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
     diff = compareOutput()
     if len(diff) != 0:
+        fail = True
         stringBuffer += diff
     else:
         stringBuffer += "Output matches\n"
 
-print("Compile not implemented fully")
+with open(test_name + '.output', 'w') as f:
+    f.write(stringBuffer)
+    f.close()
+
+if(fail):
+    os.system(f"echo \"{red}FAIL {path}{clear} output doesn't match\"")
+else:
+    os.system(f"echo \"{green}pass {path}{clear}\" output matches!")
