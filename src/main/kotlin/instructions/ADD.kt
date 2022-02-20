@@ -1,25 +1,11 @@
 package instructions
 
-class ADD: WInstruction {
+class ADD(val rDest: Register,
+          val rSrc:  Register,
+          val op2:   Operand2,
+          val shiftVal: Int? = null): WInstruction {
 
-    private var rDest: Register? = null
-    private var rSrc: Register?  = null
-    private var op2: Operand2?   = null
-    private var shiftVal: Int?   = null
-    var flagSet: Boolean         = false
-
-    constructor(rDest: Register, rSrc: Register, op2: Operand2) {
-        this.rDest = rDest
-        this.rSrc  = rSrc
-        this.op2   = op2
-    }
-
-    constructor(rDest: Register, rSrc: Register, op2: Operand2, shiftVal: Int) {
-        this.rDest    = rDest
-        this.rSrc     = rSrc
-        this.op2      = op2
-        this.shiftVal = shiftVal
-    }
+    var flagSet: Boolean = false
 
     override fun toString(): String {
         var sb = "ADD"

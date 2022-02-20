@@ -1,12 +1,6 @@
 package instructions
 
-class Register {
-
-    val rName: String
-
-    constructor(name: String) {
-        this.rName = name
-    }
+class Register(val rName: String) {
 
     override fun hashCode(): Int {
         return rName.hashCode()
