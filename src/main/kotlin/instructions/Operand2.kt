@@ -45,4 +45,5 @@ class Operand2 {
                 sb = "=" + label
         }
         return sb
+    }
 }
