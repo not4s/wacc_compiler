@@ -1,0 +1,69 @@
+Guide
+https://developer.arm.com/documentation/ddi0403/d/Application-Level-Architecture/Instruction-Details/Alphabetical-list-of-ARMv7-M-Thumb-instructions?lang=en
+
+
+Operations
+ADD:
+    ADD{S}<c>.W <Rd>,<Rn>,#<const> // immediate
+    ADD<c> <Rd>,<Rn>,<Rm>          // register
+    ADD{S}<c>.W <Rd>,<Rn>,<Rm>{,<shift>}
+    ADD<c> <Rd>,SP,#<imm8>         // SP plus register
+    ADD<c> SP,SP,#<imm7>           // SP plus immediate
+SUB:
+    SUB<c> <Rd>,SP,#<imm8>
+    SUB<c> SP,SP,#<imm7>
+
+
+Move Instructions
+MOV
+MOVLT
+MOVLTE
+MOVEQ
+MOVGT
+MOVGE
+MOVNE
+
+
+Stack Instructions:
+PUSH
+POP
+Label?
+
+
+Logical Instructions
+CMP:
+    CMP reg, #imm
+    CMP reg, reg
+AND:
+    AND{S}<c>.W <Rd>,<Rn>,<Rm>{,<shift>}
+ORR:
+    ORR<c> <Rdn>,<Rm>
+
+
+Branch Instructions
+B:
+    B label
+BEQ:
+    BEQ label
+BL:
+    BL label
+
+
+Load Instructions
+LDR:
+    LDR<c> <Rt>,<label> // literal
+LDRSB:
+    LDRSB<c> <Rt>, [<Rn>]
+    LDRSB<c> <Rt>, [<Rn>, #-<imm8>]
+
+
+Store Instructions
+STR:
+STRB:
+
+- We would need a register class
+
+- The second operand of most instructions can be different types such as
+  imm, register, or label with even offsets, so we would need a class that could
+  handle all the different types
+
