@@ -1,4 +1,4 @@
-package codeGenerator
+package instructions
 
 // TODO: decide interface vs abstract class, let's go for interface for now
 // the interface of all types of instructions
