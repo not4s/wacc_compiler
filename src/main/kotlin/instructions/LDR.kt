@@ -2,7 +2,7 @@ package instructions
 
 class LDR(val rDest:        Register,
           val op2:          Operand2,
-          var isSignedByte: Boolean = false) {
+          var isSignedByte: Boolean = false): WInstruction {
     
     override fun toString(): String {
         var sb = "LDR"
