@@ -35,7 +35,8 @@ Stack Instructions
 PUSH
 POP
     PUSH/POP {reg}
-Label?
+
+Label
 
 
 Logical Instructions
@@ -43,9 +44,11 @@ CMP:
     CMP reg, #imm
     CMP reg, reg
 AND:
+    AND{S}<c> <Rd>,<Rn>,#<const>
     AND{S}<c>.W <Rd>,<Rn>,<Rm>{,<shift>}
 ORR:
-    ORR<c> <Rdn>,<Rm>
+    ORR{S}<c> <Rd>,<Rn>,#<const>
+    ORR{S}<c>.W <Rd>,<Rn>,<Rm>{,<shift>}
 
 
 Branch Instructions
@@ -59,9 +62,12 @@ BL:
 
 Load Instructions
 LDR:
-    LDR<c> <Rt>,<label> // literal
+    LDR<c> <Rt>,<label>             // literal
+    LDR<c> <Rt>, [<Rn>{,#<imm5>}]   // immediate
+    LDR<c> <Rt>,[<Rn>,<Rm>]         // register
 LDRSB:
-    LDRSB<c> <Rt>, [<Rn>]
+    LDRSB<c> <Rt>, <label>
+    LDRSB<c> <Rt>, [<Rn>, <Rm>]
     LDRSB<c> <Rt>, [<Rn>, #-<imm8>]
 
 
