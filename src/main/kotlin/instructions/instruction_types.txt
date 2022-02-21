@@ -74,6 +74,11 @@ LDRSB:
 Store Instructions
 STR:
 STRB:
+    STR<c> <Rt>, [<Rn>{,#<imm5>}](!)   // immediate
+    STR<c> <Rt>,[<Rn>,<Rm>](!)         // register
+! means "Register write-back":
+ the base register is used to calculate the address of the transfer, and is updated
+
 
 - We would need a register class
 
