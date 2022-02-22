@@ -19,10 +19,14 @@ def navigateToDirectory(path: str) -> str:
 
 # intelligently compares two strings displaying - or + where lines are missed or added
 def compareStrings(correct: str, received: str) -> str:
-    correct_list = list(filter(lambda a: a != "", correct.split("\n")))
-    result_list = list(filter(lambda a: a != "", received.split("\n")))
+    correct_list = filter(lambda a: a != "", correct.split("\n"))
+    result_list = filter(lambda a: a != "", received.split("\n"))
+    # replace all tabs with four spaces
+    correct_list = map(lambda line: line.replace("\t", "    "), correct_list)
+    result_list = map(lambda line: line.replace("\t", "    "), result_list)
+    # calculate difference
     differences = ""
-    for diff in list(dl.unified_diff(correct_list, result_list))[3:]:
+    for diff in list(dl.unified_diff(list(correct_list), list(result_list)))[3:]:
         differences += f"{diff}\n"
     return differences[:-1]
 
@@ -81,7 +85,7 @@ os.chdir("..")
 # get assembly from WACC compiler
 # check if the test has already been compiled
 # if it hasn't compile it and read the file
-if not os.path.isfile(f"{test_name}.s"):
+if not os.path.isfile(f"{COMPILED_CODE_DIR}/{path[:-len('.wacc')]}.s"):
     errCode = os.system(f"./compile wacc_test/{path} -d")
     if (errCode >> 8 != 0):
         os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
@@ -115,6 +119,9 @@ def compareAssembly() -> str:
     prevDirectory = goToWaccTestDir()
     stream = os.popen(f"./refCompile {REFCOMPILER_ASSEMBLY} {path}")
     refCompiler_assembly_output = extractGoodStuffFromRefCompile(stream.read())
+    # remove line numbers from refCompiler Output
+    refCompiler_assembly_output = map(lambda line: line.lstrip('0123456789'), refCompiler_assembly_output.split("\n"))
+    refCompiler_assembly_output = '\n'.join(refCompiler_assembly_output)
     navigateToDirectory(prevDirectory)
 
     return compareStrings(refCompiler_assembly_output, wacc_assembly)
@@ -128,13 +135,13 @@ if(options.a):
     diff = compareAssembly()
     if len(diff) != 0:
         fail = True
-        stringBuffer += diff
+        stringBuffer += f"{diff}\n"
     else:
         stringBuffer += "Assembly code matches\n"
 
 # if no argmuents provided by default compares output
 if(options.x or (not options.x and not options.x)):
-    stringBuffer += f"\n{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
+    stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
     diff = compareOutput()
     if len(diff) != 0:
         fail = True
@@ -147,5 +154,7 @@ with open(test_name + '.output', 'w') as f:
 
 if(fail):
     os.system(f"echo \"{red}FAIL {path}{clear} output doesn't match\"")
+    sys.exit(1)
 else:
     os.system(f"echo \"{green}pass {path}{clear}\" output matches!")
+    sys.exit(0)
