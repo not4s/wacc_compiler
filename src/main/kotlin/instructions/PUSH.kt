@@ -1,8 +1,8 @@
 package instructions
 
-class PUSH(val reg: Register): WInstruction {
+data class PUSH(val reg: Register) : WInstruction {
 
     override fun toString(): String {
-        return "PUSH {" + reg + "}"
+        return "PUSH {$reg}"
     }
 }
