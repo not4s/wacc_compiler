@@ -156,5 +156,7 @@ with open(test_name + '.output', 'w') as f:
 
 if(fail):
     os.system(f"echo \"{red}FAIL {path}{clear} output doesn't match\"")
+    sys.exit(1)
 else:
     os.system(f"echo \"{green}pass {path}{clear}\" output matches!")
+    sys.exit(0)
