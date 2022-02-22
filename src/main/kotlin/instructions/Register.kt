@@ -1,28 +1,28 @@
 package instructions
 
-class Register(val rName: String) {
+data class Register(val rName: String) {
 
     override fun hashCode(): Int {
         return rName.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
-        when {
-            other is Register -> return other.rName.equals(this.rName)
-            other is Operand2 -> {
-                val reg2     = other.getReg()
-                return reg2 != null && reg2.equals(this)
+        return when (other) {
+            is Register -> other.rName == this.rName
+            is Operand2 -> {
+                val reg2 = other.getReg()
+                reg2 != null && reg2 == this
             }
-            else -> return false
+            else -> false
         }
     }
 
     override fun toString(): String {
-        when {
-            rName.equals("r13") -> return "sp"
-            rName.equals("r14") -> return "lr"
-            rName.equals("r15") -> return "pc"
-            else                -> return rName
+        return when (rName) {
+            "r13" -> "sp"
+            "r14" -> "lr"
+            "r15" -> "pc"
+            else -> rName
         }
     }
 }

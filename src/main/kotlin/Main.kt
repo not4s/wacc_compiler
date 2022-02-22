@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.CommonTokenStream
 import semantic.ASTVisitor
 import symbolTable.ParentRefSymbolTable
 import syntax.SyntaxErrBuilderErrorListener
+import utils.ARM_HELLO_WORLD_PROGRAM
 import utils.ExitCode
 import utils.SemanticException
 import java.io.File
@@ -14,9 +15,7 @@ fun main(args: Array<String>) {
     if (args.isEmpty()) {
         throw IllegalArgumentException("Please provide filepath as argument.")
     }
-    println("You have passed in: ${args.joinToString()}")
     val file = File(args[0])
-    println("Opening file: $file\n")
 
     val input = CharStreams.fromFileName(file.absolutePath)
 
@@ -32,10 +31,11 @@ fun main(args: Array<String>) {
 
     val tree = parser.program()
     try {
-        val res = ASTVisitor(ParentRefSymbolTable(file.absolutePath)).visit(tree)
-        println(res)
+        ASTVisitor(ParentRefSymbolTable(file.absolutePath)).visit(tree)
     } catch (e: SemanticException) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
+    // Temporary
+    println(ARM_HELLO_WORLD_PROGRAM)
 }

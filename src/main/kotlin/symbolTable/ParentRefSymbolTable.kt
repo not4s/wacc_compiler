@@ -45,7 +45,6 @@ class ParentRefSymbolTable(
 
     override fun get(arrSym: String, indices: Array<WInt>, errorMessageBuilder: SemanticErrorMessageBuilder): WAny {
         val prev = dict[arrSym]
-
         if (prev == null) {
             SemanticChecker.checkParentTableIsNotNull(parentTable, arrSym, errorMessageBuilder)
             return parentTable?.get(arrSym, indices, errorMessageBuilder)
