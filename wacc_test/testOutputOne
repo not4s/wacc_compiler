@@ -26,7 +26,7 @@ def compareStrings(correct: str, received: str) -> str:
         differences += f"{diff}\n"
     return differences[:-1]
 
-# goes to the wacc_test directory and returns the previous working directory 
+# goes to the wacc_test directory and returns the previous working directory
 # assumes that wacc_test is a parent on the cwd
 def goToWaccTestDir() -> str:
     currentDir = os.getcwd()
@@ -92,17 +92,16 @@ getToTestDir(path_to_assembly)
 
 with open(test_name + '.s', 'r') as f:
     wacc_assembly = f.read()
-    f.close()
 
 # check that the output from the program is the same
 def compareOutput() -> str:
     # emulate WACC assembly code
     stream = os.popen(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s")
     stream = os.popen(f"qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}")
-    
+
     # get output from program
     wacc_emulated_output = stream.read()
-    
+
     # compare output from refCompile to output from program; go into refCompile's directory
     prevDirectory = goToWaccTestDir()
     stream = os.popen(f'echo {args["p"]} | ./refCompile  {REFCOMPILER_OUTPUT} {path}')
@@ -145,7 +144,6 @@ if(options.x or (not options.x and not options.x)):
 
 with open(test_name + '.output', 'w') as f:
     f.write(stringBuffer)
-    f.close()
 
 if(fail):
     os.system(f"echo \"{red}FAIL {path}{clear} output doesn't match\"")
