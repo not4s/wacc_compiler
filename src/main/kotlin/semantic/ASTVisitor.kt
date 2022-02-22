@@ -258,7 +258,9 @@ class ASTVisitor(
      * if some unknown bug will show up.
      */
     override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): IdentifierGet {
-        return IdentifierGet(st, ctx.IDENTIFIER().text, ctx)
+        val symbol = ctx.IDENTIFIER().text
+        st.get(symbol, builderTemplateFromContext(ctx, st))
+        return IdentifierGet(st, symbol, ctx)
     }
 
     override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Expr {
