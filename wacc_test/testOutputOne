@@ -19,10 +19,14 @@ def navigateToDirectory(path: str) -> str:
 
 # intelligently compares two strings displaying - or + where lines are missed or added
 def compareStrings(correct: str, received: str) -> str:
-    correct_list = list(filter(lambda a: a != "", correct.split("\n")))
-    result_list = list(filter(lambda a: a != "", received.split("\n")))
+    correct_list = filter(lambda a: a != "", correct.split("\n"))
+    result_list = filter(lambda a: a != "", received.split("\n"))
+    # replace all tabs with four spaces
+    correct_list = map(lambda line: line.replace("\t", "    "), correct_list)
+    result_list = map(lambda line: line.replace("\t", "    "), result_list)
+    # calculate difference
     differences = ""
-    for diff in list(dl.unified_diff(correct_list, result_list))[3:]:
+    for diff in list(dl.unified_diff(list(correct_list), list(result_list)))[3:]:
         differences += f"{diff}\n"
     return differences[:-1]
 
