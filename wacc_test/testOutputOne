@@ -116,6 +116,9 @@ def compareAssembly() -> str:
     prevDirectory = goToWaccTestDir()
     stream = os.popen(f"./refCompile {REFCOMPILER_ASSEMBLY} {path}")
     refCompiler_assembly_output = extractGoodStuffFromRefCompile(stream.read())
+    # remove line numbers from refCompiler Output
+    refCompiler_assembly_output = map(lambda line: line.lstrip('0123456789'), refCompiler_assembly_output.split("\n"))
+    refCompiler_assembly_output = '\n'.join(refCompiler_assembly_output)
     navigateToDirectory(prevDirectory)
 
     return compareStrings(refCompiler_assembly_output, wacc_assembly)
