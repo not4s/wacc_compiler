@@ -81,7 +81,7 @@ os.chdir("..")
 # get assembly from WACC compiler
 # check if the test has already been compiled
 # if it hasn't compile it and read the file
-if not os.path.isfile(f"{test_name}.s"):
+if not os.path.isfile(f"{COMPILED_CODE_DIR}/{path[:-len('.wacc')]}.s"):
     errCode = os.system(f"./compile wacc_test/{path} -d")
     if (errCode >> 8 != 0):
         os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
@@ -129,13 +129,13 @@ if(options.a):
     diff = compareAssembly()
     if len(diff) != 0:
         fail = True
-        stringBuffer += diff
+        stringBuffer += f"{diff}\n"
     else:
         stringBuffer += "Assembly code matches\n"
 
 # if no argmuents provided by default compares output
 if(options.x or (not options.x and not options.x)):
-    stringBuffer += f"\n{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
+    stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
     diff = compareOutput()
     if len(diff) != 0:
         fail = True
