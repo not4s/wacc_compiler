@@ -38,7 +38,7 @@ class ASTVisitor(
         }
     }
 
-    override fun visitProgram(ctx: WACCParser.ProgramContext): Stat {
+    override fun visitProgram(ctx: WACCParser.ProgramContext): ProgramAST {
         // This adds functions to symbol table
         val waccFunctions: MutableList<Pair<WACCParser.FuncContext, WACCFunction>> = mutableListOf()
         for (f in ctx.func()) {
@@ -63,6 +63,7 @@ class ASTVisitor(
             }
             waccFunctions.add(Pair(f, bodyLessFunction))
         }
+        val funcASTs = mutableListOf<WACCFunction>()
         for ((funCtx, waccFun) in waccFunctions) {
             val funcAST = safeVisit(waccFun) { visitFuncBody(waccFun, funCtx) } as WACCFunction
             st.reassign(
@@ -70,18 +71,19 @@ class ASTVisitor(
                 funcAST,
                 builderTemplateFromContext(funCtx, st)
             )
+            funcASTs.add(funcAST)
         }
         // Create a child scope, functions are now stored in parent table.
         // This scope is still 'global'
         val childScope = st.createChildScope()
         childScope.isGlobal = true
-        val programAST =
+        val programBody =
             safeVisit(SkipStat(st)) { ASTVisitor(childScope, semanticErrorCount).visit(ctx.stat()) } as Stat
         val totalSemanticErrors = semanticErrorCount.get()
         if (totalSemanticErrors > 0) {
             throw SemanticException("Semantic errors detected: $totalSemanticErrors, compilation aborted.")
         }
-        return programAST
+        return ProgramAST(st, funcASTs, programBody)
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {

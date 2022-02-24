@@ -25,6 +25,21 @@ interface AST {
     override fun toString(): String
 }
 
+class ProgramAST(
+    override val st: SymbolTable,
+    val functions: List<WACCFunction>,
+    val body: Stat,
+) : AST {
+    override fun toString(): String {
+        return "Prog:\n" +
+                "{\n" +
+                "$functions" +
+                "\n$body\n" +
+                "}"
+    }
+
+}
+
 interface Typed : AST {
     val type: WAny
 }
