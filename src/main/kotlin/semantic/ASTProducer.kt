@@ -10,7 +10,7 @@ import utils.*
 import waccType.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class ASTVisitor(
+class ASTProducer(
     private val st: SymbolTable,
 ) : WACCParserBaseVisitor<AST>() {
 
@@ -78,7 +78,7 @@ class ASTVisitor(
         val childScope = st.createChildScope()
         childScope.isGlobal = true
         val programBody =
-            safeVisit(SkipStat(st)) { ASTVisitor(childScope, semanticErrorCount).visit(ctx.stat()) } as Stat
+            safeVisit(SkipStat(st)) { ASTProducer(childScope, semanticErrorCount).visit(ctx.stat()) } as Stat
         val totalSemanticErrors = semanticErrorCount.get()
         if (totalSemanticErrors > 0) {
             throw SemanticException("Semantic errors detected: $totalSemanticErrors, compilation aborted.")
@@ -347,7 +347,7 @@ class ASTVisitor(
     override fun visitStatWhileDo(ctx: WACCParser.StatWhileDoContext): WhileStat {
         val conditionExpr = safeVisit(Literal(st, WBool())) { this.visit(ctx.whileCond) } as Expr
         val loopBodyStat = safeVisit(SkipStat(st)) {
-            ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.doBlock)
+            ASTProducer(st.createChildScope(), semanticErrorCount).visit(ctx.doBlock)
         } as Stat
         SemanticChecker.checkWhileCondIsWBool(
             type = conditionExpr.type,
@@ -368,7 +368,7 @@ class ASTVisitor(
     }
 
     override fun visitStatBeginEnd(ctx: WACCParser.StatBeginEndContext): AST {
-        return ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.stat())
+        return ASTProducer(st.createChildScope(), semanticErrorCount).visit(ctx.stat())
     }
 
     override fun visitStatFree(ctx: WACCParser.StatFreeContext): FreeStat {
@@ -424,10 +424,10 @@ class ASTVisitor(
 
     override fun visitStatIfThenElse(ctx: WACCParser.StatIfThenElseContext): IfThenStat {
         val thenStat = safeVisit(SkipStat(st)) {
-            ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.thenBlock)
+            ASTProducer(st.createChildScope(), semanticErrorCount).visit(ctx.thenBlock)
         } as Stat
         val elseStat = safeVisit(SkipStat(st)) {
-            ASTVisitor(st.createChildScope(), semanticErrorCount).visit(ctx.elseBlock)
+            ASTProducer(st.createChildScope(), semanticErrorCount).visit(ctx.elseBlock)
         } as Stat
         val condition = safeVisit(Literal(st, WBool())) { this.visit(ctx.ifCond) } as Expr
         SemanticChecker.checkIfCondIsWBool(
@@ -477,7 +477,7 @@ class ASTVisitor(
     private fun visitFuncBody(function: WACCFunction, ctx: WACCParser.FuncContext): WACCFunction {
         val functionBody =
             safeVisit(SkipStat(st)) {
-                ASTVisitor(function.st, semanticErrorCount).visit(ctx.stat())
+                ASTProducer(function.st, semanticErrorCount).visit(ctx.stat())
             } as Stat
         SemanticChecker.checkReturnType(functionBody, function.type, builderTemplateFromContext(ctx, st))
         SyntaxChecker.checkFunctionHavingReturn(functionBody, function.identifier)

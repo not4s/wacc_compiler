@@ -2,7 +2,7 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import semantic.ASTVisitor
+import semantic.ASTProducer
 import symbolTable.ParentRefSymbolTable
 import syntax.SyntaxErrBuilderErrorListener
 import utils.ARM_HELLO_WORLD_PROGRAM
@@ -31,7 +31,7 @@ fun main(args: Array<String>) {
 
     val tree = parser.program()
     try {
-        ASTVisitor(ParentRefSymbolTable(file.absolutePath)).visit(tree)
+        ASTProducer(ParentRefSymbolTable(file.absolutePath)).visit(tree)
     } catch (e: SemanticException) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
