@@ -1,5 +1,7 @@
 package instructions
 
+import instructions.aux.Register
+
 data class STR(
     val rSrc: Register,
     val rDest: Register,

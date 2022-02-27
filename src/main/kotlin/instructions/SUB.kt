@@ -1,5 +1,8 @@
 package instructions
 
+import instructions.aux.Operand2
+import instructions.aux.Register
+
 data class SUB(
     val rDest: Register,
     val lhs: Register,

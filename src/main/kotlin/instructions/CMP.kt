@@ -1,5 +1,8 @@
 package instructions
 
+import instructions.aux.Operand2
+import instructions.aux.Register
+
 data class CMP(
     val reg: Register,
     val op2: Operand2

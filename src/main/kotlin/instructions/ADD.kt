@@ -1,5 +1,8 @@
 package instructions
 
+import instructions.aux.Operand2
+import instructions.aux.Register
+
 data class ADD(
     val rDest: Register,
     val rSrc: Register,

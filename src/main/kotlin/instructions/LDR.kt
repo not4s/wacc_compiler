@@ -1,5 +1,8 @@
 package instructions
 
+import instructions.aux.Operand2
+import instructions.aux.Register
+
 data class LDR(
     val rDest: Register,
     val op2: Operand2,
