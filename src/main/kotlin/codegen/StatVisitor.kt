@@ -12,7 +12,7 @@ import instructions.operations.MOV
 
 class StatVisitor : ASTVisitor<Stat> {
 
-    val registerProvider = RegisterProvider()
+    private val registerProvider = RegisterProvider()
 
     override fun visit(ctx: Stat): List<WInstruction> {
         return when (ctx) {
@@ -23,7 +23,7 @@ class StatVisitor : ASTVisitor<Stat> {
     }
 
     private fun visitExitStat(ctx: ExitStat): List<WInstruction> {
-        val exprVisitor: ExprVisitor = ExprVisitor(registerProvider)
+        val exprVisitor = ExprVisitor(registerProvider)
         val evaluationCode = exprVisitor.visit(ctx.expr)
         val exitCode: Operand2 = exprVisitor.resultStored ?: throw Exception("Unhandled res")
         val ldrDestReg = registerProvider.get()
