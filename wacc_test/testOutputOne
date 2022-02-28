@@ -53,6 +53,35 @@ def getToTestDir(path: str) -> str:
 def extractGoodStuffFromRefCompile(refCompileOutput: str):
     return refCompileOutput.split(REFCOMPILER_SPLIT)[1]
 
+# check that the output from the program is the same
+def compareOutput() -> str:
+    # emulate WACC assembly code
+    stream = os.popen(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s")
+    stream = os.popen(f"qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}")
+
+    # get output from program
+    wacc_emulated_output = stream.read()
+
+    # compare output from refCompile to output from program; go into refCompile's directory
+    prevDirectory = goToWaccTestDir()
+    stream = os.popen(f'echo {args["p"]} | ./refCompile  {REFCOMPILER_OUTPUT} {path}')
+    refCompiler_emulated_output = extractGoodStuffFromRefCompile(stream.read())
+    navigateToDirectory(prevDirectory)
+
+    return compareStrings(refCompiler_emulated_output, wacc_emulated_output)
+
+def compareAssembly() -> str:
+    # get assembly from refCompile
+    prevDirectory = goToWaccTestDir()
+    stream = os.popen(f"./refCompile {REFCOMPILER_ASSEMBLY} {path}")
+    refCompiler_assembly_output = extractGoodStuffFromRefCompile(stream.read())
+    # remove line numbers from refCompiler Output
+    refCompiler_assembly_output = map(lambda line: line.lstrip('0123456789'), refCompiler_assembly_output.split("\n"))
+    refCompiler_assembly_output = '\n'.join(refCompiler_assembly_output)
+    navigateToDirectory(prevDirectory)
+
+    return compareStrings(refCompiler_assembly_output, wacc_assembly)
+
 parser=argparse.ArgumentParser(description='Script testing correctness of the compiler output')
 
 parser.add_argument('src_file', help='file destination of the wacc file')
@@ -87,44 +116,20 @@ os.chdir("..")
 # if it hasn't compile it and read the file
 if not os.path.isfile(f"{COMPILED_CODE_DIR}/{path[:-len('.wacc')]}.s"):
     errCode = os.system(f"./compile wacc_test/{path} -d")
-    if (errCode >> 8 != 0):
+    # if the error code is because of an invalid program compilation
+    if (errCode >> 8 in [100, 200]):
         os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
         sys.exit(0)
+    # if the error code is not a pass
+    elif (errCode >> 8 != 0):
+        os.system(f"echo \"{red}FAIL {path}{clear} Erroneous exception in running Main.kt\"")
+        sys.exit(errCode >> 8)
 
 # change directory to directory with .s file
 getToTestDir(path_to_assembly)
 
 with open(test_name + '.s', 'r') as f:
     wacc_assembly = f.read()
-
-# check that the output from the program is the same
-def compareOutput() -> str:
-    # emulate WACC assembly code
-    stream = os.popen(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s")
-    stream = os.popen(f"qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}")
-
-    # get output from program
-    wacc_emulated_output = stream.read()
-
-    # compare output from refCompile to output from program; go into refCompile's directory
-    prevDirectory = goToWaccTestDir()
-    stream = os.popen(f'echo {args["p"]} | ./refCompile  {REFCOMPILER_OUTPUT} {path}')
-    refCompiler_emulated_output = extractGoodStuffFromRefCompile(stream.read())
-    navigateToDirectory(prevDirectory)
-
-    return compareStrings(refCompiler_emulated_output, wacc_emulated_output)
-
-def compareAssembly() -> str:
-    # get assembly from refCompile
-    prevDirectory = goToWaccTestDir()
-    stream = os.popen(f"./refCompile {REFCOMPILER_ASSEMBLY} {path}")
-    refCompiler_assembly_output = extractGoodStuffFromRefCompile(stream.read())
-    # remove line numbers from refCompiler Output
-    refCompiler_assembly_output = map(lambda line: line.lstrip('0123456789'), refCompiler_assembly_output.split("\n"))
-    refCompiler_assembly_output = '\n'.join(refCompiler_assembly_output)
-    navigateToDirectory(prevDirectory)
-
-    return compareStrings(refCompiler_assembly_output, wacc_assembly)
 
 stringBuffer = ""
 fail: bool = False
