@@ -30,4 +30,88 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+ordAndchrExpr.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 4
+4		.ascii	" is "
+5	msg_1:
+6		.word 4
+7		.ascii	" is "
+8	msg_2:
+9		.word 5
+10		.ascii	"%.*s\0"
+11	msg_3:
+12		.word 3
+13		.ascii	"%d\0"
+14	msg_4:
+15		.word 1
+16		.ascii	"\0"
+17	
+18	.text
+19	
+20	.global main
+21	main:
+22		PUSH {lr}
+23		SUB sp, sp, #5
+24		MOV r4, #'a'
+25		STRB r4, [sp, #4]
+26		LDR r4, =99
+27		STR r4, [sp]
+28		LDRSB r4, [sp, #4]
+29		MOV r0, r4
+30		BL putchar
+31		LDR r4, =msg_0
+32		MOV r0, r4
+33		BL p_print_string
+34		LDRSB r4, [sp, #4]
+35		MOV r0, r4
+36		BL p_print_int
+37		BL p_print_ln
+38		LDR r4, [sp]
+39		MOV r0, r4
+40		BL p_print_int
+41		LDR r4, =msg_1
+42		MOV r0, r4
+43		BL p_print_string
+44		LDR r4, [sp]
+45		MOV r0, r4
+46		BL putchar
+47		BL p_print_ln
+48		ADD sp, sp, #5
+49		LDR r0, =0
+50		POP {pc}
+51		.ltorg
+52	p_print_string:
+53		PUSH {lr}
+54		LDR r1, [r0]
+55		ADD r2, r0, #4
+56		LDR r0, =msg_2
+57		ADD r0, r0, #4
+58		BL printf
+59		MOV r0, #0
+60		BL fflush
+61		POP {pc}
+62	p_print_int:
+63		PUSH {lr}
+64		MOV r1, r0
+65		LDR r0, =msg_3
+66		ADD r0, r0, #4
+67		BL printf
+68		MOV r0, #0
+69		BL fflush
+70		POP {pc}
+71	p_print_ln:
+72		PUSH {lr}
+73		LDR r0, =msg_4
+74		ADD r0, r0, #4
+75		BL puts
+76		MOV r0, #0
+77		BL fflush
+78		POP {pc}
+79	
+===========================================================
 -- Finished

@@ -23,4 +23,72 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+echoPuncChar.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 25
+4		.ascii	"enter a character to echo"
+5	msg_1:
+6		.word 5
+7		.ascii	"%.*s\0"
+8	msg_2:
+9		.word 1
+10		.ascii	"\0"
+11	msg_3:
+12		.word 4
+13		.ascii	" %c\0"
+14	
+15	.text
+16	
+17	.global main
+18	main:
+19		PUSH {lr}
+20		SUB sp, sp, #1
+21		MOV r4, #0
+22		STRB r4, [sp]
+23		LDR r4, =msg_0
+24		MOV r0, r4
+25		BL p_print_string
+26		BL p_print_ln
+27		ADD r4, sp, #0
+28		MOV r0, r4
+29		BL p_read_char
+30		LDRSB r4, [sp]
+31		MOV r0, r4
+32		BL putchar
+33		BL p_print_ln
+34		ADD sp, sp, #1
+35		LDR r0, =0
+36		POP {pc}
+37		.ltorg
+38	p_print_string:
+39		PUSH {lr}
+40		LDR r1, [r0]
+41		ADD r2, r0, #4
+42		LDR r0, =msg_1
+43		ADD r0, r0, #4
+44		BL printf
+45		MOV r0, #0
+46		BL fflush
+47		POP {pc}
+48	p_print_ln:
+49		PUSH {lr}
+50		LDR r0, =msg_2
+51		ADD r0, r0, #4
+52		BL puts
+53		MOV r0, #0
+54		BL fflush
+55		POP {pc}
+56	p_read_char:
+57		PUSH {lr}
+58		MOV r1, r0
+59		LDR r0, =msg_3
+60		ADD r0, r0, #4
+61		BL scanf
+62		POP {pc}
+63	
+===========================================================
 -- Finished

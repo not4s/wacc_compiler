@@ -26,4 +26,107 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+functionReturnPair.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 50
+4		.ascii	"NullReferenceError: dereference a null reference\n\0"
+5	msg_1:
+6		.word 3
+7		.ascii	"%d\0"
+8	msg_2:
+9		.word 1
+10		.ascii	"\0"
+11	msg_3:
+12		.word 5
+13		.ascii	"%.*s\0"
+14	
+15	.text
+16	
+17	.global main
+18	f_getPair:
+19		PUSH {lr}
+20		SUB sp, sp, #4
+21		LDR r0, =8
+22		BL malloc
+23		MOV r4, r0
+24		LDR r5, =10
+25		LDR r0, =4
+26		BL malloc
+27		STR r5, [r0]
+28		STR r0, [r4]
+29		LDR r5, =15
+30		LDR r0, =4
+31		BL malloc
+32		STR r5, [r0]
+33		STR r0, [r4, #4]
+34		STR r4, [sp]
+35		LDR r4, [sp]
+36		MOV r0, r4
+37		ADD sp, sp, #4
+38		POP {pc}
+39		POP {pc}
+40		.ltorg
+41	main:
+42		PUSH {lr}
+43		SUB sp, sp, #8
+44		BL f_getPair
+45		MOV r4, r0
+46		STR r4, [sp, #4]
+47		LDR r4, [sp, #4]
+48		MOV r0, r4
+49		BL p_check_null_pointer
+50		LDR r4, [r4]
+51		LDR r4, [r4]
+52		STR r4, [sp]
+53		LDR r4, [sp]
+54		MOV r0, r4
+55		BL p_print_int
+56		BL p_print_ln
+57		ADD sp, sp, #8
+58		LDR r0, =0
+59		POP {pc}
+60		.ltorg
+61	p_check_null_pointer:
+62		PUSH {lr}
+63		CMP r0, #0
+64		LDREQ r0, =msg_0
+65		BLEQ p_throw_runtime_error
+66		POP {pc}
+67	p_print_int:
+68		PUSH {lr}
+69		MOV r1, r0
+70		LDR r0, =msg_1
+71		ADD r0, r0, #4
+72		BL printf
+73		MOV r0, #0
+74		BL fflush
+75		POP {pc}
+76	p_print_ln:
+77		PUSH {lr}
+78		LDR r0, =msg_2
+79		ADD r0, r0, #4
+80		BL puts
+81		MOV r0, #0
+82		BL fflush
+83		POP {pc}
+84	p_throw_runtime_error:
+85		BL p_print_string
+86		MOV r0, #-1
+87		BL exit
+88	p_print_string:
+89		PUSH {lr}
+90		LDR r1, [r0]
+91		ADD r2, r0, #4
+92		LDR r0, =msg_3
+93		ADD r0, r0, #4
+94		BL printf
+95		MOV r0, #0
+96		BL fflush
+97		POP {pc}
+98	
+===========================================================
 -- Finished

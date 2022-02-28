@@ -33,4 +33,111 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+scopeWhileRedefine.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 6
+4		.ascii	" Boom!"
+5	msg_1:
+6		.word 12
+7		.ascii	"counting... "
+8	msg_2:
+9		.word 5
+10		.ascii	"%.*s\0"
+11	msg_3:
+12		.word 3
+13		.ascii	"%d\0"
+14	msg_4:
+15		.word 1
+16		.ascii	"\0"
+17	msg_5:
+18		.word 83
+19		.ascii	"OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
+20	
+21	.text
+22	
+23	.global main
+24	main:
+25		PUSH {lr}
+26		SUB sp, sp, #8
+27		LDR r4, =5
+28		STR r4, [sp, #4]
+29		LDR r4, =msg_0
+30		STR r4, [sp]
+31		B L0
+32	L1:
+33		SUB sp, sp, #4
+34		LDR r4, =msg_1
+35		STR r4, [sp]
+36		LDR r4, [sp]
+37		MOV r0, r4
+38		BL p_print_string
+39		LDR r4, [sp, #8]
+40		MOV r0, r4
+41		BL p_print_int
+42		BL p_print_ln
+43		LDR r4, [sp, #8]
+44		LDR r5, =1
+45		SUBS r4, r4, r5
+46		BLVS p_throw_overflow_error
+47		STR r4, [sp, #8]
+48		ADD sp, sp, #4
+49	L0:
+50		LDR r4, [sp, #4]
+51		LDR r5, =0
+52		CMP r4, r5
+53		MOVGT r4, #1
+54		MOVLE r4, #0
+55		CMP r4, #1
+56		BEQ L1
+57		LDR r4, [sp, #4]
+58		MOV r0, r4
+59		BL p_print_int
+60		LDR r4, [sp]
+61		MOV r0, r4
+62		BL p_print_string
+63		BL p_print_ln
+64		ADD sp, sp, #8
+65		LDR r0, =0
+66		POP {pc}
+67		.ltorg
+68	p_print_string:
+69		PUSH {lr}
+70		LDR r1, [r0]
+71		ADD r2, r0, #4
+72		LDR r0, =msg_2
+73		ADD r0, r0, #4
+74		BL printf
+75		MOV r0, #0
+76		BL fflush
+77		POP {pc}
+78	p_print_int:
+79		PUSH {lr}
+80		MOV r1, r0
+81		LDR r0, =msg_3
+82		ADD r0, r0, #4
+83		BL printf
+84		MOV r0, #0
+85		BL fflush
+86		POP {pc}
+87	p_print_ln:
+88		PUSH {lr}
+89		LDR r0, =msg_4
+90		ADD r0, r0, #4
+91		BL puts
+92		MOV r0, #0
+93		BL fflush
+94		POP {pc}
+95	p_throw_overflow_error:
+96		LDR r0, =msg_5
+97		BL p_throw_runtime_error
+98	p_throw_runtime_error:
+99		BL p_print_string
+100		MOV r0, #-1
+101		BL exit
+102	
+===========================================================
 -- Finished

@@ -35,4 +35,192 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+linkedList.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 8
+4		.ascii	"list = {"
+5	msg_1:
+6		.word 2
+7		.ascii	", "
+8	msg_2:
+9		.word 1
+10		.ascii	"}"
+11	msg_3:
+12		.word 5
+13		.ascii	"%.*s\0"
+14	msg_4:
+15		.word 50
+16		.ascii	"NullReferenceError: dereference a null reference\n\0"
+17	msg_5:
+18		.word 3
+19		.ascii	"%d\0"
+20	msg_6:
+21		.word 1
+22		.ascii	"\0"
+23	
+24	.text
+25	
+26	.global main
+27	main:
+28		PUSH {lr}
+29		SUB sp, sp, #28
+30		LDR r0, =8
+31		BL malloc
+32		MOV r4, r0
+33		LDR r5, =11
+34		LDR r0, =4
+35		BL malloc
+36		STR r5, [r0]
+37		STR r0, [r4]
+38		LDR r5, =0
+39		LDR r0, =4
+40		BL malloc
+41		STR r5, [r0]
+42		STR r0, [r4, #4]
+43		STR r4, [sp, #24]
+44		LDR r0, =8
+45		BL malloc
+46		MOV r4, r0
+47		LDR r5, =4
+48		LDR r0, =4
+49		BL malloc
+50		STR r5, [r0]
+51		STR r0, [r4]
+52		LDR r5, [sp, #24]
+53		LDR r0, =4
+54		BL malloc
+55		STR r5, [r0]
+56		STR r0, [r4, #4]
+57		STR r4, [sp, #20]
+58		LDR r0, =8
+59		BL malloc
+60		MOV r4, r0
+61		LDR r5, =2
+62		LDR r0, =4
+63		BL malloc
+64		STR r5, [r0]
+65		STR r0, [r4]
+66		LDR r5, [sp, #20]
+67		LDR r0, =4
+68		BL malloc
+69		STR r5, [r0]
+70		STR r0, [r4, #4]
+71		STR r4, [sp, #16]
+72		LDR r0, =8
+73		BL malloc
+74		MOV r4, r0
+75		LDR r5, =1
+76		LDR r0, =4
+77		BL malloc
+78		STR r5, [r0]
+79		STR r0, [r4]
+80		LDR r5, [sp, #16]
+81		LDR r0, =4
+82		BL malloc
+83		STR r5, [r0]
+84		STR r0, [r4, #4]
+85		STR r4, [sp, #12]
+86		LDR r4, =msg_0
+87		MOV r0, r4
+88		BL p_print_string
+89		LDR r4, [sp, #12]
+90		STR r4, [sp, #8]
+91		LDR r4, [sp, #8]
+92		MOV r0, r4
+93		BL p_check_null_pointer
+94		LDR r4, [r4, #4]
+95		LDR r4, [r4]
+96		STR r4, [sp, #4]
+97		LDR r4, =0
+98		STR r4, [sp]
+99		B L0
+100	L1:
+101		LDR r4, [sp, #8]
+102		MOV r0, r4
+103		BL p_check_null_pointer
+104		LDR r4, [r4]
+105		LDR r4, [r4]
+106		STR r4, [sp]
+107		LDR r4, [sp]
+108		MOV r0, r4
+109		BL p_print_int
+110		LDR r4, =msg_1
+111		MOV r0, r4
+112		BL p_print_string
+113		LDR r4, [sp, #4]
+114		STR r4, [sp, #8]
+115		LDR r4, [sp, #8]
+116		MOV r0, r4
+117		BL p_check_null_pointer
+118		LDR r4, [r4, #4]
+119		LDR r4, [r4]
+120		STR r4, [sp, #4]
+121	L0:
+122		LDR r4, [sp, #4]
+123		LDR r5, =0
+124		CMP r4, r5
+125		MOVNE r4, #1
+126		MOVEQ r4, #0
+127		CMP r4, #1
+128		BEQ L1
+129		LDR r4, [sp, #8]
+130		MOV r0, r4
+131		BL p_check_null_pointer
+132		LDR r4, [r4]
+133		LDR r4, [r4]
+134		STR r4, [sp]
+135		LDR r4, [sp]
+136		MOV r0, r4
+137		BL p_print_int
+138		LDR r4, =msg_2
+139		MOV r0, r4
+140		BL p_print_string
+141		BL p_print_ln
+142		ADD sp, sp, #28
+143		LDR r0, =0
+144		POP {pc}
+145		.ltorg
+146	p_print_string:
+147		PUSH {lr}
+148		LDR r1, [r0]
+149		ADD r2, r0, #4
+150		LDR r0, =msg_3
+151		ADD r0, r0, #4
+152		BL printf
+153		MOV r0, #0
+154		BL fflush
+155		POP {pc}
+156	p_check_null_pointer:
+157		PUSH {lr}
+158		CMP r0, #0
+159		LDREQ r0, =msg_4
+160		BLEQ p_throw_runtime_error
+161		POP {pc}
+162	p_print_int:
+163		PUSH {lr}
+164		MOV r1, r0
+165		LDR r0, =msg_5
+166		ADD r0, r0, #4
+167		BL printf
+168		MOV r0, #0
+169		BL fflush
+170		POP {pc}
+171	p_print_ln:
+172		PUSH {lr}
+173		LDR r0, =msg_6
+174		ADD r0, r0, #4
+175		BL puts
+176		MOV r0, #0
+177		BL fflush
+178		POP {pc}
+179	p_throw_runtime_error:
+180		BL p_print_string
+181		MOV r0, #-1
+182		BL exit
+183	
+===========================================================
 -- Finished

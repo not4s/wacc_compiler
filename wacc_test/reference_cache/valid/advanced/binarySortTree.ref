@@ -91,4 +91,376 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+test.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 47
+4		.ascii	"Please enter the number of integers to insert: "
+5	msg_1:
+6		.word 10
+7		.ascii	"There are "
+8	msg_2:
+9		.word 10
+10		.ascii	" integers."
+11	msg_3:
+12		.word 36
+13		.ascii	"Please enter the number at position "
+14	msg_4:
+15		.word 3
+16		.ascii	" : "
+17	msg_5:
+18		.word 29
+19		.ascii	"Here are the numbers sorted: "
+20	msg_6:
+21		.word 0
+22		.ascii	""
+23	msg_7:
+24		.word 50
+25		.ascii	"NullReferenceError: dereference a null reference\n\0"
+26	msg_8:
+27		.word 3
+28		.ascii	"%d\0"
+29	msg_9:
+30		.word 5
+31		.ascii	"%.*s\0"
+32	msg_10:
+33		.word 3
+34		.ascii	"%d\0"
+35	msg_11:
+36		.word 1
+37		.ascii	"\0"
+38	msg_12:
+39		.word 83
+40		.ascii	"OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
+41	
+42	.text
+43	
+44	.global main
+45	f_createNewNode:
+46		PUSH {lr}
+47		SUB sp, sp, #8
+48		LDR r0, =8
+49		BL malloc
+50		MOV r4, r0
+51		LDR r5, [sp, #16]
+52		LDR r0, =4
+53		BL malloc
+54		STR r5, [r0]
+55		STR r0, [r4]
+56		LDR r5, [sp, #20]
+57		LDR r0, =4
+58		BL malloc
+59		STR r5, [r0]
+60		STR r0, [r4, #4]
+61		STR r4, [sp, #4]
+62		LDR r0, =8
+63		BL malloc
+64		MOV r4, r0
+65		LDR r5, [sp, #12]
+66		LDR r0, =4
+67		BL malloc
+68		STR r5, [r0]
+69		STR r0, [r4]
+70		LDR r5, [sp, #4]
+71		LDR r0, =4
+72		BL malloc
+73		STR r5, [r0]
+74		STR r0, [r4, #4]
+75		STR r4, [sp]
+76		LDR r4, [sp]
+77		MOV r0, r4
+78		ADD sp, sp, #8
+79		POP {pc}
+80		POP {pc}
+81		.ltorg
+82	f_insert:
+83		PUSH {lr}
+84		LDR r4, [sp, #4]
+85		LDR r5, =0
+86		CMP r4, r5
+87		MOVEQ r4, #1
+88		MOVNE r4, #0
+89		CMP r4, #0
+90		BEQ L0
+91		LDR r4, =0
+92		STR r4, [sp, #-4]!
+93		LDR r4, =0
+94		STR r4, [sp, #-4]!
+95		LDR r4, [sp, #16]
+96		STR r4, [sp, #-4]!
+97		BL f_createNewNode
+98		ADD sp, sp, #12
+99		MOV r4, r0
+100		STR r4, [sp, #4]
+101		B L1
+102	L0:
+103		SUB sp, sp, #12
+104		LDR r4, [sp, #16]
+105		MOV r0, r4
+106		BL p_check_null_pointer
+107		LDR r4, [r4, #4]
+108		LDR r4, [r4]
+109		STR r4, [sp, #8]
+110		LDR r4, [sp, #16]
+111		MOV r0, r4
+112		BL p_check_null_pointer
+113		LDR r4, [r4]
+114		LDR r4, [r4]
+115		STR r4, [sp, #4]
+116		LDR r4, =0
+117		STR r4, [sp]
+118		LDR r4, [sp, #20]
+119		LDR r5, [sp, #4]
+120		CMP r4, r5
+121		MOVLT r4, #1
+122		MOVGE r4, #0
+123		CMP r4, #0
+124		BEQ L2
+125		LDR r4, [sp, #8]
+126		MOV r0, r4
+127		BL p_check_null_pointer
+128		LDR r4, [r4]
+129		LDR r4, [r4]
+130		STR r4, [sp]
+131		LDR r4, [sp, #20]
+132		STR r4, [sp, #-4]!
+133		LDR r4, [sp, #4]
+134		STR r4, [sp, #-4]!
+135		BL f_insert
+136		ADD sp, sp, #8
+137		MOV r4, r0
+138		LDR r5, [sp, #8]
+139		MOV r0, r5
+140		BL p_check_null_pointer
+141		LDR r5, [r5]
+142		STR r4, [r5]
+143		B L3
+144	L2:
+145		LDR r4, [sp, #8]
+146		MOV r0, r4
+147		BL p_check_null_pointer
+148		LDR r4, [r4, #4]
+149		LDR r4, [r4]
+150		STR r4, [sp]
+151		LDR r4, [sp, #20]
+152		STR r4, [sp, #-4]!
+153		LDR r4, [sp, #4]
+154		STR r4, [sp, #-4]!
+155		BL f_insert
+156		ADD sp, sp, #8
+157		MOV r4, r0
+158		LDR r5, [sp, #8]
+159		MOV r0, r5
+160		BL p_check_null_pointer
+161		LDR r5, [r5, #4]
+162		STR r4, [r5]
+163	L3:
+164		ADD sp, sp, #12
+165	L1:
+166		LDR r4, [sp, #4]
+167		MOV r0, r4
+168		POP {pc}
+169		POP {pc}
+170		.ltorg
+171	f_printTree:
+172		PUSH {lr}
+173		LDR r4, [sp, #4]
+174		LDR r5, =0
+175		CMP r4, r5
+176		MOVEQ r4, #1
+177		MOVNE r4, #0
+178		CMP r4, #0
+179		BEQ L4
+180		LDR r4, =0
+181		MOV r0, r4
+182		POP {pc}
+183		B L5
+184	L4:
+185		SUB sp, sp, #12
+186		LDR r4, [sp, #16]
+187		MOV r0, r4
+188		BL p_check_null_pointer
+189		LDR r4, [r4, #4]
+190		LDR r4, [r4]
+191		STR r4, [sp, #8]
+192		LDR r4, [sp, #8]
+193		MOV r0, r4
+194		BL p_check_null_pointer
+195		LDR r4, [r4]
+196		LDR r4, [r4]
+197		STR r4, [sp, #4]
+198		LDR r4, [sp, #4]
+199		STR r4, [sp, #-4]!
+200		BL f_printTree
+201		ADD sp, sp, #4
+202		MOV r4, r0
+203		STR r4, [sp]
+204		LDR r4, [sp, #16]
+205		MOV r0, r4
+206		BL p_check_null_pointer
+207		LDR r4, [r4]
+208		LDR r4, [r4]
+209		STR r4, [sp]
+210		LDR r4, [sp]
+211		MOV r0, r4
+212		BL p_print_int
+213		MOV r4, #' '
+214		MOV r0, r4
+215		BL putchar
+216		LDR r4, [sp, #8]
+217		MOV r0, r4
+218		BL p_check_null_pointer
+219		LDR r4, [r4, #4]
+220		LDR r4, [r4]
+221		STR r4, [sp, #4]
+222		LDR r4, [sp, #4]
+223		STR r4, [sp, #-4]!
+224		BL f_printTree
+225		ADD sp, sp, #4
+226		MOV r4, r0
+227		STR r4, [sp]
+228		LDR r4, =0
+229		MOV r0, r4
+230		ADD sp, sp, #12
+231		POP {pc}
+232		ADD sp, sp, #12
+233	L5:
+234		POP {pc}
+235		.ltorg
+236	main:
+237		PUSH {lr}
+238		SUB sp, sp, #12
+239		LDR r4, =0
+240		STR r4, [sp, #8]
+241		LDR r4, =msg_0
+242		MOV r0, r4
+243		BL p_print_string
+244		ADD r4, sp, #8
+245		MOV r0, r4
+246		BL p_read_int
+247		LDR r4, =msg_1
+248		MOV r0, r4
+249		BL p_print_string
+250		LDR r4, [sp, #8]
+251		MOV r0, r4
+252		BL p_print_int
+253		LDR r4, =msg_2
+254		MOV r0, r4
+255		BL p_print_string
+256		BL p_print_ln
+257		LDR r4, =0
+258		STR r4, [sp, #4]
+259		LDR r4, =0
+260		STR r4, [sp]
+261		B L6
+262	L7:
+263		SUB sp, sp, #4
+264		LDR r4, =0
+265		STR r4, [sp]
+266		LDR r4, =msg_3
+267		MOV r0, r4
+268		BL p_print_string
+269		LDR r4, [sp, #8]
+270		LDR r5, =1
+271		ADDS r4, r4, r5
+272		BLVS p_throw_overflow_error
+273		MOV r0, r4
+274		BL p_print_int
+275		LDR r4, =msg_4
+276		MOV r0, r4
+277		BL p_print_string
+278		ADD r4, sp, #0
+279		MOV r0, r4
+280		BL p_read_int
+281		LDR r4, [sp]
+282		STR r4, [sp, #-4]!
+283		LDR r4, [sp, #8]
+284		STR r4, [sp, #-4]!
+285		BL f_insert
+286		ADD sp, sp, #8
+287		MOV r4, r0
+288		STR r4, [sp, #4]
+289		LDR r4, [sp, #8]
+290		LDR r5, =1
+291		ADDS r4, r4, r5
+292		BLVS p_throw_overflow_error
+293		STR r4, [sp, #8]
+294		ADD sp, sp, #4
+295	L6:
+296		LDR r4, [sp, #4]
+297		LDR r5, [sp, #8]
+298		CMP r4, r5
+299		MOVLT r4, #1
+300		MOVGE r4, #0
+301		CMP r4, #1
+302		BEQ L7
+303		LDR r4, =msg_5
+304		MOV r0, r4
+305		BL p_print_string
+306		LDR r4, [sp]
+307		STR r4, [sp, #-4]!
+308		BL f_printTree
+309		ADD sp, sp, #4
+310		MOV r4, r0
+311		STR r4, [sp, #4]
+312		LDR r4, =msg_6
+313		MOV r0, r4
+314		BL p_print_string
+315		BL p_print_ln
+316		ADD sp, sp, #12
+317		LDR r0, =0
+318		POP {pc}
+319		.ltorg
+320	p_check_null_pointer:
+321		PUSH {lr}
+322		CMP r0, #0
+323		LDREQ r0, =msg_7
+324		BLEQ p_throw_runtime_error
+325		POP {pc}
+326	p_print_int:
+327		PUSH {lr}
+328		MOV r1, r0
+329		LDR r0, =msg_8
+330		ADD r0, r0, #4
+331		BL printf
+332		MOV r0, #0
+333		BL fflush
+334		POP {pc}
+335	p_print_string:
+336		PUSH {lr}
+337		LDR r1, [r0]
+338		ADD r2, r0, #4
+339		LDR r0, =msg_9
+340		ADD r0, r0, #4
+341		BL printf
+342		MOV r0, #0
+343		BL fflush
+344		POP {pc}
+345	p_read_int:
+346		PUSH {lr}
+347		MOV r1, r0
+348		LDR r0, =msg_10
+349		ADD r0, r0, #4
+350		BL scanf
+351		POP {pc}
+352	p_print_ln:
+353		PUSH {lr}
+354		LDR r0, =msg_11
+355		ADD r0, r0, #4
+356		BL puts
+357		MOV r0, #0
+358		BL fflush
+359		POP {pc}
+360	p_throw_overflow_error:
+361		LDR r0, =msg_12
+362		BL p_throw_runtime_error
+363	p_throw_runtime_error:
+364		BL p_print_string
+365		MOV r0, #-1
+366		BL exit
+367	
+===========================================================
 -- Finished

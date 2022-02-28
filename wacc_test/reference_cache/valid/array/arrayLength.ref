@@ -19,4 +19,64 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+arrayLength.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 3
+4		.ascii	"%d\0"
+5	msg_1:
+6		.word 1
+7		.ascii	"\0"
+8	
+9	.text
+10	
+11	.global main
+12	main:
+13		PUSH {lr}
+14		SUB sp, sp, #4
+15		LDR r0, =20
+16		BL malloc
+17		MOV r4, r0
+18		LDR r5, =43
+19		STR r5, [r4, #4]
+20		LDR r5, =2
+21		STR r5, [r4, #8]
+22		LDR r5, =18
+23		STR r5, [r4, #12]
+24		LDR r5, =1
+25		STR r5, [r4, #16]
+26		LDR r5, =4
+27		STR r5, [r4]
+28		STR r4, [sp]
+29		LDR r4, [sp]
+30		LDR r4, [r4]
+31		MOV r0, r4
+32		BL p_print_int
+33		BL p_print_ln
+34		ADD sp, sp, #4
+35		LDR r0, =0
+36		POP {pc}
+37		.ltorg
+38	p_print_int:
+39		PUSH {lr}
+40		MOV r1, r0
+41		LDR r0, =msg_0
+42		ADD r0, r0, #4
+43		BL printf
+44		MOV r0, #0
+45		BL fflush
+46		POP {pc}
+47	p_print_ln:
+48		PUSH {lr}
+49		LDR r0, =msg_1
+50		ADD r0, r0, #4
+51		BL puts
+52		MOV r0, #0
+53		BL fflush
+54		POP {pc}
+55	
+===========================================================
 -- Finished

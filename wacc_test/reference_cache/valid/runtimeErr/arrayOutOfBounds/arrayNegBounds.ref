@@ -23,4 +23,116 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+arrayNegBounds.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 44
+4		.ascii	"ArrayIndexOutOfBoundsError: negative index\n\0"
+5	msg_1:
+6		.word 45
+7		.ascii	"ArrayIndexOutOfBoundsError: index too large\n\0"
+8	msg_2:
+9		.word 3
+10		.ascii	"%d\0"
+11	msg_3:
+12		.word 1
+13		.ascii	"\0"
+14	msg_4:
+15		.word 5
+16		.ascii	"%.*s\0"
+17	
+18	.text
+19	
+20	.global main
+21	main:
+22		PUSH {lr}
+23		SUB sp, sp, #8
+24		LDR r0, =20
+25		BL malloc
+26		MOV r4, r0
+27		LDR r5, =43
+28		STR r5, [r4, #4]
+29		LDR r5, =2
+30		STR r5, [r4, #8]
+31		LDR r5, =18
+32		STR r5, [r4, #12]
+33		LDR r5, =1
+34		STR r5, [r4, #16]
+35		LDR r5, =4
+36		STR r5, [r4]
+37		STR r4, [sp, #4]
+38		LDR r0, =16
+39		BL malloc
+40		MOV r4, r0
+41		LDR r5, =1
+42		STR r5, [r4, #4]
+43		LDR r5, =2
+44		STR r5, [r4, #8]
+45		LDR r5, =3
+46		STR r5, [r4, #12]
+47		LDR r5, =3
+48		STR r5, [r4]
+49		STR r4, [sp]
+50		ADD r4, sp, #4
+51		LDR r5, =-2
+52		LDR r4, [r4]
+53		MOV r0, r5
+54		MOV r1, r4
+55		BL p_check_array_bounds
+56		ADD r4, r4, #4
+57		ADD r4, r4, r5, LSL #2
+58		LDR r4, [r4]
+59		MOV r0, r4
+60		BL p_print_int
+61		BL p_print_ln
+62		ADD sp, sp, #8
+63		LDR r0, =0
+64		POP {pc}
+65		.ltorg
+66	p_check_array_bounds:
+67		PUSH {lr}
+68		CMP r0, #0
+69		LDRLT r0, =msg_0
+70		BLLT p_throw_runtime_error
+71		LDR r1, [r1]
+72		CMP r0, r1
+73		LDRCS r0, =msg_1
+74		BLCS p_throw_runtime_error
+75		POP {pc}
+76	p_print_int:
+77		PUSH {lr}
+78		MOV r1, r0
+79		LDR r0, =msg_2
+80		ADD r0, r0, #4
+81		BL printf
+82		MOV r0, #0
+83		BL fflush
+84		POP {pc}
+85	p_print_ln:
+86		PUSH {lr}
+87		LDR r0, =msg_3
+88		ADD r0, r0, #4
+89		BL puts
+90		MOV r0, #0
+91		BL fflush
+92		POP {pc}
+93	p_throw_runtime_error:
+94		BL p_print_string
+95		MOV r0, #-1
+96		BL exit
+97	p_print_string:
+98		PUSH {lr}
+99		LDR r1, [r0]
+100		ADD r2, r0, #4
+101		LDR r0, =msg_4
+102		ADD r0, r0, #4
+103		BL printf
+104		MOV r0, #0
+105		BL fflush
+106		POP {pc}
+107	
+===========================================================
 -- Finished

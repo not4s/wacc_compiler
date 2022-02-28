@@ -22,4 +22,63 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+notExpr.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 5
+4		.ascii	"true\0"
+5	msg_1:
+6		.word 6
+7		.ascii	"false\0"
+8	msg_2:
+9		.word 1
+10		.ascii	"\0"
+11	
+12	.text
+13	
+14	.global main
+15	main:
+16		PUSH {lr}
+17		SUB sp, sp, #2
+18		MOV r4, #1
+19		STRB r4, [sp, #1]
+20		MOV r4, #0
+21		STRB r4, [sp]
+22		LDRSB r4, [sp, #1]
+23		EOR r4, r4, #1
+24		MOV r0, r4
+25		BL p_print_bool
+26		BL p_print_ln
+27		LDRSB r4, [sp]
+28		EOR r4, r4, #1
+29		MOV r0, r4
+30		BL p_print_bool
+31		BL p_print_ln
+32		ADD sp, sp, #2
+33		LDR r0, =0
+34		POP {pc}
+35		.ltorg
+36	p_print_bool:
+37		PUSH {lr}
+38		CMP r0, #0
+39		LDRNE r0, =msg_0
+40		LDREQ r0, =msg_1
+41		ADD r0, r0, #4
+42		BL printf
+43		MOV r0, #0
+44		BL fflush
+45		POP {pc}
+46	p_print_ln:
+47		PUSH {lr}
+48		LDR r0, =msg_2
+49		ADD r0, r0, #4
+50		BL puts
+51		MOV r0, #0
+52		BL fflush
+53		POP {pc}
+54	
+===========================================================
 -- Finished

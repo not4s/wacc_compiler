@@ -24,4 +24,148 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+arrayNested.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 44
+4		.ascii	"ArrayIndexOutOfBoundsError: negative index\n\0"
+5	msg_1:
+6		.word 45
+7		.ascii	"ArrayIndexOutOfBoundsError: index too large\n\0"
+8	msg_2:
+9		.word 3
+10		.ascii	"%d\0"
+11	msg_3:
+12		.word 1
+13		.ascii	"\0"
+14	msg_4:
+15		.word 5
+16		.ascii	"%.*s\0"
+17	
+18	.text
+19	
+20	.global main
+21	main:
+22		PUSH {lr}
+23		SUB sp, sp, #12
+24		LDR r0, =16
+25		BL malloc
+26		MOV r4, r0
+27		LDR r5, =1
+28		STR r5, [r4, #4]
+29		LDR r5, =2
+30		STR r5, [r4, #8]
+31		LDR r5, =3
+32		STR r5, [r4, #12]
+33		LDR r5, =3
+34		STR r5, [r4]
+35		STR r4, [sp, #8]
+36		LDR r0, =12
+37		BL malloc
+38		MOV r4, r0
+39		LDR r5, =3
+40		STR r5, [r4, #4]
+41		LDR r5, =4
+42		STR r5, [r4, #8]
+43		LDR r5, =2
+44		STR r5, [r4]
+45		STR r4, [sp, #4]
+46		LDR r0, =12
+47		BL malloc
+48		MOV r4, r0
+49		LDR r5, [sp, #8]
+50		STR r5, [r4, #4]
+51		LDR r5, [sp, #4]
+52		STR r5, [r4, #8]
+53		LDR r5, =2
+54		STR r5, [r4]
+55		STR r4, [sp]
+56		ADD r4, sp, #0
+57		LDR r5, =0
+58		LDR r4, [r4]
+59		MOV r0, r5
+60		MOV r1, r4
+61		BL p_check_array_bounds
+62		ADD r4, r4, #4
+63		ADD r4, r4, r5, LSL #2
+64		LDR r5, =2
+65		LDR r4, [r4]
+66		MOV r0, r5
+67		MOV r1, r4
+68		BL p_check_array_bounds
+69		ADD r4, r4, #4
+70		ADD r4, r4, r5, LSL #2
+71		LDR r4, [r4]
+72		MOV r0, r4
+73		BL p_print_int
+74		BL p_print_ln
+75		ADD r4, sp, #0
+76		LDR r5, =1
+77		LDR r4, [r4]
+78		MOV r0, r5
+79		MOV r1, r4
+80		BL p_check_array_bounds
+81		ADD r4, r4, #4
+82		ADD r4, r4, r5, LSL #2
+83		LDR r5, =0
+84		LDR r4, [r4]
+85		MOV r0, r5
+86		MOV r1, r4
+87		BL p_check_array_bounds
+88		ADD r4, r4, #4
+89		ADD r4, r4, r5, LSL #2
+90		LDR r4, [r4]
+91		MOV r0, r4
+92		BL p_print_int
+93		BL p_print_ln
+94		ADD sp, sp, #12
+95		LDR r0, =0
+96		POP {pc}
+97		.ltorg
+98	p_check_array_bounds:
+99		PUSH {lr}
+100		CMP r0, #0
+101		LDRLT r0, =msg_0
+102		BLLT p_throw_runtime_error
+103		LDR r1, [r1]
+104		CMP r0, r1
+105		LDRCS r0, =msg_1
+106		BLCS p_throw_runtime_error
+107		POP {pc}
+108	p_print_int:
+109		PUSH {lr}
+110		MOV r1, r0
+111		LDR r0, =msg_2
+112		ADD r0, r0, #4
+113		BL printf
+114		MOV r0, #0
+115		BL fflush
+116		POP {pc}
+117	p_print_ln:
+118		PUSH {lr}
+119		LDR r0, =msg_3
+120		ADD r0, r0, #4
+121		BL puts
+122		MOV r0, #0
+123		BL fflush
+124		POP {pc}
+125	p_throw_runtime_error:
+126		BL p_print_string
+127		MOV r0, #-1
+128		BL exit
+129	p_print_string:
+130		PUSH {lr}
+131		LDR r1, [r0]
+132		ADD r2, r0, #4
+133		LDR r0, =msg_4
+134		ADD r0, r0, #4
+135		BL printf
+136		MOV r0, #0
+137		BL fflush
+138		POP {pc}
+139	
+===========================================================
 -- Finished

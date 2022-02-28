@@ -22,4 +22,62 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+printCharArray.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 5
+4		.ascii	"%.*s\0"
+5	msg_1:
+6		.word 1
+7		.ascii	"\0"
+8	
+9	.text
+10	
+11	.global main
+12	main:
+13		PUSH {lr}
+14		SUB sp, sp, #4
+15		LDR r0, =7
+16		BL malloc
+17		MOV r4, r0
+18		MOV r5, #'h'
+19		STRB r5, [r4, #4]
+20		MOV r5, #'i'
+21		STRB r5, [r4, #5]
+22		MOV r5, #'!'
+23		STRB r5, [r4, #6]
+24		LDR r5, =3
+25		STR r5, [r4]
+26		STR r4, [sp]
+27		LDR r4, [sp]
+28		MOV r0, r4
+29		BL p_print_string
+30		BL p_print_ln
+31		ADD sp, sp, #4
+32		LDR r0, =0
+33		POP {pc}
+34		.ltorg
+35	p_print_string:
+36		PUSH {lr}
+37		LDR r1, [r0]
+38		ADD r2, r0, #4
+39		LDR r0, =msg_0
+40		ADD r0, r0, #4
+41		BL printf
+42		MOV r0, #0
+43		BL fflush
+44		POP {pc}
+45	p_print_ln:
+46		PUSH {lr}
+47		LDR r0, =msg_1
+48		ADD r0, r0, #4
+49		BL puts
+50		MOV r0, #0
+51		BL fflush
+52		POP {pc}
+53	
+===========================================================
 -- Finished

@@ -22,4 +22,78 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+printCharAsString.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 5
+4		.ascii	"%.*s\0"
+5	msg_1:
+6		.word 1
+7		.ascii	"\0"
+8	
+9	.text
+10	
+11	.global main
+12	main:
+13		PUSH {lr}
+14		SUB sp, sp, #4
+15		LDR r0, =7
+16		BL malloc
+17		MOV r4, r0
+18		MOV r5, #'f'
+19		STRB r5, [r4, #4]
+20		MOV r5, #'o'
+21		STRB r5, [r4, #5]
+22		MOV r5, #'o'
+23		STRB r5, [r4, #6]
+24		LDR r5, =3
+25		STR r5, [r4]
+26		STR r4, [sp]
+27		LDR r4, [sp]
+28		MOV r0, r4
+29		BL p_print_string
+30		BL p_print_ln
+31		LDR r0, =7
+32		BL malloc
+33		MOV r4, r0
+34		MOV r5, #'b'
+35		STRB r5, [r4, #4]
+36		MOV r5, #'a'
+37		STRB r5, [r4, #5]
+38		MOV r5, #'r'
+39		STRB r5, [r4, #6]
+40		LDR r5, =3
+41		STR r5, [r4]
+42		STR r4, [sp]
+43		LDR r4, [sp]
+44		MOV r0, r4
+45		BL p_print_string
+46		BL p_print_ln
+47		ADD sp, sp, #4
+48		LDR r0, =0
+49		POP {pc}
+50		.ltorg
+51	p_print_string:
+52		PUSH {lr}
+53		LDR r1, [r0]
+54		ADD r2, r0, #4
+55		LDR r0, =msg_0
+56		ADD r0, r0, #4
+57		BL printf
+58		MOV r0, #0
+59		BL fflush
+60		POP {pc}
+61	p_print_ln:
+62		PUSH {lr}
+63		LDR r0, =msg_1
+64		ADD r0, r0, #4
+65		BL puts
+66		MOV r0, #0
+67		BL fflush
+68		POP {pc}
+69	
+===========================================================
 -- Finished

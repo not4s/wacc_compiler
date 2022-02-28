@@ -24,4 +24,111 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+writeFst.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 50
+4		.ascii	"NullReferenceError: dereference a null reference\n\0"
+5	msg_1:
+6		.word 3
+7		.ascii	"%d\0"
+8	msg_2:
+9		.word 1
+10		.ascii	"\0"
+11	msg_3:
+12		.word 5
+13		.ascii	"%.*s\0"
+14	
+15	.text
+16	
+17	.global main
+18	main:
+19		PUSH {lr}
+20		SUB sp, sp, #8
+21		LDR r0, =8
+22		BL malloc
+23		MOV r4, r0
+24		LDR r5, =10
+25		LDR r0, =4
+26		BL malloc
+27		STR r5, [r0]
+28		STR r0, [r4]
+29		MOV r5, #'a'
+30		LDR r0, =1
+31		BL malloc
+32		STRB r5, [r0]
+33		STR r0, [r4, #4]
+34		STR r4, [sp, #4]
+35		LDR r4, [sp, #4]
+36		MOV r0, r4
+37		BL p_check_null_pointer
+38		LDR r4, [r4]
+39		LDR r4, [r4]
+40		STR r4, [sp]
+41		LDR r4, [sp]
+42		MOV r0, r4
+43		BL p_print_int
+44		BL p_print_ln
+45		LDR r4, =42
+46		LDR r5, [sp, #4]
+47		MOV r0, r5
+48		BL p_check_null_pointer
+49		LDR r5, [r5]
+50		STR r4, [r5]
+51		LDR r4, [sp, #4]
+52		MOV r0, r4
+53		BL p_check_null_pointer
+54		LDR r4, [r4]
+55		LDR r4, [r4]
+56		STR r4, [sp]
+57		LDR r4, [sp]
+58		MOV r0, r4
+59		BL p_print_int
+60		BL p_print_ln
+61		ADD sp, sp, #8
+62		LDR r0, =0
+63		POP {pc}
+64		.ltorg
+65	p_check_null_pointer:
+66		PUSH {lr}
+67		CMP r0, #0
+68		LDREQ r0, =msg_0
+69		BLEQ p_throw_runtime_error
+70		POP {pc}
+71	p_print_int:
+72		PUSH {lr}
+73		MOV r1, r0
+74		LDR r0, =msg_1
+75		ADD r0, r0, #4
+76		BL printf
+77		MOV r0, #0
+78		BL fflush
+79		POP {pc}
+80	p_print_ln:
+81		PUSH {lr}
+82		LDR r0, =msg_2
+83		ADD r0, r0, #4
+84		BL puts
+85		MOV r0, #0
+86		BL fflush
+87		POP {pc}
+88	p_throw_runtime_error:
+89		BL p_print_string
+90		MOV r0, #-1
+91		BL exit
+92	p_print_string:
+93		PUSH {lr}
+94		LDR r1, [r0]
+95		ADD r2, r0, #4
+96		LDR r0, =msg_3
+97		ADD r0, r0, #4
+98		BL printf
+99		MOV r0, #0
+100		BL fflush
+101		POP {pc}
+102	
+===========================================================
 -- Finished

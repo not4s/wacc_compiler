@@ -48,4 +48,162 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+sequentialCount.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 20
+4		.ascii	"Can you count to 10?"
+5	msg_1:
+6		.word 5
+7		.ascii	"%.*s\0"
+8	msg_2:
+9		.word 1
+10		.ascii	"\0"
+11	msg_3:
+12		.word 3
+13		.ascii	"%d\0"
+14	msg_4:
+15		.word 83
+16		.ascii	"OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
+17	
+18	.text
+19	
+20	.global main
+21	main:
+22		PUSH {lr}
+23		SUB sp, sp, #4
+24		LDR r4, =1
+25		STR r4, [sp]
+26		LDR r4, =msg_0
+27		MOV r0, r4
+28		BL p_print_string
+29		BL p_print_ln
+30		LDR r4, [sp]
+31		MOV r0, r4
+32		BL p_print_int
+33		BL p_print_ln
+34		LDR r4, [sp]
+35		LDR r5, =1
+36		ADDS r4, r4, r5
+37		BLVS p_throw_overflow_error
+38		STR r4, [sp]
+39		LDR r4, [sp]
+40		MOV r0, r4
+41		BL p_print_int
+42		BL p_print_ln
+43		LDR r4, [sp]
+44		LDR r5, =1
+45		ADDS r4, r4, r5
+46		BLVS p_throw_overflow_error
+47		STR r4, [sp]
+48		LDR r4, [sp]
+49		MOV r0, r4
+50		BL p_print_int
+51		BL p_print_ln
+52		LDR r4, [sp]
+53		LDR r5, =1
+54		ADDS r4, r4, r5
+55		BLVS p_throw_overflow_error
+56		STR r4, [sp]
+57		LDR r4, [sp]
+58		MOV r0, r4
+59		BL p_print_int
+60		BL p_print_ln
+61		LDR r4, [sp]
+62		LDR r5, =1
+63		ADDS r4, r4, r5
+64		BLVS p_throw_overflow_error
+65		STR r4, [sp]
+66		LDR r4, [sp]
+67		MOV r0, r4
+68		BL p_print_int
+69		BL p_print_ln
+70		LDR r4, [sp]
+71		LDR r5, =1
+72		ADDS r4, r4, r5
+73		BLVS p_throw_overflow_error
+74		STR r4, [sp]
+75		LDR r4, [sp]
+76		MOV r0, r4
+77		BL p_print_int
+78		BL p_print_ln
+79		LDR r4, [sp]
+80		LDR r5, =1
+81		ADDS r4, r4, r5
+82		BLVS p_throw_overflow_error
+83		STR r4, [sp]
+84		LDR r4, [sp]
+85		MOV r0, r4
+86		BL p_print_int
+87		BL p_print_ln
+88		LDR r4, [sp]
+89		LDR r5, =1
+90		ADDS r4, r4, r5
+91		BLVS p_throw_overflow_error
+92		STR r4, [sp]
+93		LDR r4, [sp]
+94		MOV r0, r4
+95		BL p_print_int
+96		BL p_print_ln
+97		LDR r4, [sp]
+98		LDR r5, =1
+99		ADDS r4, r4, r5
+100		BLVS p_throw_overflow_error
+101		STR r4, [sp]
+102		LDR r4, [sp]
+103		MOV r0, r4
+104		BL p_print_int
+105		BL p_print_ln
+106		LDR r4, [sp]
+107		LDR r5, =1
+108		ADDS r4, r4, r5
+109		BLVS p_throw_overflow_error
+110		STR r4, [sp]
+111		LDR r4, [sp]
+112		MOV r0, r4
+113		BL p_print_int
+114		BL p_print_ln
+115		ADD sp, sp, #4
+116		LDR r0, =0
+117		POP {pc}
+118		.ltorg
+119	p_print_string:
+120		PUSH {lr}
+121		LDR r1, [r0]
+122		ADD r2, r0, #4
+123		LDR r0, =msg_1
+124		ADD r0, r0, #4
+125		BL printf
+126		MOV r0, #0
+127		BL fflush
+128		POP {pc}
+129	p_print_ln:
+130		PUSH {lr}
+131		LDR r0, =msg_2
+132		ADD r0, r0, #4
+133		BL puts
+134		MOV r0, #0
+135		BL fflush
+136		POP {pc}
+137	p_print_int:
+138		PUSH {lr}
+139		MOV r1, r0
+140		LDR r0, =msg_3
+141		ADD r0, r0, #4
+142		BL printf
+143		MOV r0, #0
+144		BL fflush
+145		POP {pc}
+146	p_throw_overflow_error:
+147		LDR r0, =msg_4
+148		BL p_throw_runtime_error
+149	p_throw_runtime_error:
+150		BL p_print_string
+151		MOV r0, #-1
+152		BL exit
+153	
+===========================================================
 -- Finished

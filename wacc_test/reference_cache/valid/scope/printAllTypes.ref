@@ -133,4 +133,680 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+printAllTypes.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 2
+4		.ascii	", "
+5	msg_1:
+6		.word 16
+7		.ascii	"this is a string"
+8	msg_2:
+9		.word 5
+10		.ascii	"array"
+11	msg_3:
+12		.word 2
+13		.ascii	"of"
+14	msg_4:
+15		.word 7
+16		.ascii	"strings"
+17	msg_5:
+18		.word 3
+19		.ascii	"( ["
+20	msg_6:
+21		.word 5
+22		.ascii	"] , ["
+23	msg_7:
+24		.word 3
+25		.ascii	"] )"
+26	msg_8:
+27		.word 2
+28		.ascii	"[ "
+29	msg_9:
+30		.word 4
+31		.ascii	" = ("
+32	msg_10:
+33		.word 3
+34		.ascii	"), "
+35	msg_11:
+36		.word 4
+37		.ascii	" = ("
+38	msg_12:
+39		.word 3
+40		.ascii	") ]"
+41	msg_13:
+42		.word 50
+43		.ascii	"NullReferenceError: dereference a null reference\n\0"
+44	msg_14:
+45		.word 5
+46		.ascii	"%.*s\0"
+47	msg_15:
+48		.word 44
+49		.ascii	"ArrayIndexOutOfBoundsError: negative index\n\0"
+50	msg_16:
+51		.word 45
+52		.ascii	"ArrayIndexOutOfBoundsError: index too large\n\0"
+53	msg_17:
+54		.word 3
+55		.ascii	"%d\0"
+56	msg_18:
+57		.word 1
+58		.ascii	"\0"
+59	msg_19:
+60		.word 3
+61		.ascii	"%p\0"
+62	msg_20:
+63		.word 5
+64		.ascii	"true\0"
+65	msg_21:
+66		.word 6
+67		.ascii	"false\0"
+68	
+69	.text
+70	
+71	.global main
+72	main:
+73		PUSH {lr}
+74		SUB sp, sp, #8
+75		LDR r4, =msg_0
+76		STR r4, [sp, #4]
+77		LDR r4, =5
+78		STR r4, [sp]
+79		SUB sp, sp, #1
+80		MOV r4, #'x'
+81		STRB r4, [sp]
+82		SUB sp, sp, #1
+83		MOV r4, #1
+84		STRB r4, [sp]
+85		SUB sp, sp, #4
+86		LDR r4, =msg_1
+87		STR r4, [sp]
+88		SUB sp, sp, #16
+89		LDR r0, =16
+90		BL malloc
+91		MOV r4, r0
+92		LDR r5, =1
+93		STR r5, [r4, #4]
+94		LDR r5, =2
+95		STR r5, [r4, #8]
+96		LDR r5, =3
+97		STR r5, [r4, #12]
+98		LDR r5, =3
+99		STR r5, [r4]
+100		STR r4, [sp, #12]
+101		SUB sp, sp, #4
+102		LDR r0, =7
+103		BL malloc
+104		MOV r4, r0
+105		MOV r5, #'x'
+106		STRB r5, [r4, #4]
+107		MOV r5, #'y'
+108		STRB r5, [r4, #5]
+109		MOV r5, #'z'
+110		STRB r5, [r4, #6]
+111		LDR r5, =3
+112		STR r5, [r4]
+113		STR r4, [sp]
+114		SUB sp, sp, #4
+115		LDR r0, =7
+116		BL malloc
+117		MOV r4, r0
+118		MOV r5, #1
+119		STRB r5, [r4, #4]
+120		MOV r5, #0
+121		STRB r5, [r4, #5]
+122		MOV r5, #1
+123		STRB r5, [r4, #6]
+124		LDR r5, =3
+125		STR r5, [r4]
+126		STR r4, [sp]
+127		SUB sp, sp, #16
+128		LDR r0, =16
+129		BL malloc
+130		MOV r4, r0
+131		LDR r5, =msg_2
+132		STR r5, [r4, #4]
+133		LDR r5, =msg_3
+134		STR r5, [r4, #8]
+135		LDR r5, =msg_4
+136		STR r5, [r4, #12]
+137		LDR r5, =3
+138		STR r5, [r4]
+139		STR r4, [sp, #12]
+140		SUB sp, sp, #12
+141		LDR r0, =8
+142		BL malloc
+143		MOV r4, r0
+144		LDR r5, =1
+145		LDR r0, =4
+146		BL malloc
+147		STR r5, [r0]
+148		STR r0, [r4]
+149		LDR r5, =2
+150		LDR r0, =4
+151		BL malloc
+152		STR r5, [r0]
+153		STR r0, [r4, #4]
+154		STR r4, [sp, #8]
+155		SUB sp, sp, #24
+156		LDR r0, =8
+157		BL malloc
+158		MOV r4, r0
+159		MOV r5, #'a'
+160		LDR r0, =1
+161		BL malloc
+162		STRB r5, [r0]
+163		STR r0, [r4]
+164		MOV r5, #1
+165		LDR r0, =1
+166		BL malloc
+167		STRB r5, [r0]
+168		STR r0, [r4, #4]
+169		STR r4, [sp, #20]
+170		LDR r0, =8
+171		BL malloc
+172		MOV r4, r0
+173		MOV r5, #'b'
+174		LDR r0, =1
+175		BL malloc
+176		STRB r5, [r0]
+177		STR r0, [r4]
+178		MOV r5, #0
+179		LDR r0, =1
+180		BL malloc
+181		STRB r5, [r0]
+182		STR r0, [r4, #4]
+183		STR r4, [sp, #16]
+184		LDR r0, =12
+185		BL malloc
+186		MOV r4, r0
+187		LDR r5, [sp, #20]
+188		STR r5, [r4, #4]
+189		LDR r5, [sp, #16]
+190		STR r5, [r4, #8]
+191		LDR r5, =2
+192		STR r5, [r4]
+193		STR r4, [sp, #12]
+194		SUB sp, sp, #20
+195		LDR r0, =16
+196		BL malloc
+197		MOV r4, r0
+198		LDR r5, =1
+199		STR r5, [r4, #4]
+200		LDR r5, =2
+201		STR r5, [r4, #8]
+202		LDR r5, =3
+203		STR r5, [r4, #12]
+204		LDR r5, =3
+205		STR r5, [r4]
+206		STR r4, [sp, #16]
+207		LDR r0, =7
+208		BL malloc
+209		MOV r4, r0
+210		MOV r5, #'a'
+211		STRB r5, [r4, #4]
+212		MOV r5, #'b'
+213		STRB r5, [r4, #5]
+214		MOV r5, #'c'
+215		STRB r5, [r4, #6]
+216		LDR r5, =3
+217		STR r5, [r4]
+218		STR r4, [sp, #12]
+219		LDR r0, =8
+220		BL malloc
+221		MOV r4, r0
+222		LDR r5, [sp, #16]
+223		LDR r0, =4
+224		BL malloc
+225		STR r5, [r0]
+226		STR r0, [r4]
+227		LDR r5, [sp, #12]
+228		LDR r0, =4
+229		BL malloc
+230		STR r5, [r0]
+231		STR r0, [r4, #4]
+232		STR r4, [sp, #8]
+233		LDR r4, [sp, #8]
+234		MOV r0, r4
+235		BL p_check_null_pointer
+236		LDR r4, [r4]
+237		LDR r4, [r4]
+238		STR r4, [sp, #4]
+239		LDR r4, [sp, #8]
+240		MOV r0, r4
+241		BL p_check_null_pointer
+242		LDR r4, [r4, #4]
+243		LDR r4, [r4]
+244		STR r4, [sp]
+245		LDR r4, =msg_5
+246		MOV r0, r4
+247		BL p_print_string
+248		ADD r4, sp, #4
+249		LDR r5, =0
+250		LDR r4, [r4]
+251		MOV r0, r5
+252		MOV r1, r4
+253		BL p_check_array_bounds
+254		ADD r4, r4, #4
+255		ADD r4, r4, r5, LSL #2
+256		LDR r4, [r4]
+257		MOV r0, r4
+258		BL p_print_int
+259		LDR r4, [sp, #106]
+260		MOV r0, r4
+261		BL p_print_string
+262		ADD r4, sp, #4
+263		LDR r5, =1
+264		LDR r4, [r4]
+265		MOV r0, r5
+266		MOV r1, r4
+267		BL p_check_array_bounds
+268		ADD r4, r4, #4
+269		ADD r4, r4, r5, LSL #2
+270		LDR r4, [r4]
+271		MOV r0, r4
+272		BL p_print_int
+273		LDR r4, [sp, #106]
+274		MOV r0, r4
+275		BL p_print_string
+276		ADD r4, sp, #4
+277		LDR r5, =2
+278		LDR r4, [r4]
+279		MOV r0, r5
+280		MOV r1, r4
+281		BL p_check_array_bounds
+282		ADD r4, r4, #4
+283		ADD r4, r4, r5, LSL #2
+284		LDR r4, [r4]
+285		MOV r0, r4
+286		BL p_print_int
+287		LDR r4, =msg_6
+288		MOV r0, r4
+289		BL p_print_string
+290		ADD r4, sp, #0
+291		LDR r5, =0
+292		LDR r4, [r4]
+293		MOV r0, r5
+294		MOV r1, r4
+295		BL p_check_array_bounds
+296		ADD r4, r4, #4
+297		ADD r4, r4, r5
+298		LDRSB r4, [r4]
+299		MOV r0, r4
+300		BL putchar
+301		LDR r4, [sp, #106]
+302		MOV r0, r4
+303		BL p_print_string
+304		ADD r4, sp, #0
+305		LDR r5, =1
+306		LDR r4, [r4]
+307		MOV r0, r5
+308		MOV r1, r4
+309		BL p_check_array_bounds
+310		ADD r4, r4, #4
+311		ADD r4, r4, r5
+312		LDRSB r4, [r4]
+313		MOV r0, r4
+314		BL putchar
+315		LDR r4, [sp, #106]
+316		MOV r0, r4
+317		BL p_print_string
+318		ADD r4, sp, #0
+319		LDR r5, =2
+320		LDR r4, [r4]
+321		MOV r0, r5
+322		MOV r1, r4
+323		BL p_check_array_bounds
+324		ADD r4, r4, #4
+325		ADD r4, r4, r5
+326		LDRSB r4, [r4]
+327		MOV r0, r4
+328		BL putchar
+329		LDR r4, =msg_7
+330		MOV r0, r4
+331		BL p_print_string
+332		BL p_print_ln
+333		ADD sp, sp, #20
+334		ADD r4, sp, #12
+335		LDR r5, =0
+336		LDR r4, [r4]
+337		MOV r0, r5
+338		MOV r1, r4
+339		BL p_check_array_bounds
+340		ADD r4, r4, #4
+341		ADD r4, r4, r5, LSL #2
+342		LDR r4, [r4]
+343		STR r4, [sp, #8]
+344		LDR r4, [sp, #8]
+345		MOV r0, r4
+346		BL p_check_null_pointer
+347		LDR r4, [r4]
+348		LDRSB r4, [r4]
+349		STRB r4, [sp, #7]
+350		LDR r4, [sp, #8]
+351		MOV r0, r4
+352		BL p_check_null_pointer
+353		LDR r4, [r4, #4]
+354		LDRSB r4, [r4]
+355		STRB r4, [sp, #6]
+356		ADD r4, sp, #12
+357		LDR r5, =1
+358		LDR r4, [r4]
+359		MOV r0, r5
+360		MOV r1, r4
+361		BL p_check_array_bounds
+362		ADD r4, r4, #4
+363		ADD r4, r4, r5, LSL #2
+364		LDR r4, [r4]
+365		STR r4, [sp, #2]
+366		LDR r4, [sp, #2]
+367		MOV r0, r4
+368		BL p_check_null_pointer
+369		LDR r4, [r4]
+370		LDRSB r4, [r4]
+371		STRB r4, [sp, #1]
+372		LDR r4, [sp, #2]
+373		MOV r0, r4
+374		BL p_check_null_pointer
+375		LDR r4, [r4, #4]
+376		LDRSB r4, [r4]
+377		STRB r4, [sp]
+378		LDR r4, =msg_8
+379		MOV r0, r4
+380		BL p_print_string
+381		LDR r4, [sp, #8]
+382		MOV r0, r4
+383		BL p_print_reference
+384		LDR r4, =msg_9
+385		MOV r0, r4
+386		BL p_print_string
+387		LDRSB r4, [sp, #7]
+388		MOV r0, r4
+389		BL putchar
+390		LDR r4, [sp, #86]
+391		MOV r0, r4
+392		BL p_print_string
+393		LDRSB r4, [sp, #6]
+394		MOV r0, r4
+395		BL p_print_bool
+396		LDR r4, =msg_10
+397		MOV r0, r4
+398		BL p_print_string
+399		LDR r4, [sp, #2]
+400		MOV r0, r4
+401		BL p_print_reference
+402		LDR r4, =msg_11
+403		MOV r0, r4
+404		BL p_print_string
+405		LDRSB r4, [sp, #1]
+406		MOV r0, r4
+407		BL putchar
+408		LDR r4, [sp, #86]
+409		MOV r0, r4
+410		BL p_print_string
+411		LDRSB r4, [sp]
+412		MOV r0, r4
+413		BL p_print_bool
+414		LDR r4, =msg_12
+415		MOV r0, r4
+416		BL p_print_string
+417		BL p_print_ln
+418		ADD sp, sp, #24
+419		LDR r4, [sp, #8]
+420		MOV r0, r4
+421		BL p_check_null_pointer
+422		LDR r4, [r4]
+423		LDR r4, [r4]
+424		STR r4, [sp, #4]
+425		LDR r4, [sp, #8]
+426		MOV r0, r4
+427		BL p_check_null_pointer
+428		LDR r4, [r4, #4]
+429		LDR r4, [r4]
+430		STR r4, [sp]
+431		LDR r4, [sp, #4]
+432		MOV r0, r4
+433		BL p_print_int
+434		LDR r4, [sp, #62]
+435		MOV r0, r4
+436		BL p_print_string
+437		LDR r4, [sp]
+438		MOV r0, r4
+439		BL p_print_int
+440		BL p_print_ln
+441		ADD sp, sp, #12
+442		ADD r4, sp, #12
+443		LDR r5, =0
+444		LDR r4, [r4]
+445		MOV r0, r5
+446		MOV r1, r4
+447		BL p_check_array_bounds
+448		ADD r4, r4, #4
+449		ADD r4, r4, r5, LSL #2
+450		LDR r4, [r4]
+451		STR r4, [sp, #8]
+452		ADD r4, sp, #12
+453		LDR r5, =1
+454		LDR r4, [r4]
+455		MOV r0, r5
+456		MOV r1, r4
+457		BL p_check_array_bounds
+458		ADD r4, r4, #4
+459		ADD r4, r4, r5, LSL #2
+460		LDR r4, [r4]
+461		STR r4, [sp, #4]
+462		ADD r4, sp, #12
+463		LDR r5, =2
+464		LDR r4, [r4]
+465		MOV r0, r5
+466		MOV r1, r4
+467		BL p_check_array_bounds
+468		ADD r4, r4, #4
+469		ADD r4, r4, r5, LSL #2
+470		LDR r4, [r4]
+471		STR r4, [sp]
+472		LDR r4, [sp, #8]
+473		MOV r0, r4
+474		BL p_print_string
+475		LDR r4, [sp, #50]
+476		MOV r0, r4
+477		BL p_print_string
+478		LDR r4, [sp, #4]
+479		MOV r0, r4
+480		BL p_print_string
+481		LDR r4, [sp, #50]
+482		MOV r0, r4
+483		BL p_print_string
+484		LDR r4, [sp]
+485		MOV r0, r4
+486		BL p_print_string
+487		BL p_print_ln
+488		ADD sp, sp, #16
+489		ADD r4, sp, #0
+490		LDR r5, =0
+491		LDR r4, [r4]
+492		MOV r0, r5
+493		MOV r1, r4
+494		BL p_check_array_bounds
+495		ADD r4, r4, #4
+496		ADD r4, r4, r5
+497		LDRSB r4, [r4]
+498		MOV r0, r4
+499		BL p_print_bool
+500		LDR r4, [sp, #34]
+501		MOV r0, r4
+502		BL p_print_string
+503		ADD r4, sp, #0
+504		LDR r5, =1
+505		LDR r4, [r4]
+506		MOV r0, r5
+507		MOV r1, r4
+508		BL p_check_array_bounds
+509		ADD r4, r4, #4
+510		ADD r4, r4, r5
+511		LDRSB r4, [r4]
+512		MOV r0, r4
+513		BL p_print_bool
+514		LDR r4, [sp, #34]
+515		MOV r0, r4
+516		BL p_print_string
+517		ADD r4, sp, #0
+518		LDR r5, =2
+519		LDR r4, [r4]
+520		MOV r0, r5
+521		MOV r1, r4
+522		BL p_check_array_bounds
+523		ADD r4, r4, #4
+524		ADD r4, r4, r5
+525		LDRSB r4, [r4]
+526		MOV r0, r4
+527		BL p_print_bool
+528		BL p_print_ln
+529		ADD sp, sp, #4
+530		LDR r4, [sp]
+531		MOV r0, r4
+532		BL p_print_string
+533		BL p_print_ln
+534		ADD sp, sp, #4
+535		ADD r4, sp, #12
+536		LDR r5, =0
+537		LDR r4, [r4]
+538		MOV r0, r5
+539		MOV r1, r4
+540		BL p_check_array_bounds
+541		ADD r4, r4, #4
+542		ADD r4, r4, r5, LSL #2
+543		LDR r4, [r4]
+544		STR r4, [sp, #8]
+545		ADD r4, sp, #12
+546		LDR r5, =1
+547		LDR r4, [r4]
+548		MOV r0, r5
+549		MOV r1, r4
+550		BL p_check_array_bounds
+551		ADD r4, r4, #4
+552		ADD r4, r4, r5, LSL #2
+553		LDR r4, [r4]
+554		STR r4, [sp, #4]
+555		ADD r4, sp, #12
+556		LDR r5, =2
+557		LDR r4, [r4]
+558		MOV r0, r5
+559		MOV r1, r4
+560		BL p_check_array_bounds
+561		ADD r4, r4, #4
+562		ADD r4, r4, r5, LSL #2
+563		LDR r4, [r4]
+564		STR r4, [sp]
+565		LDR r4, [sp, #8]
+566		MOV r0, r4
+567		BL p_print_int
+568		LDR r4, [sp, #26]
+569		MOV r0, r4
+570		BL p_print_string
+571		LDR r4, [sp, #4]
+572		MOV r0, r4
+573		BL p_print_int
+574		LDR r4, [sp, #26]
+575		MOV r0, r4
+576		BL p_print_string
+577		LDR r4, [sp]
+578		MOV r0, r4
+579		BL p_print_int
+580		BL p_print_ln
+581		ADD sp, sp, #16
+582		LDR r4, [sp]
+583		MOV r0, r4
+584		BL p_print_string
+585		BL p_print_ln
+586		ADD sp, sp, #4
+587		LDRSB r4, [sp]
+588		MOV r0, r4
+589		BL p_print_bool
+590		BL p_print_ln
+591		ADD sp, sp, #1
+592		LDRSB r4, [sp]
+593		MOV r0, r4
+594		BL putchar
+595		BL p_print_ln
+596		ADD sp, sp, #1
+597		LDR r4, [sp]
+598		MOV r0, r4
+599		BL p_print_int
+600		BL p_print_ln
+601		ADD sp, sp, #8
+602		LDR r0, =0
+603		POP {pc}
+604		.ltorg
+605	p_check_null_pointer:
+606		PUSH {lr}
+607		CMP r0, #0
+608		LDREQ r0, =msg_13
+609		BLEQ p_throw_runtime_error
+610		POP {pc}
+611	p_print_string:
+612		PUSH {lr}
+613		LDR r1, [r0]
+614		ADD r2, r0, #4
+615		LDR r0, =msg_14
+616		ADD r0, r0, #4
+617		BL printf
+618		MOV r0, #0
+619		BL fflush
+620		POP {pc}
+621	p_check_array_bounds:
+622		PUSH {lr}
+623		CMP r0, #0
+624		LDRLT r0, =msg_15
+625		BLLT p_throw_runtime_error
+626		LDR r1, [r1]
+627		CMP r0, r1
+628		LDRCS r0, =msg_16
+629		BLCS p_throw_runtime_error
+630		POP {pc}
+631	p_print_int:
+632		PUSH {lr}
+633		MOV r1, r0
+634		LDR r0, =msg_17
+635		ADD r0, r0, #4
+636		BL printf
+637		MOV r0, #0
+638		BL fflush
+639		POP {pc}
+640	p_print_ln:
+641		PUSH {lr}
+642		LDR r0, =msg_18
+643		ADD r0, r0, #4
+644		BL puts
+645		MOV r0, #0
+646		BL fflush
+647		POP {pc}
+648	p_print_reference:
+649		PUSH {lr}
+650		MOV r1, r0
+651		LDR r0, =msg_19
+652		ADD r0, r0, #4
+653		BL printf
+654		MOV r0, #0
+655		BL fflush
+656		POP {pc}
+657	p_print_bool:
+658		PUSH {lr}
+659		CMP r0, #0
+660		LDRNE r0, =msg_20
+661		LDREQ r0, =msg_21
+662		ADD r0, r0, #4
+663		BL printf
+664		MOV r0, #0
+665		BL fflush
+666		POP {pc}
+667	p_throw_runtime_error:
+668		BL p_print_string
+669		MOV r0, #-1
+670		BL exit
+671	
+===========================================================
 -- Finished

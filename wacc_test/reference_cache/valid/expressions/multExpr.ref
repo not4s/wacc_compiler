@@ -20,4 +20,80 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+multExpr.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 83
+4		.ascii	"OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
+5	msg_1:
+6		.word 3
+7		.ascii	"%d\0"
+8	msg_2:
+9		.word 1
+10		.ascii	"\0"
+11	msg_3:
+12		.word 5
+13		.ascii	"%.*s\0"
+14	
+15	.text
+16	
+17	.global main
+18	main:
+19		PUSH {lr}
+20		SUB sp, sp, #8
+21		LDR r4, =5
+22		STR r4, [sp, #4]
+23		LDR r4, =3
+24		STR r4, [sp]
+25		LDR r4, [sp, #4]
+26		LDR r5, [sp]
+27		SMULL r4, r5, r4, r5
+28		CMP r5, r4, ASR #31
+29		BLNE p_throw_overflow_error
+30		MOV r0, r4
+31		BL p_print_int
+32		BL p_print_ln
+33		ADD sp, sp, #8
+34		LDR r0, =0
+35		POP {pc}
+36		.ltorg
+37	p_throw_overflow_error:
+38		LDR r0, =msg_0
+39		BL p_throw_runtime_error
+40	p_print_int:
+41		PUSH {lr}
+42		MOV r1, r0
+43		LDR r0, =msg_1
+44		ADD r0, r0, #4
+45		BL printf
+46		MOV r0, #0
+47		BL fflush
+48		POP {pc}
+49	p_print_ln:
+50		PUSH {lr}
+51		LDR r0, =msg_2
+52		ADD r0, r0, #4
+53		BL puts
+54		MOV r0, #0
+55		BL fflush
+56		POP {pc}
+57	p_throw_runtime_error:
+58		BL p_print_string
+59		MOV r0, #-1
+60		BL exit
+61	p_print_string:
+62		PUSH {lr}
+63		LDR r1, [r0]
+64		ADD r2, r0, #4
+65		LDR r0, =msg_3
+66		ADD r0, r0, #4
+67		BL printf
+68		MOV r0, #0
+69		BL fflush
+70		POP {pc}
+71	
+===========================================================
 -- Finished

@@ -24,4 +24,57 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+null.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 3
+4		.ascii	"%p\0"
+5	msg_1:
+6		.word 1
+7		.ascii	"\0"
+8	
+9	.text
+10	
+11	.global main
+12	main:
+13		PUSH {lr}
+14		SUB sp, sp, #4
+15		LDR r4, =0
+16		STR r4, [sp]
+17		LDR r4, [sp]
+18		MOV r0, r4
+19		BL p_print_reference
+20		BL p_print_ln
+21		LDR r4, =0
+22		STR r4, [sp]
+23		LDR r4, [sp]
+24		MOV r0, r4
+25		BL p_print_reference
+26		BL p_print_ln
+27		ADD sp, sp, #4
+28		LDR r0, =0
+29		POP {pc}
+30		.ltorg
+31	p_print_reference:
+32		PUSH {lr}
+33		MOV r1, r0
+34		LDR r0, =msg_0
+35		ADD r0, r0, #4
+36		BL printf
+37		MOV r0, #0
+38		BL fflush
+39		POP {pc}
+40	p_print_ln:
+41		PUSH {lr}
+42		LDR r0, =msg_1
+43		ADD r0, r0, #4
+44		BL puts
+45		MOV r0, #0
+46		BL fflush
+47		POP {pc}
+48	
+===========================================================
 -- Finished

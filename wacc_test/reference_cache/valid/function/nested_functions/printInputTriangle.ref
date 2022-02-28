@@ -39,4 +39,142 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+printInputTriangle.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 1
+4		.ascii	"-"
+5	msg_1:
+6		.word 0
+7		.ascii	""
+8	msg_2:
+9		.word 48
+10		.ascii	"Please enter the size of the triangle to print: "
+11	msg_3:
+12		.word 5
+13		.ascii	"%.*s\0"
+14	msg_4:
+15		.word 83
+16		.ascii	"OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
+17	msg_5:
+18		.word 1
+19		.ascii	"\0"
+20	msg_6:
+21		.word 3
+22		.ascii	"%d\0"
+23	
+24	.text
+25	
+26	.global main
+27	f_f:
+28		PUSH {lr}
+29		LDR r4, [sp, #4]
+30		LDR r5, =0
+31		CMP r4, r5
+32		MOVEQ r4, #1
+33		MOVNE r4, #0
+34		CMP r4, #0
+35		BEQ L0
+36		B L1
+37	L0:
+38		SUB sp, sp, #8
+39		LDR r4, [sp, #12]
+40		STR r4, [sp, #4]
+41		B L2
+42	L3:
+43		LDR r4, =msg_0
+44		MOV r0, r4
+45		BL p_print_string
+46		LDR r4, [sp, #4]
+47		LDR r5, =1
+48		SUBS r4, r4, r5
+49		BLVS p_throw_overflow_error
+50		STR r4, [sp, #4]
+51	L2:
+52		LDR r4, [sp, #4]
+53		LDR r5, =0
+54		CMP r4, r5
+55		MOVGT r4, #1
+56		MOVLE r4, #0
+57		CMP r4, #1
+58		BEQ L3
+59		LDR r4, =msg_1
+60		MOV r0, r4
+61		BL p_print_string
+62		BL p_print_ln
+63		LDR r4, [sp, #12]
+64		LDR r5, =1
+65		SUBS r4, r4, r5
+66		BLVS p_throw_overflow_error
+67		STR r4, [sp, #-4]!
+68		BL f_f
+69		ADD sp, sp, #4
+70		MOV r4, r0
+71		STR r4, [sp]
+72		ADD sp, sp, #8
+73	L1:
+74		LDR r4, =0
+75		MOV r0, r4
+76		POP {pc}
+77		POP {pc}
+78		.ltorg
+79	main:
+80		PUSH {lr}
+81		SUB sp, sp, #8
+82		LDR r4, =msg_2
+83		MOV r0, r4
+84		BL p_print_string
+85		BL p_print_ln
+86		LDR r4, =0
+87		STR r4, [sp, #4]
+88		ADD r4, sp, #4
+89		MOV r0, r4
+90		BL p_read_int
+91		LDR r4, [sp, #4]
+92		STR r4, [sp, #-4]!
+93		BL f_f
+94		ADD sp, sp, #4
+95		MOV r4, r0
+96		STR r4, [sp]
+97		ADD sp, sp, #8
+98		LDR r0, =0
+99		POP {pc}
+100		.ltorg
+101	p_print_string:
+102		PUSH {lr}
+103		LDR r1, [r0]
+104		ADD r2, r0, #4
+105		LDR r0, =msg_3
+106		ADD r0, r0, #4
+107		BL printf
+108		MOV r0, #0
+109		BL fflush
+110		POP {pc}
+111	p_throw_overflow_error:
+112		LDR r0, =msg_4
+113		BL p_throw_runtime_error
+114	p_print_ln:
+115		PUSH {lr}
+116		LDR r0, =msg_5
+117		ADD r0, r0, #4
+118		BL puts
+119		MOV r0, #0
+120		BL fflush
+121		POP {pc}
+122	p_read_int:
+123		PUSH {lr}
+124		MOV r1, r0
+125		LDR r0, =msg_6
+126		ADD r0, r0, #4
+127		BL scanf
+128		POP {pc}
+129	p_throw_runtime_error:
+130		BL p_print_string
+131		MOV r0, #-1
+132		BL exit
+133	
+===========================================================
 -- Finished

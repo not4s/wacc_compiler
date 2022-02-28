@@ -26,4 +26,104 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+functionSimpleLoop.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 83
+4		.ascii	"OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
+5	msg_1:
+6		.word 3
+7		.ascii	"%d\0"
+8	msg_2:
+9		.word 1
+10		.ascii	"\0"
+11	msg_3:
+12		.word 5
+13		.ascii	"%.*s\0"
+14	
+15	.text
+16	
+17	.global main
+18	f_f:
+19		PUSH {lr}
+20		SUB sp, sp, #4
+21		LDR r4, =0
+22		STR r4, [sp]
+23		B L0
+24	L1:
+25		LDR r4, [sp]
+26		LDR r5, =1
+27		ADDS r4, r4, r5
+28		BLVS p_throw_overflow_error
+29		STR r4, [sp]
+30	L0:
+31		LDR r4, [sp]
+32		LDR r5, [sp, #8]
+33		CMP r4, r5
+34		MOVLT r4, #1
+35		MOVGE r4, #0
+36		CMP r4, #1
+37		BEQ L1
+38		LDR r4, [sp]
+39		MOV r0, r4
+40		ADD sp, sp, #4
+41		POP {pc}
+42		POP {pc}
+43		.ltorg
+44	main:
+45		PUSH {lr}
+46		SUB sp, sp, #4
+47		LDR r4, =10
+48		STR r4, [sp, #-4]!
+49		BL f_f
+50		ADD sp, sp, #4
+51		MOV r4, r0
+52		STR r4, [sp]
+53		LDR r4, [sp]
+54		MOV r0, r4
+55		BL p_print_int
+56		BL p_print_ln
+57		ADD sp, sp, #4
+58		LDR r0, =0
+59		POP {pc}
+60		.ltorg
+61	p_throw_overflow_error:
+62		LDR r0, =msg_0
+63		BL p_throw_runtime_error
+64	p_print_int:
+65		PUSH {lr}
+66		MOV r1, r0
+67		LDR r0, =msg_1
+68		ADD r0, r0, #4
+69		BL printf
+70		MOV r0, #0
+71		BL fflush
+72		POP {pc}
+73	p_print_ln:
+74		PUSH {lr}
+75		LDR r0, =msg_2
+76		ADD r0, r0, #4
+77		BL puts
+78		MOV r0, #0
+79		BL fflush
+80		POP {pc}
+81	p_throw_runtime_error:
+82		BL p_print_string
+83		MOV r0, #-1
+84		BL exit
+85	p_print_string:
+86		PUSH {lr}
+87		LDR r1, [r0]
+88		ADD r2, r0, #4
+89		LDR r0, =msg_3
+90		ADD r0, r0, #4
+91		BL printf
+92		MOV r0, #0
+93		BL fflush
+94		POP {pc}
+95	
+===========================================================
 -- Finished

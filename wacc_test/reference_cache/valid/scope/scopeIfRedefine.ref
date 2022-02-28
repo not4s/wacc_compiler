@@ -28,4 +28,93 @@ end
 
 -- Compiler Output:
 -- Compiling...
+-- Printing Assembly...
+scopeIfRedefine.s contents are:
+===========================================================
+0	.data
+1	
+2	msg_0:
+3		.word 5
+4		.ascii	"true\0"
+5	msg_1:
+6		.word 6
+7		.ascii	"false\0"
+8	msg_2:
+9		.word 1
+10		.ascii	"\0"
+11	msg_3:
+12		.word 3
+13		.ascii	"%d\0"
+14	
+15	.text
+16	
+17	.global main
+18	main:
+19		PUSH {lr}
+20		SUB sp, sp, #4
+21		LDR r4, =12
+22		STR r4, [sp]
+23		LDR r4, [sp]
+24		LDR r5, =12
+25		CMP r4, r5
+26		MOVEQ r4, #1
+27		MOVNE r4, #0
+28		CMP r4, #0
+29		BEQ L0
+30		SUB sp, sp, #1
+31		MOV r4, #1
+32		STRB r4, [sp]
+33		LDRSB r4, [sp]
+34		MOV r0, r4
+35		BL p_print_bool
+36		BL p_print_ln
+37		ADD sp, sp, #1
+38		B L1
+39	L0:
+40		SUB sp, sp, #1
+41		MOV r4, #'a'
+42		STRB r4, [sp]
+43		LDRSB r4, [sp]
+44		MOV r0, r4
+45		BL putchar
+46		BL p_print_ln
+47		ADD sp, sp, #1
+48	L1:
+49		LDR r4, [sp]
+50		MOV r0, r4
+51		BL p_print_int
+52		BL p_print_ln
+53		ADD sp, sp, #4
+54		LDR r0, =0
+55		POP {pc}
+56		.ltorg
+57	p_print_bool:
+58		PUSH {lr}
+59		CMP r0, #0
+60		LDRNE r0, =msg_0
+61		LDREQ r0, =msg_1
+62		ADD r0, r0, #4
+63		BL printf
+64		MOV r0, #0
+65		BL fflush
+66		POP {pc}
+67	p_print_ln:
+68		PUSH {lr}
+69		LDR r0, =msg_2
+70		ADD r0, r0, #4
+71		BL puts
+72		MOV r0, #0
+73		BL fflush
+74		POP {pc}
+75	p_print_int:
+76		PUSH {lr}
+77		MOV r1, r0
+78		LDR r0, =msg_3
+79		ADD r0, r0, #4
+80		BL printf
+81		MOV r0, #0
+82		BL fflush
+83		POP {pc}
+84	
+===========================================================
 -- Finished
