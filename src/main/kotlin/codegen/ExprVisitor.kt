@@ -3,8 +3,8 @@ package codegen
 import ast.Expr
 import ast.Literal
 import instructions.WInstruction
-import instructions.aux.Immediate
-import instructions.aux.Operand2
+import instructions.misc.Immediate
+import instructions.misc.Operand2
 import waccType.WInt
 
 class ExprVisitor(registerProvider: RegisterProvider) : ASTVisitor<Expr> {

@@ -1,6 +1,6 @@
 package codegen
 
-import instructions.aux.Register
+import instructions.misc.Register
 
 /**
  * Temporary solution for register allocation

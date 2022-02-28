@@ -4,8 +4,8 @@ import ast.Stat
 import ast.statement.ExitStat
 import ast.statement.SkipStat
 import instructions.WInstruction
-import instructions.aux.Operand2
-import instructions.aux.Register
+import instructions.misc.Operand2
+import instructions.misc.Register
 import instructions.operations.B
 import instructions.operations.LDR
 import instructions.operations.MOV
