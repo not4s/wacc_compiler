@@ -1,11 +1,14 @@
 import antlr.WACCLexer
 import antlr.WACCParser
+import ast.ProgramAST
+import codegen.ProgramVisitor
+import instructions.aux.Label
+import instructions.aux.Section
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import semantic.ASTProducer
 import symbolTable.ParentRefSymbolTable
 import syntax.SyntaxErrBuilderErrorListener
-import utils.ARM_HELLO_WORLD_PROGRAM
 import utils.ExitCode
 import utils.SemanticException
 import java.io.File
@@ -30,12 +33,17 @@ fun main(args: Array<String>) {
     parser.addErrorListener(SyntaxErrBuilderErrorListener(file))
 
     val tree = parser.program()
+    val ast: ProgramAST
     try {
-        ASTProducer(ParentRefSymbolTable(file.absolutePath)).visit(tree)
+        ast = ASTProducer(ParentRefSymbolTable(file.absolutePath)).visit(tree) as ProgramAST
     } catch (e: SemanticException) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
-    // Temporary
-    println(ARM_HELLO_WORLD_PROGRAM)
+    val instructions = ProgramVisitor().visit(ast)
+
+    var count = 0
+    println(instructions.joinToString("\n") {
+        "${count++}\t" + if (it is Section || it is Label) "$it" else "\t$it"
+    })
 }

@@ -7,3 +7,9 @@ class LTORG : WInstruction {
         return ".ltorg"
     }
 }
+
+class BlankLine : WInstruction {
+    override fun toString(): String {
+        return ""
+    }
+}

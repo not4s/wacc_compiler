@@ -1,18 +1,19 @@
 package instructions
 
-import instructions.aux.Operand2
 import instructions.aux.Register
+
+/**
+ * Indicator that the operand can be the field of LDR source
+ */
+interface Loadable
 
 data class LDR(
     val rDest: Register,
-    val op2: Operand2,
+    val src: Loadable,
     var isSignedByte: Boolean = false
 ) : WInstruction {
-
     override fun toString(): String {
-        val sb = "LDR"
-        if (isSignedByte) sb.plus("SB")
-        sb.plus(" $rDest, $op2")
-        return sb
+        val instruction = "LDR" + if (isSignedByte) "SB" else ""
+        return "$instruction $rDest, $src"
     }
 }

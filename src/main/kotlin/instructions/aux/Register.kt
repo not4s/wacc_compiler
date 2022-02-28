@@ -1,21 +1,6 @@
 package instructions.aux
 
-data class Register(val rName: String) {
-
-    override fun hashCode(): Int {
-        return rName.hashCode()
-    }
-
-//    override fun equals(other: Any?): Boolean {
-//        return when (other) {
-//            is Register -> other.rName == this.rName
-//            is Operand2 -> {
-//                val reg2 = other.getReg()
-//                reg2 != null && reg2 == this
-//            }
-//            else -> false
-//        }
-//    }
+data class Register(val rName: String) : Operand2 {
 
     override fun toString(): String {
         return when (rName) {
