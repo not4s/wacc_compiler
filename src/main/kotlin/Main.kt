@@ -44,6 +44,6 @@ fun main(args: Array<String>) {
     val instructions = ProgramVisitor().visit(ast)
 
     println(instructions.joinToString("\n") {
-        "\t" + if (it is BlankLine) "" else (if (it is Section || it is Label) "$it" else "\t$it")
+        "\t" + if (it is Section || it is Label || it is BlankLine) "$it" else "\t$it"
     } + "\n\t")
 }
