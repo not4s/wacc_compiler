@@ -1,4 +1,7 @@
-package instructions
+package instructions.operations
+
+import instructions.WInstruction
+import instructions.aux.Register
 
 data class PUSH(val reg: Register) : WInstruction {
 

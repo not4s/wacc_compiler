@@ -1,4 +1,7 @@
-package instructions
+package instructions.operations
+
+import instructions.WInstruction
+import instructions.aux.Register
 
 data class POP(val reg: Register) : WInstruction {
 

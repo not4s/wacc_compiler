@@ -16,6 +16,7 @@ antlr_config/.antlr
 #ignore test result directory
 wacc_test/results
 wacc_test/compiled_code
+wacc_test/sample_programs/myprogs
 
 # ignore maven target directory
 target

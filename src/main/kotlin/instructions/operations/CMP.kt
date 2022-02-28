@@ -1,4 +1,8 @@
-package instructions
+package instructions.operations
+
+import instructions.WInstruction
+import instructions.aux.Operand2
+import instructions.aux.Register
 
 data class CMP(
     val reg: Register,
