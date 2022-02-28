@@ -1,9 +1,9 @@
 package codegen
 
 import ast.ProgramAST
-import instructions.LDR
-import instructions.POP
-import instructions.PUSH
+import instructions.operations.LDR
+import instructions.operations.POP
+import instructions.operations.PUSH
 import instructions.WInstruction
 import instructions.aux.*
 

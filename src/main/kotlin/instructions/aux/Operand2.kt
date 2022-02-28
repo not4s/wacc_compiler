@@ -1,6 +1,6 @@
 package instructions.aux
 
-import instructions.Loadable
+import instructions.operations.Loadable
 
 interface Operand2 : Loadable
 

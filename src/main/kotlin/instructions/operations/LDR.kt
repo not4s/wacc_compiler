@@ -1,5 +1,6 @@
-package instructions
+package instructions.operations
 
+import instructions.WInstruction
 import instructions.aux.Register
 
 /**

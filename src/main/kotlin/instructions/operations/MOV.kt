@@ -1,5 +1,6 @@
-package instructions
+package instructions.operations
 
+import instructions.WInstruction
 import instructions.aux.Operand2
 import instructions.aux.Register
 
@@ -14,9 +15,6 @@ data class MOV(
     }
 
     override fun toString(): String {
-        val sb = "MOV"
-        if (cond != null) sb.plus(cond)
-        sb.plus(" $rDest, $op2")
-        return sb
+        return "MOV${cond ?: ""} $rDest, $op2"
     }
 }

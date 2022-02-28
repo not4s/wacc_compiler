@@ -1,4 +1,6 @@
-package instructions
+package instructions.operations
+
+import instructions.WInstruction
 
 data class B(
     val label: String,
@@ -10,9 +12,6 @@ data class B(
     }
 
     override fun toString(): String {
-        val sb = "B"
-        if (cond != null) sb.plus(cond)
-        sb.plus(" $label")
-        return sb
+        return "B${cond ?: ""} $label"
     }
 }

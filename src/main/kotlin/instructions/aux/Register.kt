@@ -21,5 +21,8 @@ data class Register(val rName: String) : Operand2 {
         fun programCounter(): Register {
             return Register("pc")
         }
+        fun resultRegister(): Register {
+            return Register("r0")
+        }
     }
 }

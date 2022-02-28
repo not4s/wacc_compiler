@@ -10,9 +10,9 @@ import symbolTable.SymbolTable
  **/
 class ExitStat(
     override val st: SymbolTable,
-    private val expression: Expr,
+    val expr: Expr,
 ) : Stat {
     override fun toString(): String {
-        return "Exit:\n" + "  (scope:$st)\n${expression.toString().prependIndent(INDENT)}"
+        return "Exit:\n" + "  (scope:$st)\n${expr.toString().prependIndent(INDENT)}"
     }
 }
