@@ -1,8 +1,8 @@
 package instructions.operations
 
 import instructions.WInstruction
-import instructions.aux.Operand2
-import instructions.aux.Register
+import instructions.misc.Operand2
+import instructions.misc.Register
 
 data class ADD(
     val rDest: Register,

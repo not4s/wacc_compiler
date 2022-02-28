@@ -1,4 +1,4 @@
-package instructions.aux
+package instructions.misc
 
 import instructions.WInstruction
 

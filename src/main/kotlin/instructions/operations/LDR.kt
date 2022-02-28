@@ -1,7 +1,7 @@
 package instructions.operations
 
 import instructions.WInstruction
-import instructions.aux.Register
+import instructions.misc.Register
 
 /**
  * Indicator that the operand can be the field of LDR source

@@ -1,7 +1,7 @@
 package instructions.operations
 
 import instructions.WInstruction
-import instructions.aux.Register
+import instructions.misc.Register
 
 data class POP(val reg: Register) : WInstruction {
 

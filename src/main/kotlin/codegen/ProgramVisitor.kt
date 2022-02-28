@@ -5,7 +5,7 @@ import instructions.operations.LDR
 import instructions.operations.POP
 import instructions.operations.PUSH
 import instructions.WInstruction
-import instructions.aux.*
+import instructions.misc.*
 
 class ProgramVisitor : ASTVisitor<ProgramAST> {
 

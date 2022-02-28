@@ -1,4 +1,4 @@
-package instructions.aux
+package instructions.misc
 
 data class Register(val rName: String) : Operand2 {
 

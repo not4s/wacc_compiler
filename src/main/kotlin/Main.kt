@@ -2,9 +2,9 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import ast.ProgramAST
 import codegen.ProgramVisitor
-import instructions.aux.BlankLine
-import instructions.aux.Label
-import instructions.aux.Section
+import instructions.misc.BlankLine
+import instructions.misc.Label
+import instructions.misc.Section
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import semantic.ASTProducer
