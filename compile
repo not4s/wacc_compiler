@@ -4,7 +4,6 @@ import os, sys, shutil, argparse
 COMPILE_DIR = 'compiled_code'
 BIN_DIR = f'wacc_test/{COMPILE_DIR}'
 BIN_FILE = 'bin'
-
 def createRemoteFile(path: str, file_name: str, content: str = ""):
     prevDir = os.getcwd()
     # if compilation directory does not exist, make the directory
@@ -54,14 +53,14 @@ if options.d:
     if(errCode >> 8 != 0):
         sys.exit(errCode >> 8)
 
-    # TODO: figure out a better way rather than repeating twice
-    stream = os.popen(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']}")
-    output = stream.read()
+    # get output from bin file
+    output = ""
+    with open(f"{BIN_DIR}/{BIN_FILE}", 'r') as f:
+        output = f.read()
 
     # move to wacc_test directory
     os.chdir("wacc_test")
 
-    # TODO: could possibly contain bug where compile_dir doesnt have / between it and path
     createRemoteFile(f"{COMPILE_DIR}{path[len('wacc_test'):-len(f'/{file_name}.wacc')]}", file_name + '.s', output)
 else:
     # the user has not specified that the output needs to be saved in a file; print output to cmd
