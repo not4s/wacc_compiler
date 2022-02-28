@@ -2,6 +2,7 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import ast.ProgramAST
 import codegen.ProgramVisitor
+import instructions.aux.BlankLine
 import instructions.aux.Label
 import instructions.aux.Section
 import org.antlr.v4.runtime.CharStreams
@@ -42,8 +43,7 @@ fun main(args: Array<String>) {
     }
     val instructions = ProgramVisitor().visit(ast)
 
-    var count = 0
     println(instructions.joinToString("\n") {
-        "${count++}\t" + if (it is Section || it is Label) "$it" else "\t$it"
-    })
+        "\t" + if (it is BlankLine) "" else (if (it is Section || it is Label) "$it" else "\t$it")
+    } + "\n\t")
 }
