@@ -1,10 +1,10 @@
 package codegen
 
 import instructions.WInstruction
-import instructions.aux.BlankLine
-import instructions.aux.Label
-import instructions.aux.Section
-import instructions.aux.SubSection
+import instructions.misc.BlankLine
+import instructions.misc.Label
+import instructions.misc.Section
+import instructions.misc.SubSection
 
 class WInstrToString {
 

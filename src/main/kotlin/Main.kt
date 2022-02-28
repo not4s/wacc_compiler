@@ -2,17 +2,8 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import ast.ProgramAST
 import codegen.ProgramVisitor
-<<<<<<< HEAD
-import instructions.misc.BlankLine
-import instructions.misc.Label
-import instructions.misc.Section
-=======
 import codegen.WInstrToString.Companion.translateInstructions
-import instructions.aux.BlankLine
-import instructions.aux.DataDeclaration
-import instructions.aux.Label
-import instructions.aux.Section
->>>>>>> origin/dataDeclaration
+import instructions.misc.DataDeclaration
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import semantic.ASTProducer
