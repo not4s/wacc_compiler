@@ -16,7 +16,7 @@ class Declaration(
     override val st: SymbolTable,
     decType: WAny,
     val identifier: String,
-    private val rhs: RHS,
+    val rhs: RHS,
     parserCtx: ParserRuleContext,
 ) : Stat {
 

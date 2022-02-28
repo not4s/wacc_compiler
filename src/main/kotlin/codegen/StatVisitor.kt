@@ -1,9 +1,12 @@
 package codegen
 
 import ast.Stat
+import ast.statement.Declaration
 import ast.statement.ExitStat
+import ast.statement.JoinStat
 import ast.statement.SkipStat
 import instructions.WInstruction
+import instructions.misc.Immediate
 import instructions.misc.Operand2
 import instructions.misc.Register
 import instructions.operations.B
@@ -18,6 +21,8 @@ class StatVisitor : ASTVisitor<Stat> {
         return when (ctx) {
             is SkipStat -> listOf()
             is ExitStat -> visitExitStat(ctx)
+            is Declaration -> visitDeclarationStat(ctx)
+            is JoinStat -> visit(ctx.first).plus(visit(ctx.second))
             else -> TODO("Not yet implemented")
         }
     }
@@ -29,10 +34,22 @@ class StatVisitor : ASTVisitor<Stat> {
         val ldrDestReg = registerProvider.get()
         return evaluationCode.plus(
             listOf(
-                LDR(ldrDestReg, exitCode),
+                when (exitCode) {
+                    is Immediate -> LDR(ldrDestReg, exitCode)
+                    is Register -> MOV(ldrDestReg, exitCode)
+                    else -> TODO("Not yet implemented")
+                },
                 MOV(Register.resultRegister(), ldrDestReg),
                 B("exit", B.Condition.L)
             )
         )
     }
+
+}
+
+private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
+    // Visit RHS, result will be stored in r4.
+    return RHSVisitor().visit(ctx.rhs).plus(
+        ctx.st.asmAssign(ctx.identifier, Register("r4"))
+    )
 }
