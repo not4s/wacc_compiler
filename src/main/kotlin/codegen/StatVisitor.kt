@@ -4,6 +4,7 @@ import ast.Stat
 import ast.statement.ExitStat
 import ast.statement.SkipStat
 import instructions.WInstruction
+import instructions.misc.DataDeclaration
 import instructions.misc.Operand2
 import instructions.misc.Register
 import instructions.operations.B
@@ -14,17 +15,9 @@ class StatVisitor : ASTVisitor<Stat> {
 
     private val registerProvider = RegisterProvider()
 
-    override fun visit(ctx: Stat): List<WInstruction> {
-        return when (ctx) {
-            is SkipStat -> listOf()
-            is ExitStat -> visitExitStat(ctx)
-            else -> TODO("Not yet implemented")
-        }
-    }
-
-    private fun visitExitStat(ctx: ExitStat): List<WInstruction> {
+    private fun visitExitStat(ctx: ExitStat, data: DataDeclaration): List<WInstruction> {
         val exprVisitor = ExprVisitor(registerProvider)
-        val evaluationCode = exprVisitor.visit(ctx.expr)
+        val evaluationCode = exprVisitor.visit(ctx.expr, data)
         val exitCode: Operand2 = exprVisitor.resultStored ?: throw Exception("Unhandled res")
         val ldrDestReg = registerProvider.get()
         return evaluationCode.plus(
@@ -34,5 +27,13 @@ class StatVisitor : ASTVisitor<Stat> {
                 B("exit", B.Condition.L)
             )
         )
+    }
+
+    override fun visit(ctx: Stat, data: DataDeclaration): List<WInstruction> {
+        return when (ctx) {
+            is SkipStat -> listOf()
+            is ExitStat -> visitExitStat(ctx, data)
+            else -> TODO("Not yet implemented")
+        }
     }
 }

@@ -2,9 +2,17 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import ast.ProgramAST
 import codegen.ProgramVisitor
+<<<<<<< HEAD
 import instructions.misc.BlankLine
 import instructions.misc.Label
 import instructions.misc.Section
+=======
+import codegen.WInstrToString.Companion.translateInstructions
+import instructions.aux.BlankLine
+import instructions.aux.DataDeclaration
+import instructions.aux.Label
+import instructions.aux.Section
+>>>>>>> origin/dataDeclaration
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import semantic.ASTProducer
@@ -41,9 +49,7 @@ fun main(args: Array<String>) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
-    val instructions = ProgramVisitor().visit(ast)
+    val instructions = ProgramVisitor().visit(ast, DataDeclaration())
 
-    println(instructions.joinToString("\n") {
-        "\t" + if (it is BlankLine) "" else (if (it is Section || it is Label) "$it" else "\t$it")
-    } + "\n\t")
+    println(translateInstructions(instructions))
 }
