@@ -7,19 +7,15 @@ class DataDeclaration {
     private var noNameMsgCounter: Int = 0
     private val declarations = mutableMapOf<String, String>()
 
-    fun addDeclaration(name: String, literal: String) : String {
+    fun addDeclaration(literal: String) : String {
         return if (declarations.values.contains(literal)) {
             // find the key corresponding to the value of the literal
             getSymbolFromLiteral(literal)
         } else {
-            declarations[name] = literal
-            name
+            val key = "msg_${noNameMsgCounter++}"
+            declarations[key] = literal
+            key
         }
-    }
-
-    fun addDeclaration(literal: String) : String {
-        val key = "msg_${noNameMsgCounter++}"
-        return addDeclaration(key, literal)
     }
 
     fun isEmpty(): Boolean {
