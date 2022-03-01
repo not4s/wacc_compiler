@@ -37,7 +37,7 @@ class ProgramVisitor(
                 )
             )
 
-        return data.getInstructions()
+        return (data.takeUnless { it.isEmpty() }?.getInstructions() ?: listOf())
             .plus(programInitialisation)
             .plus(program)
             .plus(funcPool.flatten())

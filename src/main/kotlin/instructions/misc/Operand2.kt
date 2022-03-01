@@ -20,6 +20,12 @@ data class Immediate(val value: Int) : Operand2 {
     fun asLoadable(): LoadImmediate = LoadImmediate(value)
 }
 
+data class shiftedRegister(val reg: Register, val value: Int): Operand2 {
+    override fun toString(): String {
+        return "$reg, #$value"
+    }   
+}
+
 data class LabelReference(val name: String) : Loadable {
 
     constructor(literal: String, data: DataDeclaration) : this(data.getSymbolFromLiteral(literal))

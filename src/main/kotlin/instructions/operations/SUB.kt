@@ -10,11 +10,11 @@ data class SUB(
     val rhs: Operand2
 ) : WInstruction {
 
-    private var flagsSet: Boolean = false
+    var flagSet: Boolean = false
 
     override fun toString(): String {
         val sb = "SUB"
-        if (flagsSet) sb.plus("S")
+        if (flagSet) sb.plus("S")
         return "$sb $rDest, $lhs, $rhs"
     }
 }
