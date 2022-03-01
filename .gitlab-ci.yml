@@ -32,7 +32,7 @@ symbol-table-test:
   script:
     - mvn test -Dtest=ParentRefSymbolTableTest
 
-front-end-tests:
+.front-end-tests:
   stage: front-end
   script:
     - cd wacc_test
