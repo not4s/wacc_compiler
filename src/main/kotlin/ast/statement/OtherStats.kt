@@ -10,7 +10,7 @@ import symbolTable.SymbolTable
  **/
 class PrintStat(
     override val st: SymbolTable,
-    private val newlineAfter: Boolean,
+    val newlineAfter: Boolean,
     val expr: Expr
 ) : Stat {
     override fun toString(): String {

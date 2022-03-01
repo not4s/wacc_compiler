@@ -1,28 +1,39 @@
 package codegen
 
 import ast.ProgramAST
+import instructions.WInstruction
+import instructions.misc.*
 import instructions.operations.LDR
 import instructions.operations.POP
 import instructions.operations.PUSH
-import instructions.WInstruction
-import instructions.misc.*
 
-class ProgramVisitor : ASTVisitor<ProgramAST> {
+class ProgramVisitor(
+    val data: DataDeclaration,
+    private val funcPool: MutableList<List<WInstruction>> = mutableListOf()
+) : ASTVisitor<ProgramAST> {
 
     override fun visit(ctx: ProgramAST): List<WInstruction> {
-        return listOf(
+        val programInitialisation = listOf(
             Section(".text"),
             BlankLine(),
             Section(".global", "main"),
             Label("main")
-        ).plus(
-            PUSH(Register.linkRegister())
-        ).plus(
-            StatVisitor().visit(ctx.body)
-        ).plus(listOf(
-            LDR(Register("r0"), Immediate(0)),
-            POP(Register.programCounter()),
-            LTORG()
-        ))
+        )
+
+        val program = listOf(PUSH(Register.linkRegister()))
+            .plus(
+                StatVisitor(data, funcPool).visit(ctx.body)
+            ).plus(
+                listOf(
+                    LDR(Register("r0"), LoadImmediate(0)),
+                    POP(Register.programCounter()),
+                    LTORG()
+                )
+            )
+
+        return data.getInstructions()
+            .plus(programInitialisation)
+            .plus(program)
+            .plus(funcPool.flatten())
     }
 }

@@ -3,11 +3,15 @@ package codegen
 import ast.Expr
 import ast.Literal
 import instructions.WInstruction
+import instructions.misc.DataDeclaration
 import instructions.misc.Immediate
+import instructions.misc.LoadImmediate
 import instructions.misc.Operand2
 import waccType.WInt
 
-class ExprVisitor(registerProvider: RegisterProvider) : ASTVisitor<Expr> {
+class ExprVisitor(
+    val registerProvider: RegisterProvider
+) : ASTVisitor<Expr> {
 
     var resultStored: Operand2? = null
 

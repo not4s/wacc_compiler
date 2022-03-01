@@ -1,12 +1,8 @@
 package instructions.operations
 
 import instructions.WInstruction
+import instructions.misc.Loadable
 import instructions.misc.Register
-
-/**
- * Indicator that the operand can be the field of LDR source
- */
-interface Loadable
 
 data class LDR(
     val rDest: Register,

@@ -193,14 +193,14 @@ invalid/syntaxErr/while:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/syntaxErr/while/*.wacc"
 
-valid/advanced:
+.valid/advanced:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/advanced/*.wacc"
 
-valid/array:
+.valid/array:
   stage: front-end
   interruptible: true
   script:
@@ -221,105 +221,105 @@ valid/basic/skip:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/basic/skip/*.wacc"
 
-valid/expressions:
+.valid/expressions:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/expressions/*.wacc"
 
-valid/function/nested_functions:
+.valid/function/nested_functions:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/function/nested_functions/*.wacc"
 
-valid/function/simple_functions:
+.valid/function/simple_functions:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/function/simple_functions/*.wacc"
 
-valid/if:
+.valid/if:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/if/*.wacc"
 
-valid/IO/print:
+.valid/IO/print:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/IO/print/*.wacc"
 
-valid/IO/read:
+.valid/IO/read:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/IO/read/*.wacc"
 
-valid/pairs:
+.valid/pairs:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/pairs/*.wacc"
 
-valid/runtimeErr/arrayOutOfBounds:
+.valid/runtimeErr/arrayOutOfBounds:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/runtimeErr/arrayOutOfBounds/*.wacc"
 
-valid/runtimeErr/divideByZero:
+.valid/runtimeErr/divideByZero:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/runtimeErr/divideByZero/*.wacc"
 
-valid/runtimeErr/integerOverflow:
+.valid/runtimeErr/integerOverflow:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/runtimeErr/integerOverflow/*.wacc"
 
-valid/runtimeErr/nullDereference:
+.valid/runtimeErr/nullDereference:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/runtimeErr/nullDereference/*.wacc"
 
-valid/scope:
+.valid/scope:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/scope/*.wacc"
 
-valid/sequence:
+.valid/sequence:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/sequence/*.wacc"
 
-valid/variables:
+.valid/variables:
   stage: front-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testDir.sh "sample_programs/valid/variables/*.wacc"
 
-valid/while:
+.valid/while:
   stage: front-end
   interruptible: true
   script:
@@ -332,8 +332,7 @@ valid/while:
   stage: back-end
   interruptible: true
   script:
-    - cd compiled_code
-    - arm-linux-gnueabi-gcc -o compiled_code/if2 -mcpu=arm1176jzf-s -mtune=arm1176jzf-s compiled_code/if2.s
+    - cd wacc_test
     - ./testOutputDir.sh "sample_programs/invalid/semanticErr/array/*.wacc"
 
 .invalid/semanticErr/exit:
