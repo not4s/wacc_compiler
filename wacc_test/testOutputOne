@@ -66,7 +66,11 @@ def compareOutput() -> str:
 
     # Close our process, save exit code returned
     pid = stream.close()
-    wacc_exit_code = os.WEXITSTATUS(pid)
+    # pid is None if exited normally (code = 0)
+    if pid is None:
+        wacc_exit_code = 0
+    else:
+        wacc_exit_code = os.WEXITSTATUS(pid)
 
     # compare output from refCompile to output from program; go into refCompile's directory
     prevDirectory = goToWaccTestDir()
