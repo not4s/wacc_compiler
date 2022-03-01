@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, argparse, re
+import os, sys, argparse, re, subprocess
 import difflib as dl
 
 REFCOMPILER_OUTPUT = "-x"
@@ -58,19 +58,12 @@ def extractGoodStuffFromRefCompile(refCompileOutput: str):
 # check that the output from the program is the same
 def compareOutput() -> str:
     # emulate WACC assembly code
-    stream = os.popen(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s")
-    stream = os.popen(f"qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}")
+    subprocess.run(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s", shell=True)
+    sp = subprocess.run(f"qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
 
     # get output from program
-    wacc_emulated_output = stream.read()
-
-    # Close our process, save exit code returned
-    pid = stream.close()
-    # pid is None if exited normally (code = 0)
-    if pid is None:
-        wacc_exit_code = 0
-    else:
-        wacc_exit_code = os.WEXITSTATUS(pid)
+    wacc_emulated_output = str(sp.stdout)
+    wacc_exit_code = sp.returncode
 
     # compare output from refCompile to output from program; go into refCompile's directory
     prevDirectory = goToWaccTestDir()
