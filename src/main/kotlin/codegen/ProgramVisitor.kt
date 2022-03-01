@@ -9,7 +9,7 @@ import instructions.operations.*
 
 class ProgramVisitor(
     val data: DataDeclaration,
-    private val funcPool: MutableList<List<WInstruction>> = mutableListOf(),
+    private val funcPool: FunctionPool = FunctionPool(),
 ) : ASTVisitor<ProgramAST> {
 
     override fun visit(ctx: ProgramAST): List<WInstruction> {

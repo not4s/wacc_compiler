@@ -118,19 +118,15 @@ path_to_assembly = path[:-len(test_name)-len(".wacc")]
 # change directory to WACC_06/
 os.chdir("..")
 
-# get assembly from WACC compiler
-# check if the test has already been compiled
-# if it hasn't compile it and read the file
-if not os.path.isfile(f"{COMPILED_CODE_DIR}/{path[:-len('.wacc')]}.s"):
-    errCode = os.system(f"./compile wacc_test/{path} -d")
-    # if the error code is because of an invalid program compilation
-    if (errCode >> 8 in [100, 200]):
-        os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
-        sys.exit(0)
-    # if the error code is not a pass
-    elif (errCode >> 8 != 0):
-        os.system(f"echo \"{red}FAIL {path}{clear} Erroneous exception in running Main.kt\"")
-        sys.exit(errCode >> 8)
+errCode = os.system(f"./compile wacc_test/{path} -d")
+# if the error code is because of an invalid program compilation
+if (errCode >> 8 in [100, 200]):
+    os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
+    sys.exit(0)
+# if the error code is not a pass
+elif (errCode >> 8 != 0):
+    os.system(f"echo \"{red}FAIL {path}{clear} Erroneous exception in running Main.kt\"")
+    sys.exit(errCode >> 8)
 
 # change directory to directory with .s file
 getToTestDir(path_to_assembly)
