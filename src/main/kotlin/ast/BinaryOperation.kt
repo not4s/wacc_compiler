@@ -12,7 +12,7 @@ class BinaryOperation(
     override val st: SymbolTable,
     private val left: Expr,
     private val right: Expr,
-    private val op: BinOperator,
+    val op: BinOperator,
 ) : Expr {
 
     override fun toString(): String {

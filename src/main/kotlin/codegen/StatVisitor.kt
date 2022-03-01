@@ -7,9 +7,7 @@ import ast.statement.PrintStat
 import ast.statement.SkipStat
 import instructions.WInstruction
 import instructions.misc.*
-import instructions.operations.B
-import instructions.operations.LDR
-import instructions.operations.MOV
+import instructions.operations.*
 import waccType.WStr
 
 class StatVisitor(
@@ -32,7 +30,7 @@ class StatVisitor(
             listOf(
                 LDR(ldrDestReg, exitCodeLoadable),
                 MOV(Register.resultRegister(), ldrDestReg),
-                B("exit", B.Condition.L)
+                B("exit", false, B.Condition.L)
             )
         )
     }
@@ -61,10 +59,10 @@ class StatVisitor(
         return listOf(
             LDR(ldrDestReg, LabelReference(literal, data)),
             MOV(Register.resultRegister(), ldrDestReg),
-            B(P_PRINT_STRING, B.Condition.L)
+            B(P_PRINT_STRING, false, B.Condition.L)
         ).apply {
             if (ctx.newlineAfter) {
-                return this.plus(B(P_PRINT_LN, B.Condition.L))
+                return this.plus(B(P_PRINT_LN, false, B.Condition.L))
             }
         }
     }

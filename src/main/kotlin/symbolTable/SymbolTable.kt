@@ -1,21 +1,31 @@
 package symbolTable
 
+import instructions.WInstruction
+import instructions.misc.ImmediateOffset
+import instructions.misc.Register
+import instructions.operations.STR
 import utils.SemanticErrorMessageBuilder
-import waccType.WAny
 import utils.SemanticException
-import waccType.WInt
+import waccType.*
 
 abstract class SymbolTable(
-    var isGlobal : Boolean,
+    var isGlobal: Boolean,
     val srcFilePath: String
 ) {
     abstract fun get(symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder): WAny
 
-    abstract fun get(arrSym: String, indices: Array<WInt>, errorMessageBuilder: SemanticErrorMessageBuilder): WAny
+    abstract fun get(
+        arrSym: String,
+        indices: Array<WInt>,
+        errorMessageBuilder: SemanticErrorMessageBuilder,
+    ): WAny
 
-    abstract fun getMap() : Map<String, WAny>
+    abstract fun getMap(): Map<String, WAny>
 
-    inline fun <reified T : WAny> getAndCast(symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder) : T {
+    inline fun <reified T : WAny> getAndCast(
+        symbol: String,
+        errorMessageBuilder: SemanticErrorMessageBuilder,
+    ): T {
         val value = this.get(symbol, errorMessageBuilder)
         if (value is T) {
             return value
@@ -24,22 +34,62 @@ abstract class SymbolTable(
         }
     }
 
-    abstract fun declare(symbol: String, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder)
+    abstract fun declare(
+        symbol: String,
+        value: WAny,
+        errorMessageBuilder: SemanticErrorMessageBuilder,
+    )
 
     /**
      * Reassignment for base types
      */
-    abstract fun reassign(symbol: String, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder)
+    abstract fun reassign(
+        symbol: String,
+        value: WAny,
+        errorMessageBuilder: SemanticErrorMessageBuilder,
+    )
 
     /**
      * Reassignment for arrays
      */
-    abstract fun reassign(arrSym: String, indices: Array<WInt>, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder)
+    abstract fun reassign(
+        arrSym: String,
+        indices: Array<WInt>,
+        value: WAny,
+        errorMessageBuilder: SemanticErrorMessageBuilder,
+    )
 
     /**
      * Reassignment for pairs
      */
-    abstract fun reassign(pairSym: String, fst: Boolean, value: WAny, errorMessageBuilder: SemanticErrorMessageBuilder)
+    abstract fun reassign(
+        pairSym: String,
+        fst: Boolean,
+        value: WAny,
+        errorMessageBuilder: SemanticErrorMessageBuilder,
+    )
 
     abstract fun createChildScope(): SymbolTable
+
+    fun typeToByteSize(value: WAny): Int {
+        // Bools, chars are 1 byte
+        // Ints, string pointers, array pointers are 4
+        // Pairs are 2 pointers, 8 bytes.
+        return when (value) {
+            is WBool, is WChar -> 1
+            is WInt, is WStr, is WArray -> 4
+            is WPair, is IncompleteWPair -> 8
+            else -> 0
+        }
+    }
+
+    val totalByteSize: Int
+        get() {
+            return getMap().values.sumOf { typeToByteSize(it) }
+        }
+
+    // Get the instruction to assign this variable. Must have already been declared (ie. existing in map) during first pass.
+    abstract fun asmAssign(symbol: String, fromRegister: Register): List<WInstruction>
+
+    abstract fun asmGet(symbol: String, toRegister: Register): List<WInstruction>
 }

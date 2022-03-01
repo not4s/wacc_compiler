@@ -25,9 +25,9 @@ fun pPrintString(data: DataDeclaration): List<WInstruction> {
         ADD(Register(2), Register.resultRegister(), Immediate(WORD_SIZE)),
         LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_STRING, data)),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
-        B(PRINTF, B.Condition.L),
+        B(PRINTF, false, B.Condition.L),
         MOV(Register.resultRegister(), Immediate(0)),
-        B(FFLUSH, B.Condition.L),
+        B(FFLUSH, false, B.Condition.L),
         POP(Register.programCounter())
     )
 }
@@ -38,9 +38,9 @@ fun pPrintLn(data: DataDeclaration): List<WInstruction> {
         PUSH(Register.linkRegister()),
         LDR(Register.resultRegister(), LabelReference(NULL_CHAR, data)),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
-        B(PUTS, B.Condition.L),
+        B(PUTS, false, B.Condition.L),
         MOV(Register.resultRegister(), Immediate(0)),
-        B(FFLUSH, B.Condition.L),
+        B(FFLUSH, false, B.Condition.L),
         POP(Register.programCounter())
     )
 }
