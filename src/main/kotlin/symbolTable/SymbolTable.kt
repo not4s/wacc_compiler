@@ -1,16 +1,14 @@
 package symbolTable
 
 import instructions.WInstruction
-import instructions.misc.ImmediateOffset
 import instructions.misc.Register
-import instructions.operations.STR
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
 
 abstract class SymbolTable(
     var isGlobal: Boolean,
-    val srcFilePath: String
+    val srcFilePath: String,
 ) {
     abstract fun get(symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder): WAny
 
@@ -90,6 +88,15 @@ abstract class SymbolTable(
 
     // Get the instruction to assign this variable. Must have already been declared (ie. existing in map) during first pass.
     abstract fun asmAssign(symbol: String, fromRegister: Register): List<WInstruction>
+    abstract fun asmAssign(
+        arrSym: String,
+        indices: Array<WInt>, fromRegister: Register,
+    ): List<WInstruction>
+
+    abstract fun asmAssign(
+        pairSym: String,
+        fst: Boolean, fromRegister: Register,
+    ): List<WInstruction>
 
     abstract fun asmGet(symbol: String, toRegister: Register): List<WInstruction>
 }

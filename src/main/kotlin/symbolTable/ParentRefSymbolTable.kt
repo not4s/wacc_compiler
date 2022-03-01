@@ -161,6 +161,22 @@ class ParentRefSymbolTable(
         }
     }
 
+    override fun asmAssign(
+        arrSym: String,
+        indices: Array<WInt>,
+        fromRegister: Register,
+    ): List<WInstruction> {
+        TODO("Not yet implemented")
+    }
+
+    override fun asmAssign(
+        pairSym: String,
+        fst: Boolean,
+        fromRegister: Register,
+    ): List<WInstruction> {
+        TODO("Not yet implemented")
+    }
+
     override fun asmGet(symbol: String, toRegister: Register): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
         var offset = 0
@@ -172,7 +188,7 @@ class ParentRefSymbolTable(
                 }
             }
             return listOf(
-                LDR(Register("r4"),
+                LDR(toRegister,
                     ImmediateOffset(Register.stackPointer(), totalByteSize - offset))
             )
         } else {

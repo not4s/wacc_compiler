@@ -9,6 +9,7 @@ import instructions.operations.LDR
 import waccType.WBool
 import waccType.WInt
 
+// Stores visiting result in Register.resultRegister.
 class RHSVisitor : ASTVisitor<RHS> {
     // Stores result of visiting in R4.
     override fun visit(ctx: RHS): List<WInstruction> {
@@ -20,8 +21,8 @@ class RHSVisitor : ASTVisitor<RHS> {
 
     private fun visitLiteral(ctx: Literal): List<WInstruction> {
         return when (ctx.type) {
-            is WInt -> listOf(LDR(Register("r4"), LoadImmediate(ctx.type.value!!)))
-            is WBool -> listOf(LDR(Register("r4"), LoadImmediate(
+            is WInt -> listOf(LDR(Register.resultRegister(), LoadImmediate(ctx.type.value!!)))
+            is WBool -> listOf(LDR(Register.resultRegister(), LoadImmediate(
                 if (ctx.type.value!!) {
                     1
                 } else 0)))

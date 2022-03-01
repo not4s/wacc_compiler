@@ -1,7 +1,6 @@
 package codegen
 
-import ast.Literal
-import ast.Stat
+import ast.*
 import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
@@ -22,6 +21,7 @@ class StatVisitor(
             is SkipStat -> listOf()
             is ExitStat -> visitExitStat(ctx)
             is Declaration -> visitDeclarationStat(ctx)
+            is Assignment -> visitAssignStat(ctx)
             is JoinStat -> visit(ctx.first).plus(visit(ctx.second))
             is PrintStat -> visitPrintStat(ctx)
             else -> TODO("Not yet implemented")
@@ -88,11 +88,23 @@ class StatVisitor(
     }
 
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
-        // Visit RHS, result will be stored in r4.
+        // Visit RHS. Result should be in resultStored register.
         return RHSVisitor().visit(ctx.rhs).plus(
-            ctx.st.asmAssign(ctx.identifier, Register("r4"))
+            ctx.st.asmAssign(ctx.identifier, Register.resultRegister())
         )
     }
+    private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
+        // Visit RHS. Result should be in resultStored register.
+        return RHSVisitor().visit(ctx.rhs).plus(
+            when (ctx.lhs) {
+                is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister())
+                is ArrayElement -> TODO("Array elements assignments not yet implemented")
+                is PairElement -> TODO("Pair elements assignments not yet implemented")
+                else -> throw Exception("An LHS is not one of the three possible ones...what?")
+            }
+        )
+    }
+
 
 }
 
