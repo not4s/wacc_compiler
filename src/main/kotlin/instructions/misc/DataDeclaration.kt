@@ -10,7 +10,7 @@ class DataDeclaration {
     fun addDeclaration(name: String, literal: String) : String {
         return if (declarations.values.contains(literal)) {
             // find the key corresponding to the value of the literal
-            declarations.filter { literal == it.value }.keys.first()
+            getSymbolFromLiteral(literal)
         } else {
             declarations[name] = literal
             name
