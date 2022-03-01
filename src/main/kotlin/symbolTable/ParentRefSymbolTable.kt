@@ -3,7 +3,6 @@ package symbolTable
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
 import instructions.misc.ImmediateOffset
-import instructions.misc.LabelReference
 import instructions.misc.Register
 import instructions.operations.LDR
 import instructions.operations.STR
@@ -185,16 +184,20 @@ class ParentRefSymbolTable(
     override fun asmGet(symbol: String, toRegister: Register): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
         var offset = 0
+        var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
                 offset += typeToByteSize(v)
                 if (k == symbol) {
+                    isSmall = v is WBool || v is WChar
                     break
                 }
             }
             return listOf(
                 LDR(toRegister,
-                    ImmediateOffset(Register.stackPointer(), totalByteSize - offset))
+                    ImmediateOffset(Register.stackPointer(),
+                        totalByteSize - offset),
+                    isSignedByte = isSmall)
             )
         } else {
             return parentTable?.asmGet(symbol, toRegister)!!

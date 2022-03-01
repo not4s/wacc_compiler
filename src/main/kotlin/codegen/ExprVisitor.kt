@@ -2,42 +2,48 @@ package codegen
 
 import ast.*
 import instructions.WInstruction
-import instructions.misc.Immediate
-import instructions.misc.Operand2
-import instructions.misc.Register
-import instructions.misc.shiftedRegister
+import instructions.misc.*
 import instructions.operations.*
-import waccType.WInt
 
 class ExprVisitor(
-    private val registerProvider: RegisterProvider
+    val data: DataDeclaration,
+    private val registerProvider: RegisterProvider,
 ) : ASTVisitor<Expr> {
 
     var resultStored: Operand2? = null
 
     override fun visit(ctx: Expr): List<WInstruction> {
         return when (ctx) {
-            is Literal -> when (ctx.type) {
-                is WInt -> {
-                    val exitCode = ctx.type.value ?: throw Exception("Exit code not found")
-                    resultStored = Immediate(exitCode)
-                    listOf()
-                }
-                else -> throw Exception("Somehow not an int exit")
+            is Literal -> {
+                // Delegate to RHS visitor of literals
+                resultStored = Register.resultRegister()
+                RHSVisitor(data, registerProvider).visit(ctx)
             }
+
             is IdentifierGet -> {
-                val reg = registerProvider.get()
-                resultStored = reg
-                ctx.st.asmGet(ctx.identifier, reg)
+                resultStored = Register.resultRegister()
+                ctx.st.asmGet(ctx.identifier, Register.resultRegister())
             }
             is BinaryOperation -> {
-                val instr = mutableListOf<WInstruction>()
-                val reg = registerProvider.get()
-                val nextReg = Register("r${(reg.rName.substring(1).toInt() + 1)}")
+                var reg1 = registerProvider.get()
+                var reg2 = registerProvider.get()
 
-                val reg1 = reg
-                val reg2 = nextReg
+                val instr =
+                    // Evaluate left, result will be in R0.
+                    visit(ctx.left)
+                        .plus(MOV(reg1, Register("r0")))
+                        // Eval right
+                        .plus(visit(ctx.right))
+                        .plus(MOV(reg2, Register("r0")))
+                        // Move to scratch registers
+                        .plus(MOV(Register("r0"), reg1))
+                        .plus(MOV(Register("r1"), reg2))
+                registerProvider.ret()
+                registerProvider.ret()
+                resultStored = Register.resultRegister()
 
+                reg1 = Register("r0")
+                reg2 = Register("r1")
                 when (ctx.op) {
 
                     BinOperator.MUL ->

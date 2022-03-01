@@ -1,5 +1,6 @@
 package codegen
 
+import ast.Expr
 import ast.Literal
 import ast.RHS
 import instructions.WInstruction
@@ -12,11 +13,11 @@ import waccType.WInt
 import waccType.WStr
 
 // Stores visiting result in Register.resultRegister.
-class RHSVisitor(val data: DataDeclaration) : ASTVisitor<RHS> {
-    // Stores result of visiting in R4.
+class RHSVisitor(val data: DataDeclaration, val rp: RegisterProvider) : ASTVisitor<RHS> {
     override fun visit(ctx: RHS): List<WInstruction> {
         return when (ctx) {
             is Literal -> visitLiteral(ctx)
+            is Expr -> ExprVisitor(data, rp).visit(ctx)
             else -> TODO("Not yet implemented")
         }
     }
