@@ -10,6 +10,7 @@ const val P_PRINT_BOOL = "p_print_bool"
 const val P_PRINT_INT = "p_print_int"
 const val PRINTF = "printf"
 const val FFLUSH = "fflush"
+const val PUTCHAR = "putchar"
 const val PUTS = "puts"
 
 const val NULL_CHAR = "\\0"

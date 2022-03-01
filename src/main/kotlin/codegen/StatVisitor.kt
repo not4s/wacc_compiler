@@ -4,9 +4,12 @@ import ast.*
 import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
-import instructions.operations.*
+import instructions.operations.B
+import instructions.operations.LDR
+import instructions.operations.MOV
 import utils.btoi
 import waccType.WBool
+import waccType.WChar
 import waccType.WInt
 import waccType.WStr
 
@@ -45,7 +48,7 @@ class StatVisitor(
         val printFun: String
         val ldrDestReg = registerProvider.get()
         val firstArgInitInstruction: WInstruction
-        var evalExprInstructions : List<WInstruction> = listOf()
+        var evalExprInstructions: List<WInstruction> = listOf()
 
         // Add general type things
         when (ctx.expr.type) {
@@ -65,6 +68,9 @@ class StatVisitor(
                 data.addDeclaration(NULL_TERMINAL_INT)
                 funcPool.add(pPrintInt(data))
             }
+            is WChar -> {
+                printFun = PUTCHAR
+            }
             else -> TODO("Not yet implemented")
         }
 
@@ -78,11 +84,15 @@ class StatVisitor(
                 }
                 is WBool -> {
                     literal = ctx.expr.type.value.toString() + NULL_CHAR
-                    firstArgInitInstruction = MOV(ldrDestReg, Immediate(btoi(literal == LITERAL_TRUE)))
+                    firstArgInitInstruction =
+                        MOV(ldrDestReg, Immediate(btoi(literal == LITERAL_TRUE)))
                 }
                 is WInt -> {
                     literal = ctx.expr.type.value.toString()
                     firstArgInitInstruction = MOV(ldrDestReg, Immediate(literal.toInt()))
+                }
+                is WChar -> {
+                    firstArgInitInstruction = MOV(ldrDestReg, ImmediateChar(ctx.expr.type.value!!))
                 }
                 else -> TODO("Non-String literals are not supported. They will require things like %s %d etc")
             }
@@ -91,7 +101,7 @@ class StatVisitor(
             evalExprInstructions = exprVisitor.visit(ctx.expr)
             firstArgInitInstruction = MOV(ldrDestReg, exprVisitor.resultStored!!)
         }
-        
+
         if (ctx.newlineAfter) {
             data.addDeclaration(NULL_CHAR)
             funcPool.add(pPrintLn(data))
@@ -114,6 +124,7 @@ class StatVisitor(
             ctx.st.asmAssign(ctx.identifier, Register.resultRegister())
         )
     }
+
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
         return RHSVisitor().visit(ctx.rhs).plus(

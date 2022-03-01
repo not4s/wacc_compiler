@@ -20,6 +20,12 @@ data class Immediate(val value: Int) : Operand2 {
     fun asLoadable(): LoadImmediate = LoadImmediate(value)
 }
 
+data class ImmediateChar(val value: Char) : Operand2 {
+    override fun toString(): String {
+        return "#'$value'"
+    }
+}
+
 data class shiftedRegister(val reg: Register, val value: Int): Operand2 {
     override fun toString(): String {
         return "$reg, #$value"
