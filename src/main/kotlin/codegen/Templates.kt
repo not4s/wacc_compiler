@@ -11,9 +11,9 @@ const val FFLUSH = "fflush"
 const val PUTS = "puts"
 
 const val NULL_CHAR = "\\0"
-val ESCAPES: List<String> = listOf(NULL_CHAR, "\\b", "\\t", "\\n", "\\f", "\\r", "\\\"", "\\'", "\\\\")
-
 const val NULL_TERMINAL_STRING = "%.*s$NULL_CHAR"
+const val LITERAL_TRUE = "true$NULL_CHAR"
+const val LITERAL_FALSE = "false$NULL_CHAR"
 
 const val WORD_SIZE = 4
 
