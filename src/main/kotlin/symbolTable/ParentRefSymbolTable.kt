@@ -1,7 +1,9 @@
 package symbolTable
 
 import instructions.WInstruction
+import instructions.misc.DataDeclaration
 import instructions.misc.ImmediateOffset
+import instructions.misc.LabelReference
 import instructions.misc.Register
 import instructions.operations.LDR
 import instructions.operations.STR
@@ -139,15 +141,16 @@ class ParentRefSymbolTable(
     override fun asmAssign(
         symbol: String,
         fromRegister: Register,
+        data: DataDeclaration,
     ): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
         var offset = 0
-        var isBoolean = false
+        var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
                 offset += typeToByteSize(v)
                 if (k == symbol) {
-                    isBoolean = v is WBool
+                    isSmall = v is WBool || v is WChar
                     break
                 }
             }
@@ -155,10 +158,28 @@ class ParentRefSymbolTable(
                 STR(fromRegister,
                     Register.stackPointer(),
                     totalByteSize - offset,
-                    isSignedByte = isBoolean))
+                    isSignedByte = isSmall))
         } else {
-            return parentTable?.asmAssign(symbol, fromRegister)!!
+            return parentTable?.asmAssign(symbol, fromRegister, data)!!
         }
+    }
+
+    override fun asmAssign(
+        arrSym: String,
+        indices: Array<WInt>,
+        fromRegister: Register,
+        data: DataDeclaration,
+    ): List<WInstruction> {
+        TODO("Not yet implemented")
+    }
+
+    override fun asmAssign(
+        pairSym: String,
+        fst: Boolean,
+        fromRegister: Register,
+        data: DataDeclaration,
+    ): List<WInstruction> {
+        TODO("Not yet implemented")
     }
 
     override fun asmGet(symbol: String, toRegister: Register): List<WInstruction> {
@@ -172,11 +193,11 @@ class ParentRefSymbolTable(
                 }
             }
             return listOf(
-                LDR(Register("r4"),
+                LDR(toRegister,
                     ImmediateOffset(Register.stackPointer(), totalByteSize - offset))
             )
         } else {
-            return parentTable?.asmAssign(symbol, toRegister)!!
+            return parentTable?.asmGet(symbol, toRegister)!!
         }
     }
 

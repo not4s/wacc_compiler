@@ -205,7 +205,7 @@ class ASTProducer(
     }
 
     override fun visitLiteralChar(ctx: WACCParser.LiteralCharContext): Literal {
-        val value: Char = ctx.CHAR().text[1]
+        val value: Char = ctx.CHAR().text.dropLast(1).last()
         return Literal(st, WChar(value))
     }
 
