@@ -31,16 +31,9 @@ class StatVisitor(
     private fun visitExitStat(ctx: ExitStat): List<WInstruction> {
         val exprVisitor = ExprVisitor(registerProvider)
         val evaluationCode = exprVisitor.visit(ctx.expr)
-        val exitCodeLoadable: Loadable = when (val operand2 = exprVisitor.resultStored) {
-            is Loadable -> operand2
-            is Immediate -> operand2.asLoadable()
-            else -> throw Exception("Unknown Operand2 when visiting Exit Statement")
-        }
-        val ldrDestReg = registerProvider.get()
         return evaluationCode.plus(
             listOf(
-                LDR(ldrDestReg, exitCodeLoadable),
-                MOV(Register.resultRegister(), ldrDestReg),
+                MOV(Register.resultRegister(), exprVisitor.resultStored!!),
                 B("exit", link = true)
             )
         )
