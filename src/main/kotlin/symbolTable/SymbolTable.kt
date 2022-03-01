@@ -1,6 +1,7 @@
 package symbolTable
 
 import instructions.WInstruction
+import instructions.misc.DataDeclaration
 import instructions.misc.Register
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
@@ -87,15 +88,22 @@ abstract class SymbolTable(
         }
 
     // Get the instruction to assign this variable. Must have already been declared (ie. existing in map) during first pass.
-    abstract fun asmAssign(symbol: String, fromRegister: Register): List<WInstruction>
+    abstract fun asmAssign(
+        symbol: String,
+        fromRegister: Register,
+        data: DataDeclaration,
+    ): List<WInstruction>
+
     abstract fun asmAssign(
         arrSym: String,
         indices: Array<WInt>, fromRegister: Register,
+        data: DataDeclaration,
     ): List<WInstruction>
 
     abstract fun asmAssign(
         pairSym: String,
         fst: Boolean, fromRegister: Register,
+        data: DataDeclaration,
     ): List<WInstruction>
 
     abstract fun asmGet(symbol: String, toRegister: Register): List<WInstruction>

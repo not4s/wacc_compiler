@@ -120,16 +120,16 @@ class StatVisitor(
 
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor().visit(ctx.rhs).plus(
-            ctx.st.asmAssign(ctx.identifier, Register.resultRegister())
+        return RHSVisitor(data).visit(ctx.rhs).plus(
+            ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data)
         )
     }
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor().visit(ctx.rhs).plus(
+        return RHSVisitor(data).visit(ctx.rhs).plus(
             when (ctx.lhs) {
-                is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister())
+                is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister(), data)
                 is ArrayElement -> TODO("Array elements assignments not yet implemented")
                 is PairElement -> TODO("Pair elements assignments not yet implemented")
                 else -> throw Exception("An LHS is not one of the three possible ones...what?")

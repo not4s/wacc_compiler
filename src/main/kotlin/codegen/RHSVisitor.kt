@@ -3,17 +3,16 @@ package codegen
 import ast.Literal
 import ast.RHS
 import instructions.WInstruction
-import instructions.misc.ImmediateChar
-import instructions.misc.LoadImmediate
-import instructions.misc.Register
+import instructions.misc.*
 import instructions.operations.LDR
 import instructions.operations.MOV
 import waccType.WBool
 import waccType.WChar
 import waccType.WInt
+import waccType.WStr
 
 // Stores visiting result in Register.resultRegister.
-class RHSVisitor : ASTVisitor<RHS> {
+class RHSVisitor(val data: DataDeclaration) : ASTVisitor<RHS> {
     // Stores result of visiting in R4.
     override fun visit(ctx: RHS): List<WInstruction> {
         return when (ctx) {
@@ -30,6 +29,12 @@ class RHSVisitor : ASTVisitor<RHS> {
                     1
                 } else 0)))
             is WChar -> listOf(MOV(Register.resultRegister(), ImmediateChar(ctx.type.value!!)))
+            is WStr -> {
+                data.addDeclaration(ctx.type.value!!)
+                listOf(
+                    LDR(Register.resultRegister(), LabelReference(ctx.type.value, data)),
+                )
+            }
             else -> TODO("Not yet implemented")
         }
     }
