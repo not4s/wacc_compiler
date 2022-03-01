@@ -12,7 +12,7 @@ import waccType.WStr
 
 class StatVisitor(
     val data: DataDeclaration,
-    private val funcPool: MutableList<List<WInstruction>>,
+    private val funcPool: FunctionPool,
 ) : ASTVisitor<Stat> {
 
     val registerProvider = RegisterProvider()
@@ -23,6 +23,7 @@ class StatVisitor(
             is ExitStat -> visitExitStat(ctx)
             is Declaration -> visitDeclarationStat(ctx)
             is JoinStat -> visit(ctx.first).plus(visit(ctx.second))
+            is PrintStat -> visitPrintStat(ctx)
             else -> TODO("Not yet implemented")
         }
     }
