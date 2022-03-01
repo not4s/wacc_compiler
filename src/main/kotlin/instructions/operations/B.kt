@@ -4,14 +4,18 @@ import instructions.WInstruction
 
 data class B(
     val label: String,
+    var link: Boolean = false,
     val cond: Condition? = null
 ) : WInstruction {
 
     enum class Condition {
-        L, EQ
+        L, EQ, NE
     }
 
     override fun toString(): String {
-        return "B${cond ?: ""} $label"
+        var sb = "B"
+        if(link) sb += "L"
+        if(cond != null) sb += cond.name
+        return sb + " ${label}"
     }
 }

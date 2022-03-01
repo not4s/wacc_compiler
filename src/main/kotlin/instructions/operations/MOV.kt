@@ -11,10 +11,12 @@ data class MOV(
 ) : WInstruction {
 
     enum class Condition {
-        LT, LTE, EQ, GT, GTE, NE
+        LT, LE, EQ, GT, GE, NE
     }
 
     override fun toString(): String {
-        return "MOV${cond ?: ""} $rDest, $op2"
+        var condName = ""
+        if(cond != null) condName = cond.name
+        return "MOV${condName} $rDest, $op2"
     }
 }
