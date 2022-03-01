@@ -7,7 +7,7 @@ processed=0
 
 for f in $1
 do
-    ./testOutputOne -xa "$f"
+    ./testOutputOne -x "$f"
 
     if [[ $? != 0 ]]
     then

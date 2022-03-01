@@ -503,14 +503,14 @@ valid/basic/skip:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/array/*.wacc"
 
-.valid/basic/exit:
+valid/basic/exit:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/basic/exit/*.wacc"
 
-.valid/basic/skip:
+valid/basic/skip:
   stage: back-end
   interruptible: true
   script:
