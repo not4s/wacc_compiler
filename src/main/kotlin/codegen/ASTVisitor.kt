@@ -5,5 +5,5 @@ import instructions.WInstruction
 import instructions.misc.DataDeclaration
 
 interface ASTVisitor<T : AST> {
-    fun visit(ctx: T, data: DataDeclaration): List<WInstruction>
+    fun visit(ctx: T): List<WInstruction>
 }

@@ -5,14 +5,17 @@ import ast.Literal
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
 import instructions.misc.Immediate
+import instructions.misc.LoadImmediate
 import instructions.misc.Operand2
 import waccType.WInt
 
-class ExprVisitor(registerProvider: RegisterProvider) : ASTVisitor<Expr> {
+class ExprVisitor(
+    val registerProvider: RegisterProvider
+) : ASTVisitor<Expr> {
 
     var resultStored: Operand2? = null
 
-    override fun visit(ctx: Expr, data: DataDeclaration): List<WInstruction> {
+    override fun visit(ctx: Expr): List<WInstruction> {
         if (ctx is Literal) {
             when (ctx.type) {
                 is WInt -> {

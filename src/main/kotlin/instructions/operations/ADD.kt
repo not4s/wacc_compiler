@@ -14,10 +14,8 @@ data class ADD(
     var flagSet: Boolean = false
 
     override fun toString(): String {
-        val sb = "ADD"
-        if (flagSet) sb.plus("S")
-        sb.plus(" $rDest, $rSrc, $op2")
-        if (shiftVal != null) sb.plus(", LSL #$shiftVal")
-        return sb
+        val command = "ADD" + if (flagSet) "S" else ""
+        val shift = shiftVal?.let { ", LSL #$it" } ?: ""
+        return "$command $rDest, $rSrc, $op2$shift"
     }
 }

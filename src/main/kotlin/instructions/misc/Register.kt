@@ -2,6 +2,8 @@ package instructions.misc
 
 data class Register(val rName: String) : Operand2 {
 
+    constructor(num: Int) : this("r$num")
+
     override fun toString(): String {
         return when (rName) {
             "r13" -> "sp"
