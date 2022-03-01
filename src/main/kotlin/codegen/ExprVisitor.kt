@@ -1,9 +1,12 @@
 package codegen
 
 import ast.*
-import instructions.misc.*
-import instructions.operations.*
 import instructions.WInstruction
+import instructions.misc.Immediate
+import instructions.misc.Operand2
+import instructions.misc.Register
+import instructions.misc.shiftedRegister
+import instructions.operations.*
 import waccType.WInt
 
 class ExprVisitor(
@@ -30,7 +33,7 @@ class ExprVisitor(
             is BinaryOperation -> {
                 val instr = mutableListOf<WInstruction>()
                 val reg = registerProvider.get()
-                val nextReg = Register("r${(reg.rName.substring(1).toInt() + 1).toString()}")
+                val nextReg = Register("r${(reg.rName.substring(1).toInt() + 1)}")
 
                 val reg1 = reg
                 val reg2 = nextReg

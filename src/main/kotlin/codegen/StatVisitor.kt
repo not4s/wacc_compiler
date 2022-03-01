@@ -8,6 +8,8 @@ import ast.statement.SkipStat
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
+import utils.btoi
+import waccType.WBool
 import waccType.WStr
 
 class StatVisitor(
@@ -30,16 +32,30 @@ class StatVisitor(
             listOf(
                 LDR(ldrDestReg, exitCodeLoadable),
                 MOV(Register.resultRegister(), ldrDestReg),
-                B("exit", false, B.Condition.L)
+                B("exit", link = true)
             )
         )
     }
 
     private fun visitPrintStat(ctx: PrintStat): List<WInstruction> {
         val literal: String
+        val printFun: String
         if (ctx.expr is Literal) {
-            literal = when (ctx.expr.type) {
-                is WStr -> ctx.expr.type.value ?: throw Exception("Unspecified Literal string")
+            when (ctx.expr.type) {
+                is WStr -> {
+                    literal = ctx.expr.type.value ?: throw Exception("Unspecified Literal string")
+                    printFun = P_PRINT_STRING
+                    data.addDeclaration(literal)
+                    data.addDeclaration(NULL_TERMINAL_STRING)
+                    funcPool.add(pPrintString(data))
+                }
+                is WBool -> {
+                    literal = ctx.expr.type.value.toString() + NULL_CHAR
+                    printFun = P_PRINT_BOOL
+                    data.addDeclaration(LITERAL_TRUE)
+                    data.addDeclaration(LITERAL_FALSE)
+                    funcPool.add(pPrintBool(data))
+                }
                 else -> TODO("Non-String literals are not supported. They will require things like %s %d etc")
             }
         } else {
@@ -48,21 +64,23 @@ class StatVisitor(
             // val evaluatedExpr = exprVisitor.visit(ctx.expr, data)
             // val exitCode: Operand2 = exprVisitor.resultStored ?: throw Exception("Unhandled result")
         }
-        data.addDeclaration(literal)
-        data.addDeclaration(NULL_TERMINAL_STRING)
-        funcPool.add(pPrintString(data))
         if (ctx.newlineAfter) {
             data.addDeclaration(NULL_CHAR)
             funcPool.add(pPrintLn(data))
         }
         val ldrDestReg = registerProvider.get()
+        val firstArgInitInstruction: WInstruction = if (printFun == P_PRINT_BOOL) {
+            MOV(ldrDestReg, Immediate(btoi(literal == LITERAL_TRUE)))
+        } else {
+            LDR(ldrDestReg, LabelReference(literal, data))
+        }
         return listOf(
-            LDR(ldrDestReg, LabelReference(literal, data)),
+            firstArgInitInstruction,
             MOV(Register.resultRegister(), ldrDestReg),
-            B(P_PRINT_STRING, false, B.Condition.L)
+            B(printFun, link = true)
         ).apply {
             if (ctx.newlineAfter) {
-                return this.plus(B(P_PRINT_LN, false, B.Condition.L))
+                return this.plus(B(P_PRINT_LN, link = true))
             }
         }
     }

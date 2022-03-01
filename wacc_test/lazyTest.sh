@@ -8,6 +8,9 @@ make
 cd wacc_test
 
 case "$1" in
+  "-m")
+    cd ..
+    make;;
   ""|"-bf"|"-fb")
     ./testAll.sh
     ./testOutputAll.sh;;

@@ -15,6 +15,10 @@ class DataDeclaration {
         declarations["msg_${noNameMsgCounter++}"] = literal
     }
 
+    fun isEmpty(): Boolean {
+        return declarations.isEmpty()
+    }
+
     /**
      * Reverse operation of taking key by literal value.
      * TODO: Maybe reverse the map?
@@ -45,11 +49,14 @@ class DataDeclaration {
         return listOf(
             Label(name),
             SubSection(".word", "${escapeStringSize(value)}"),
-            SubSection(".ascii", " \"$value\""),
+            SubSection(".ascii", "$THREE_SPACES\"$value\""),
         )
     }
 
     companion object {
+
+        private const val THREE_SPACES = "   "
+
         private fun escapeStringSize(value: String): Int {
             var size = value.length
             if (value.contains("\\")) {
