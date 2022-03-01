@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, argparse
+import os, sys, argparse, re
 import difflib as dl
 
 REFCOMPILER_OUTPUT = "-x"
@@ -50,8 +50,10 @@ def getToTestDir(path: str) -> str:
     return currentDir
 
 # extracts the expected output from inbetween the ======= in the refCompiler
+# Also extract error code.
 def extractGoodStuffFromRefCompile(refCompileOutput: str):
-    return refCompileOutput.split(REFCOMPILER_SPLIT)[1]
+    exit_code = re.search(r'The exit code is ([0-9]+).', refCompileOutput).group(1)
+    return refCompileOutput.split(REFCOMPILER_SPLIT)[1], exit_code
 
 # check that the output from the program is the same
 def compareOutput() -> str:
@@ -62,11 +64,19 @@ def compareOutput() -> str:
     # get output from program
     wacc_emulated_output = stream.read()
 
+    # Close our process, save exit code returned
+    pid = stream.close()
+    wacc_exit_code = os.WEXITSTATUS(pid)
+
     # compare output from refCompile to output from program; go into refCompile's directory
     prevDirectory = goToWaccTestDir()
     stream = os.popen(f'echo {args["p"]} | ./refCompile  {REFCOMPILER_OUTPUT} {path}')
-    refCompiler_emulated_output = extractGoodStuffFromRefCompile(stream.read())
+    refCompiler_emulated_output, ref_exit_code = extractGoodStuffFromRefCompile(stream.read())
     navigateToDirectory(prevDirectory)
+
+    # Append exit code returned to the end
+    refCompiler_emulated_output += f"\nExit code returned: {ref_exit_code}"
+    wacc_emulated_output += f"\nExit code returned: {wacc_exit_code}"
 
     return compareStrings(refCompiler_emulated_output, wacc_emulated_output)
 
