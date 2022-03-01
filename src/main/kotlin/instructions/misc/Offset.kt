@@ -14,10 +14,13 @@ interface Offset : Loadable
 class ImmediateOffset(
     private val baseRegister: Register,
     private val offset: Int? = null,
-    private val preIndexed: Boolean? = null
+    private val preIndexed: Boolean? = null,
 ) : Offset {
     override fun toString(): String {
         offset ?: return "[$baseRegister]"
+        if (offset == 0) {
+            return "[$baseRegister]"
+        }
         return when (preIndexed) {
             null -> "[$baseRegister, #$offset]"
             true -> "[$baseRegister, #$offset]!"
@@ -40,7 +43,7 @@ data class RegisterOffset(
     private val offsetRegister: Register,
     private val positiveReg: Boolean,
     private val shift: Int? = null,
-    private val preIndexed: Boolean? = null
+    private val preIndexed: Boolean? = null,
 ) : Offset {
     override fun toString(): String {
         val plusMinus = (if (positiveReg) "+" else "-") + "$offsetRegister"

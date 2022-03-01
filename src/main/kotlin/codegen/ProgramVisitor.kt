@@ -1,15 +1,15 @@
 package codegen
 
+
 import ast.ProgramAST
 import instructions.WInstruction
 import instructions.misc.*
-import instructions.operations.LDR
-import instructions.operations.POP
-import instructions.operations.PUSH
+import instructions.operations.*
+
 
 class ProgramVisitor(
     val data: DataDeclaration,
-    private val funcPool: MutableList<List<WInstruction>> = mutableListOf()
+    private val funcPool: MutableList<List<WInstruction>> = mutableListOf(),
 ) : ASTVisitor<ProgramAST> {
 
     override fun visit(ctx: ProgramAST): List<WInstruction> {
@@ -22,7 +22,13 @@ class ProgramVisitor(
 
         val program = listOf(PUSH(Register.linkRegister()))
             .plus(
+                // Offset initial SP
+                offsetStackBy(ctx.body.st.totalByteSize))
+            .plus(
                 StatVisitor(data, funcPool).visit(ctx.body)
+            ).plus(
+                // Un-offset initial SP
+                unOffsetStackBy(ctx.body.st.totalByteSize)
             ).plus(
                 listOf(
                     LDR(Register("r0"), LoadImmediate(0)),

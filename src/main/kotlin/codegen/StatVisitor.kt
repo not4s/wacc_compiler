@@ -2,9 +2,7 @@ package codegen
 
 import ast.Literal
 import ast.Stat
-import ast.statement.ExitStat
-import ast.statement.PrintStat
-import ast.statement.SkipStat
+import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.B
@@ -14,15 +12,25 @@ import waccType.WStr
 
 class StatVisitor(
     val data: DataDeclaration,
-    private val funcPool: MutableList<List<WInstruction>>
+    private val funcPool: MutableList<List<WInstruction>>,
 ) : ASTVisitor<Stat> {
 
-    private val registerProvider = RegisterProvider()
+    val registerProvider = RegisterProvider()
+
+    override fun visit(ctx: Stat): List<WInstruction> {
+        return when (ctx) {
+            is SkipStat -> listOf()
+            is ExitStat -> visitExitStat(ctx)
+            is Declaration -> visitDeclarationStat(ctx)
+            is JoinStat -> visit(ctx.first).plus(visit(ctx.second))
+            else -> TODO("Not yet implemented")
+        }
+    }
 
     private fun visitExitStat(ctx: ExitStat): List<WInstruction> {
         val exprVisitor = ExprVisitor(registerProvider)
         val evaluationCode = exprVisitor.visit(ctx.expr)
-        val exitCodeLoadable: Loadable = when(val operand2 = exprVisitor.resultStored) {
+        val exitCodeLoadable: Loadable = when (val operand2 = exprVisitor.resultStored) {
             is Loadable -> operand2
             is Immediate -> operand2.asLoadable()
             else -> throw Exception("Unknown Operand2 when visiting Exit Statement")
@@ -69,12 +77,13 @@ class StatVisitor(
         }
     }
 
-    override fun visit(ctx: Stat): List<WInstruction> {
-        return when (ctx) {
-            is SkipStat -> listOf()
-            is ExitStat -> visitExitStat(ctx)
-            is PrintStat -> visitPrintStat(ctx)
-            else -> TODO("Not yet implemented")
-        }
+    private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
+        // Visit RHS, result will be stored in r4.
+        return RHSVisitor().visit(ctx.rhs).plus(
+            ctx.st.asmAssign(ctx.identifier, Register("r4"))
+        )
     }
+
 }
+
+

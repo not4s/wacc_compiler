@@ -13,14 +13,14 @@ data class STR(
     private var regWriteBack: Boolean = false
 
     override fun toString(): String {
-        val sb = "STR"
-        if (isSignedByte) sb.plus("B")
-        sb.plus(" $rSrc, [$rDest")
-        when {
-            offset != 0 -> sb.plus(", #$offset]")
-            else -> sb.plus("]")
+        var sb = "STR"
+        if (isSignedByte) sb += ("B")
+        sb += (" $rSrc, [$rDest")
+        sb += when {
+            offset != 0 -> (", #$offset]")
+            else -> ("]")
         }
-        if (regWriteBack) sb.plus("!")
+        if (regWriteBack) sb +=("!")
         return sb
     }
 }
