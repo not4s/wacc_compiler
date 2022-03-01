@@ -7,6 +7,7 @@ import instructions.misc.*
 import instructions.operations.*
 import utils.btoi
 import waccType.WBool
+import waccType.WInt
 import waccType.WStr
 
 class StatVisitor(
@@ -58,6 +59,12 @@ class StatVisitor(
                     data.addDeclaration(LITERAL_FALSE)
                     funcPool.add(pPrintBool(data))
                 }
+                is WInt -> {
+                    literal = ctx.expr.type.value.toString()
+                    printFun = P_PRINT_INT
+                    data.addDeclaration(NULL_TERMINAL_INT)
+                    funcPool.add(pPrintInt(data))
+                }
                 else -> TODO("Non-String literals are not supported. They will require things like %s %d etc")
             }
         } else {
@@ -71,11 +78,14 @@ class StatVisitor(
             funcPool.add(pPrintLn(data))
         }
         val ldrDestReg = registerProvider.get()
-        val firstArgInitInstruction: WInstruction = if (printFun == P_PRINT_BOOL) {
-            MOV(ldrDestReg, Immediate(btoi(literal == LITERAL_TRUE)))
-        } else {
-            LDR(ldrDestReg, LabelReference(literal, data))
-        }
+        val firstArgInitInstruction: WInstruction =
+            when (printFun) {
+                P_PRINT_BOOL -> MOV(ldrDestReg, Immediate(btoi(literal == LITERAL_TRUE)))
+                P_PRINT_INT -> MOV(ldrDestReg, Immediate(literal.toInt()))
+                P_PRINT_STRING -> LDR(ldrDestReg, LabelReference(literal, data))
+                else -> TODO("Not yet implemented")
+            }
+
         return listOf(
             firstArgInitInstruction,
             MOV(Register.resultRegister(), ldrDestReg),
