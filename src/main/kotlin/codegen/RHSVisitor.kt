@@ -3,10 +3,13 @@ package codegen
 import ast.Literal
 import ast.RHS
 import instructions.WInstruction
+import instructions.misc.ImmediateChar
 import instructions.misc.LoadImmediate
 import instructions.misc.Register
 import instructions.operations.LDR
+import instructions.operations.MOV
 import waccType.WBool
+import waccType.WChar
 import waccType.WInt
 
 // Stores visiting result in Register.resultRegister.
@@ -26,6 +29,7 @@ class RHSVisitor : ASTVisitor<RHS> {
                 if (ctx.type.value!!) {
                     1
                 } else 0)))
+            is WChar -> listOf(MOV(Register.resultRegister(), ImmediateChar(ctx.type.value!!)))
             else -> TODO("Not yet implemented")
         }
     }

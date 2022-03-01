@@ -142,12 +142,12 @@ class ParentRefSymbolTable(
     ): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
         var offset = 0
-        var isBoolean = false
+        var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
                 offset += typeToByteSize(v)
                 if (k == symbol) {
-                    isBoolean = v is WBool
+                    isSmall = v is WBool || v is WChar
                     break
                 }
             }
@@ -155,7 +155,7 @@ class ParentRefSymbolTable(
                 STR(fromRegister,
                     Register.stackPointer(),
                     totalByteSize - offset,
-                    isSignedByte = isBoolean))
+                    isSignedByte = isSmall))
         } else {
             return parentTable?.asmAssign(symbol, fromRegister)!!
         }
