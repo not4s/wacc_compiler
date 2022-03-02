@@ -11,6 +11,7 @@ const val P_PRINT_INT = "p_print_int"
 const val PRINTF = "printf"
 const val FFLUSH = "fflush"
 const val PUTCHAR = "putchar"
+const val MALLOC = "malloc"
 const val PUTS = "puts"
 
 const val NULL_CHAR = "\\0"
@@ -60,6 +61,7 @@ fun pPrintBool(data: DataDeclaration): List<WInstruction> {
         B(PRINTF, link = true)
     ).plus(printFunEnd)
 }
+
 fun pPrintInt(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_PRINT_INT),
