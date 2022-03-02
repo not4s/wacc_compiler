@@ -36,7 +36,7 @@ class StatVisitor(
         val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val condition = exprVisitor.visit(ctx.condition)
 
-        val thenBranchLabel: String = funcPool.getAbstractLabel()
+        val elseBranchLabel: String = funcPool.getAbstractLabel()
         val afterIfLabel: String = funcPool.getAbstractLabel()
 
         val elseCode: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.elseStat)
@@ -45,15 +45,15 @@ class StatVisitor(
         // compare with false, branch if equal (else branch)
         val jump = listOf(
             CMP(exprVisitor.resultStored!! as Register, Immediate(0)),
-            B(thenBranchLabel, cond = B.Condition.EQ)
+            B(elseBranchLabel, cond = B.Condition.EQ)
         )
 
         return condition
             .plus(jump)
-            .plus(elseCode)
-            .plus(B(afterIfLabel))
-            .plus(Label(thenBranchLabel))
             .plus(thenCode)
+            .plus(B(afterIfLabel))
+            .plus(Label(elseBranchLabel))
+            .plus(elseCode)
             .plus(Label(afterIfLabel))
     }
 

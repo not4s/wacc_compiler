@@ -243,7 +243,7 @@ valid/basic/skip:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/function/simple_functions/*.wacc"
 
-.valid/if:
+valid/if:
   stage: back-end
   interruptible: true
   script:
