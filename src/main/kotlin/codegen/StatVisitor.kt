@@ -25,8 +25,38 @@ class StatVisitor(
             is Assignment -> visitAssignStat(ctx)
             is JoinStat -> visit(ctx.first).plus(visit(ctx.second))
             is PrintStat -> visitPrintStat(ctx)
+            is ReadStat -> visitReadStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitReadStat(ctx: ReadStat): List<WInstruction> {
+        val readFun: String
+        when (ctx.lhs.type) {
+            is WInt -> {
+                readFun = P_READ_INT
+                data.addDeclaration(NULL_TERMINAL_INT)
+                funcPool.add(pReadInt(data))
+            }
+            is WChar -> {
+                readFun = P_READ_CHAR
+                data.addDeclaration(NULL_TERMINAL_CHAR)
+                funcPool.add(pReadChar(data))
+            }
+            else -> throw Exception("Can only read chars or ints")
+        }
+
+        val ldrDestReg = registerProvider.get()
+
+        val lhsVisitor = LHSVisitor(registerProvider)
+        val evalExprInstructions = lhsVisitor.visit(ctx.lhs)
+        val firstArgInitInstruction = MOV(ldrDestReg, lhsVisitor.resultStored!!)
+
+        return evalExprInstructions.plus(listOf(
+            firstArgInitInstruction,
+            MOV(Register.resultRegister(), ldrDestReg),
+            B(readFun, link = true)
+        ))
     }
 
     private fun visitExitStat(ctx: ExitStat): List<WInstruction> {
