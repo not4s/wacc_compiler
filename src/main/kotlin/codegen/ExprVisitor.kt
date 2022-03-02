@@ -48,7 +48,7 @@ class ExprVisitor(
                         return instr.plus(
                             listOf(
                                 SMULL(reg1, reg2, reg1, reg2),
-                                CMP(reg2, shiftedRegister(reg1, 31)),
+                                CMP(reg2, ShiftedRegister(reg1, 31)),
                                 B("p_throw_overflow_error", true, B.Condition.NE)
                             )
                         )
@@ -58,11 +58,8 @@ class ExprVisitor(
                         pCheckDivideByZero(data, funcPool)
                         return instr.plus(
                             listOf(
-                                MOV(Register("r0"), reg1),
-                                MOV(Register("r1"), reg2),
                                 B("p_check_divide_by_zero", true),
                                 B("__aeabi_idiv", true),
-                                MOV(reg1, Register("r0"))
                             )
                         )
                     }
@@ -99,7 +96,7 @@ class ExprVisitor(
                         return instr.plus(
                             listOf(
                                 subInstr,
-                                B("p_throw_overflow_error", true),
+                                B("p_throw_overflow_error", true, cond = B.Condition.VS),
                             )
                         )
                     }

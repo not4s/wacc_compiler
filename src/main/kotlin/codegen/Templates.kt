@@ -125,8 +125,8 @@ fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool) {
                 LabelReference(DIVIDE_BY_ZERO_MESSAGE, data),
                 conditionCode = ConditionCode.EQ
             ),
-            B(THROW_RUNTIME_ERROR, cond = B.Condition.EQ),
-            POP(Register.resultRegister())
+            B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.EQ),
+            POP(Register.programCounter())
         )
     )
     // add dependencies if not added yet
