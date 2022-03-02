@@ -5,18 +5,37 @@ COMPILE_DIR = 'compiled_code'
 BIN_DIR = f'wacc_test/{COMPILE_DIR}'
 BIN_FILE = 'bin'
 def createRemoteFile(path: str, file_name: str, content: str = ""):
-    prevDir = os.getcwd()
-    # if compilation directory does not exist, make the directory
-    for d in path.split("/"):
-        if not os.path.exists(d):
-            os.makedirs(d)
-        os.chdir(d)
+    if(len(path) != 0):
+        prevDir = os.getcwd()
+        # if compilation directory does not exist, make the directory
+        for d in path.split("/"):
+            if not os.path.exists(d):
+                os.makedirs(d)
+            os.chdir(d)
 
     # write output
     with open(file_name, 'w') as f:
         f.write(content)
 
-    os.chdir(prevDir)
+    if(len(path) != 0):
+        os.chdir(prevDir)
+
+def compileCode() -> str:
+    if not os.path.isfile(f"{BIN_DIR}/{BIN_FILE}"):
+        createRemoteFile(BIN_DIR, BIN_FILE)
+
+    # the user wants to save the output of the file
+    errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']} > {BIN_DIR}/{BIN_FILE}")
+    # On Unix, the return value is a 16-bit number whose high byte is the exit status (if the signal number is zero)
+    if(errCode >> 8 != 0):
+        sys.exit(errCode >> 8)
+
+    # get output from bin file
+    output = ""
+    with open(f"{BIN_DIR}/{BIN_FILE}", 'r') as f:
+        output = f.read()
+    
+    return output
 
 parser=argparse.ArgumentParser(description='Script compiling a wacc file')
 
@@ -44,26 +63,12 @@ if file_type != 'wacc':
 file_name = os.path.splitext(os.path.basename(path))[0]
 
 if options.d:
-    if not os.path.isfile(f"{BIN_DIR}/{BIN_FILE}"):
-        createRemoteFile(BIN_DIR, BIN_FILE)
-
-    # the user wants to save the output of the file
-    errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']} > {BIN_DIR}/{BIN_FILE}")
-    # On Unix, the return value is a 16-bit number whose high byte is the exit status (if the signal number is zero)
-    if(errCode >> 8 != 0):
-        sys.exit(errCode >> 8)
-
-    # get output from bin file
-    output = ""
-    with open(f"{BIN_DIR}/{BIN_FILE}", 'r') as f:
-        output = f.read()
+    output = compileCode()
 
     # move to wacc_test directory
     os.chdir("wacc_test")
 
     createRemoteFile(f"{COMPILE_DIR}{path[len('wacc_test'):-len(f'/{file_name}.wacc')]}", file_name + '.s', output)
 else:
-    # the user has not specified that the output needs to be saved in a file; print output to cmd
-    errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']}")
-    # On Unix, the return value is a 16-bit number whose high byte is the exit status (if the signal number is zero)
-    sys.exit(errCode >> 8)
+    output = compileCode()
+    createRemoteFile("", file_name + '.s', output)
