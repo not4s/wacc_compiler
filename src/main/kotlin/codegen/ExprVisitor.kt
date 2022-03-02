@@ -38,7 +38,7 @@ class ExprVisitor(
                         pThrowOverflowError(data, funcPool)
                         return instr.plus(
                             listOf(
-                                NEG(Register.resultRegister(), Register.resultRegister()),
+                                RSB(Register.resultRegister(), Register.resultRegister()),
                                 B("p_throw_overflow_error", true, cond = B.Condition.VS),
                             )
                         )

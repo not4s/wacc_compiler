@@ -92,9 +92,9 @@ fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool) {
     functionPool.add(
         listOf(
             Label(THROW_RUNTIME_ERROR),
-            B(P_PRINT_STRING),
+            B(P_PRINT_STRING, link=true),
             MOV(Register.resultRegister(), Immediate(-1)),
-            B(EXIT)
+            B(EXIT, link=true)
         )
     )
     // add dependencies if not added yet
