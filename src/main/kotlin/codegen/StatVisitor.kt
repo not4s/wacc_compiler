@@ -71,7 +71,7 @@ class StatVisitor(
 
         val ldrDestReg = registerProvider.get()
 
-        val lhsVisitor = LHSVisitor(registerProvider)
+        val lhsVisitor = LHSVisitor(registerProvider, data)
         val evalExprInstructions = lhsVisitor.visit(ctx.lhs)
         val firstArgInitInstruction = MOV(ldrDestReg, lhsVisitor.resultStored!!)
 
