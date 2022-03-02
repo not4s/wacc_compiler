@@ -8,7 +8,10 @@ const val P_PRINT_STRING = "p_print_string"
 const val P_PRINT_LN = "p_print_ln"
 const val P_PRINT_BOOL = "p_print_bool"
 const val P_PRINT_INT = "p_print_int"
+const val P_READ_INT = "p_read_int"
+const val P_READ_CHAR = "p_read_char"
 const val PRINTF = "printf"
+const val SCANF = "scanf"
 const val FFLUSH = "fflush"
 const val PUTCHAR = "putchar"
 const val MALLOC = "malloc"
@@ -17,6 +20,7 @@ const val PUTS = "puts"
 const val NULL_CHAR = "\\0"
 const val NULL_TERMINAL_STRING = "%.*s$NULL_CHAR"
 const val NULL_TERMINAL_INT = "%d$NULL_CHAR"
+const val NULL_TERMINAL_CHAR = " %c$NULL_CHAR"
 const val LITERAL_TRUE = "true$NULL_CHAR"
 const val LITERAL_FALSE = "false$NULL_CHAR"
 
@@ -87,6 +91,30 @@ fun pPrintInt(data: DataDeclaration): List<WInstruction> {
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
         B(PRINTF, link = true)
     ).plus(printFunEnd)
+}
+
+fun pReadInt(data: DataDeclaration): List<WInstruction> {
+    return listOf(
+        Label(P_READ_INT),
+        PUSH(Register.linkRegister()),
+        MOV(Register(1), Register.resultRegister()),
+        LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_INT, data)),
+        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
+        B(SCANF, link = true),
+        POP(Register.programCounter())
+    )
+}
+
+fun pReadChar(data: DataDeclaration): List<WInstruction> {
+    return listOf(
+        Label(P_READ_CHAR),
+        PUSH(Register.linkRegister()),
+        MOV(Register(1), Register.resultRegister()),
+        LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_CHAR, data)),
+        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
+        B(SCANF, link = true),
+        POP(Register.programCounter())
+    )
 }
 
 fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool) {

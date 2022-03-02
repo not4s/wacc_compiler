@@ -10,7 +10,7 @@ import symbolTable.SymbolTable
  **/
 class ReadStat(
     override val st: SymbolTable,
-    private val lhs: LHS,
+    val lhs: LHS,
 ) : Stat {
 
     override fun toString(): String {
