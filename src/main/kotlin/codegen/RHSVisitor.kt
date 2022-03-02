@@ -33,7 +33,6 @@ class RHSVisitor(val data: DataDeclaration) : ASTVisitor<RHS> {
         val arrValueStoreReg = registerProvider.get()
         var index = 0
         return listOf(
-            SUB(Register.stackPointer(), Register.stackPointer(), Immediate(4)),
             LDR(Register.resultRegister(), LoadImmediate(arrSize + WORD_SIZE)),
             B(MALLOC, link = true),
             MOV(mallocResReg, Register.resultRegister())
