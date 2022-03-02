@@ -92,6 +92,7 @@ abstract class SymbolTable(
         symbol: String,
         fromRegister: Register,
         data: DataDeclaration,
+        type: WAny?
     ): List<WInstruction>
 
     abstract fun asmAssign(
