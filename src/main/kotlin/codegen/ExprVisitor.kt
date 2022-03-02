@@ -37,7 +37,7 @@ class ExprVisitor(
 
                 val reg1 = reg
                 val reg2 = nextReg
-
+                resultStored = reg1 // TODO: do we always store result of expression in reg1?
                 when (ctx.op) {
 
                     BinOperator.MUL ->

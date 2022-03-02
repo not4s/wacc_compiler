@@ -5,6 +5,7 @@ import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.B
+import instructions.operations.CMP
 import instructions.operations.LDR
 import instructions.operations.MOV
 import utils.btoi
@@ -25,8 +26,30 @@ class StatVisitor(
             is Assignment -> visitAssignStat(ctx)
             is JoinStat -> visit(ctx.first).plus(visit(ctx.second))
             is PrintStat -> visitPrintStat(ctx)
+            is IfThenStat -> visitIfThenStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitIfThenStat(ctx: IfThenStat): List<WInstruction> {
+        // evaluate conditional
+        val exprVisitor = ExprVisitor(registerProvider)
+        val condition = exprVisitor.visit(ctx.condition)
+
+        val elseBranchLabel: String = "temp-else-branch-label"
+        val afterIfLabel: String = "temp-after-if-label"
+
+        val elseCode: List<WInstruction> = listOf()
+        val thenCode: List<WInstruction> = listOf()
+
+        // compare with false
+        // branch if equal (else branch)
+        val jump = listOf(
+            CMP(exprVisitor.resultStored!! as Register, Immediate(0)),
+            B(elseBranchLabel, cond = B.Condition.EQ)
+        )
+
+        return condition.plus(jump).plus(thenCode).plus(elseCode)
     }
 
     private fun visitExitStat(ctx: ExitStat): List<WInstruction> {
@@ -113,11 +136,13 @@ class StatVisitor(
             funcPool.add(pPrintLn(data))
         }
 
-        return evalExprInstructions.plus(listOf(
-            firstArgInitInstruction,
-            MOV(Register.resultRegister(), ldrDestReg),
-            B(printFun, link = true)
-        )).apply {
+        return evalExprInstructions.plus(
+            listOf(
+                firstArgInitInstruction,
+                MOV(Register.resultRegister(), ldrDestReg),
+                B(printFun, link = true)
+            )
+        ).apply {
             if (ctx.newlineAfter) {
                 return this.plus(B(P_PRINT_LN, link = true))
             }
