@@ -4,10 +4,7 @@ import ast.*
 import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
-import instructions.operations.B
-import instructions.operations.CMP
-import instructions.operations.LDR
-import instructions.operations.MOV
+import instructions.operations.*
 import utils.btoi
 import waccType.*
 
@@ -54,34 +51,33 @@ class StatVisitor(
     }
 
     private fun visitReadStat(ctx: ReadStat): List<WInstruction> {
+        val output = mutableListOf<WInstruction>()
         val readFun: String
         when (ctx.lhs.type) {
             is WInt -> {
                 readFun = P_READ_INT
                 data.addDeclaration(NULL_TERMINAL_INT)
                 funcPool.add(pReadInt(data))
+                output.add(ADD(Register.resultRegister(), Register.stackPointer(), Immediate(0)))
             }
             is WChar -> {
                 readFun = P_READ_CHAR
                 data.addDeclaration(NULL_TERMINAL_CHAR)
                 funcPool.add(pReadChar(data))
+                output.add(ADD(Register.resultRegister(), Register.stackPointer(), Immediate(0)))
             }
             else -> throw Exception("Can only read chars or ints")
         }
 
-        val ldrDestReg = registerProvider.get()
-
-        val lhsVisitor = LHSVisitor(registerProvider, data)
-        val evalExprInstructions = lhsVisitor.visit(ctx.lhs)
-        val firstArgInitInstruction = MOV(ldrDestReg, lhsVisitor.resultStored!!)
-
-        return evalExprInstructions.plus(
-            listOf(
-                firstArgInitInstruction,
-                MOV(Register.resultRegister(), ldrDestReg),
-                B(readFun, link = true)
-            )
+        return output.plus(
+            B(readFun, link = true)
+        ).plus(
+            when (ctx.lhs) {
+                is IdentifierSet -> ctx.st.asmGet(ctx.lhs.identifier, Register.resultRegister(), data)
+                else -> TODO()
+            }
         )
+
     }
 
     private fun visitIfThenStat(ctx: IfThenStat): List<WInstruction> {
