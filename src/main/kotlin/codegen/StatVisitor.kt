@@ -5,6 +5,7 @@ import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.B
+import instructions.operations.CMP
 import instructions.operations.LDR
 import instructions.operations.MOV
 import utils.btoi
@@ -18,14 +19,36 @@ class StatVisitor(
     private val registerProvider = RegisterProvider()
 
     override fun visit(ctx: Stat): List<WInstruction> {
+        //
         return when (ctx) {
             is SkipStat -> listOf()
             is ExitStat -> visitExitStat(ctx)
             is Declaration -> visitDeclarationStat(ctx)
             is Assignment -> visitAssignStat(ctx)
-            is JoinStat -> visit(ctx.first).plus(visit(ctx.second))
+            is JoinStat -> {
+                if (ctx.first.st !== ctx.st) {
+                    offsetStackBy(ctx.first.st.totalByteSize).plus(
+                        visit(ctx.first)
+                    ).plus(
+                        unOffsetStackBy(ctx.first.st.totalByteSize)
+                    )
+                } else {
+                    visit(ctx.first)
+                }.plus(
+                    if (ctx.second.st !== ctx.st) {
+                        offsetStackBy(ctx.second.st.totalByteSize).plus(
+                            visit(ctx.second)
+                        ).plus(
+                            unOffsetStackBy(ctx.second.st.totalByteSize)
+                        )
+                    } else {
+                        visit(ctx.second)
+                    }
+                )
+            }
             is PrintStat -> visitPrintStat(ctx)
             is ReadStat -> visitReadStat(ctx)
+            is IfThenStat -> visitIfThenStat(ctx)
             else -> TODO("Not yet implemented")
         }
     }
@@ -52,15 +75,47 @@ class StatVisitor(
         val evalExprInstructions = lhsVisitor.visit(ctx.lhs)
         val firstArgInitInstruction = MOV(ldrDestReg, lhsVisitor.resultStored!!)
 
-        return evalExprInstructions.plus(listOf(
-            firstArgInitInstruction,
-            MOV(Register.resultRegister(), ldrDestReg),
-            B(readFun, link = true)
-        ))
+        return evalExprInstructions.plus(
+            listOf(
+                firstArgInitInstruction,
+                MOV(Register.resultRegister(), ldrDestReg),
+                B(readFun, link = true)
+            )
+        )
+    }
+
+    private fun visitIfThenStat(ctx: IfThenStat): List<WInstruction> {
+        // evaluate conditional
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
+        val condition = exprVisitor.visit(ctx.condition)
+
+        val elseBranchLabel: String = funcPool.getAbstractLabel()
+        val afterIfLabel: String = funcPool.getAbstractLabel()
+
+        val thenCode: List<WInstruction> = offsetStackBy(ctx.thenStat.st.totalByteSize)
+            .plus(StatVisitor(data, funcPool).visit(ctx.thenStat))
+            .plus(unOffsetStackBy(ctx.thenStat.st.totalByteSize))
+        val elseCode: List<WInstruction> = offsetStackBy(ctx.elseStat.st.totalByteSize)
+            .plus(StatVisitor(data, funcPool).visit(ctx.elseStat))
+            .plus(unOffsetStackBy(ctx.elseStat.st.totalByteSize))
+
+        // compare with false, branch if equal (else branch)
+        val jump = listOf(
+            CMP(exprVisitor.resultStored!! as Register, Immediate(0)),
+            B(elseBranchLabel, cond = B.Condition.EQ)
+        )
+
+        return condition
+            .plus(jump)
+            .plus(thenCode)
+            .plus(B(afterIfLabel))
+            .plus(Label(elseBranchLabel))
+            .plus(elseCode)
+            .plus(Label(afterIfLabel))
     }
 
     private fun visitExitStat(ctx: ExitStat): List<WInstruction> {
-        val exprVisitor = ExprVisitor(registerProvider)
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val evaluationCode = exprVisitor.visit(ctx.expr)
         return evaluationCode.plus(
             listOf(
@@ -133,7 +188,7 @@ class StatVisitor(
                 else -> TODO("Non-String literals are not supported. They will require things like %s %d etc")
             }
         } else {
-            val exprVisitor = ExprVisitor(registerProvider)
+            val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
             evalExprInstructions = exprVisitor.visit(ctx.expr)
             firstArgInitInstruction = MOV(ldrDestReg, exprVisitor.resultStored!!)
         }
@@ -143,11 +198,14 @@ class StatVisitor(
             funcPool.add(pPrintLn(data))
         }
 
-        return evalExprInstructions.plus(listOf(
-            firstArgInitInstruction,
-            MOV(Register.resultRegister(), ldrDestReg),
-            B(printFun, link = true)
-        )).apply {
+        registerProvider.ret()
+        return evalExprInstructions.plus(
+            listOf(
+                firstArgInitInstruction,
+                MOV(Register.resultRegister(), ldrDestReg),
+                B(printFun, link = true)
+            )
+        ).apply {
             if (ctx.newlineAfter) {
                 return this.plus(B(P_PRINT_LN, link = true))
             }
@@ -156,16 +214,16 @@ class StatVisitor(
 
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data).visit(ctx.rhs).plus(
-            ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data)
+        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
+            ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
         )
     }
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data).visit(ctx.rhs).plus(
+        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
             when (ctx.lhs) {
-                is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister(), data)
+                is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister(), data, null)
                 is ArrayElement -> TODO("Array elements assignments not yet implemented")
                 is PairElement -> TODO("Pair elements assignments not yet implemented")
                 else -> throw Exception("An LHS is not one of the three possible ones...what?")

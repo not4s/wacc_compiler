@@ -26,9 +26,9 @@ data class ImmediateChar(val value: Char) : Operand2 {
     }
 }
 
-data class shiftedRegister(val reg: Register, val value: Int): Operand2 {
+data class ShiftedRegister(val reg: Register, val value: Int): Operand2 {
     override fun toString(): String {
-        return "$reg, #$value"
+        return "$reg, ASR #$value"
     }   
 }
 

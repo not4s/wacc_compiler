@@ -10,8 +10,8 @@ import waccType.WInt
  **/
 class BinaryOperation(
     override val st: SymbolTable,
-    private val left: Expr,
-    private val right: Expr,
+    val left: Expr,
+    val right: Expr,
     val op: BinOperator,
 ) : Expr {
 

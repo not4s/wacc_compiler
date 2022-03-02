@@ -14,7 +14,7 @@ import waccType.WAny
  **/
 class Declaration(
     override val st: SymbolTable,
-    decType: WAny,
+    val decType: WAny,
     val identifier: String,
     val rhs: RHS,
     parserCtx: ParserRuleContext,

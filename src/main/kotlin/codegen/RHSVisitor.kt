@@ -14,7 +14,7 @@ import waccType.WInt
 import waccType.WStr
 
 // Stores visiting result in Register.resultRegister.
-class RHSVisitor(val data: DataDeclaration) : ASTVisitor<RHS> {
+class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcPool: FunctionPool) : ASTVisitor<RHS> {
 
     private val registerProvider = RegisterProvider()
 
@@ -23,6 +23,7 @@ class RHSVisitor(val data: DataDeclaration) : ASTVisitor<RHS> {
         return when (ctx) {
             is Literal -> visitLiteral(ctx)
             is ArrayLiteral -> visitArrayLiteral(ctx)
+            is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
             else -> TODO("Not yet implemented")
         }
     }
@@ -64,10 +65,15 @@ class RHSVisitor(val data: DataDeclaration) : ASTVisitor<RHS> {
     private fun visitLiteral(ctx: Literal): List<WInstruction> {
         return when (ctx.type) {
             is WInt -> listOf(LDR(Register.resultRegister(), LoadImmediate(ctx.type.value!!)))
-            is WBool -> listOf(LDR(Register.resultRegister(), LoadImmediate(
-                if (ctx.type.value!!) {
-                    1
-                } else 0)))
+            is WBool -> listOf(
+                LDR(
+                    Register.resultRegister(), LoadImmediate(
+                        if (ctx.type.value!!) {
+                            1
+                        } else 0
+                    )
+                )
+            )
             is WChar -> listOf(MOV(Register.resultRegister(), ImmediateChar(ctx.type.value!!)))
             is WStr -> {
                 val reference = data.addDeclaration(ctx.type.value!!)

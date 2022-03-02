@@ -24,6 +24,14 @@ const val NULL_TERMINAL_CHAR = "%c$NULL_CHAR"
 const val LITERAL_TRUE = "true$NULL_CHAR"
 const val LITERAL_FALSE = "false$NULL_CHAR"
 
+const val THROW_RUNTIME_ERROR = "p_throw_runtime_error"
+const val THROW_OVERFLOW_ERROR = "p_throw_overflow_error"
+const val CHECK_DIVIDE_BY_ZERO = "p_check_divide_by_zero"
+const val OVERFLOW_ERROR_MESSAGE =
+    "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\\n\\0"
+const val DIVIDE_BY_ZERO_MESSAGE = "DivideByZeroError: divide or modulo by zero\\n\\0"
+const val EXIT = "exit"
+
 const val WORD_SIZE = 4
 
 val printFunEnd: List<WInstruction> = listOf(
@@ -59,8 +67,16 @@ fun pPrintBool(data: DataDeclaration): List<WInstruction> {
         Label(P_PRINT_BOOL),
         PUSH(Register.linkRegister()),
         CMP(Register.resultRegister(), Immediate(0)),
-        LDR(Register.resultRegister(), LabelReference(LITERAL_TRUE, data), conditionCode = ConditionCode.NE),
-        LDR(Register.resultRegister(), LabelReference(LITERAL_FALSE, data), conditionCode = ConditionCode.EQ),
+        LDR(
+            Register.resultRegister(),
+            LabelReference(LITERAL_TRUE, data),
+            conditionCode = ConditionCode.NE
+        ),
+        LDR(
+            Register.resultRegister(),
+            LabelReference(LITERAL_FALSE, data),
+            conditionCode = ConditionCode.EQ
+        ),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
         B(PRINTF, link = true)
     ).plus(printFunEnd)
@@ -99,4 +115,49 @@ fun pReadChar(data: DataDeclaration): List<WInstruction> {
         B(SCANF, link = true),
         POP(Register.programCounter())
     )
+}
+
+fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
+            Label(THROW_RUNTIME_ERROR),
+            B(P_PRINT_STRING, link=true),
+            MOV(Register.resultRegister(), Immediate(-1)),
+            B(EXIT, link=true)
+        )
+    )
+    // add dependencies if not added yet
+    functionPool.add(pPrintString(data))
+}
+
+fun pThrowOverflowError(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
+            Label(THROW_OVERFLOW_ERROR),
+            LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data)),
+            B(THROW_RUNTIME_ERROR, link = true)
+        )
+    )
+    // add dependencies if not added yet
+    pThrowRuntimeError(data, functionPool)
+}
+
+
+fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
+            Label(CHECK_DIVIDE_BY_ZERO),
+            PUSH(Register.linkRegister()),
+            CMP(Register("r1"), Immediate(0)),
+            LDR(
+                Register.resultRegister(),
+                LabelReference(DIVIDE_BY_ZERO_MESSAGE, data),
+                conditionCode = ConditionCode.EQ
+            ),
+            B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.EQ),
+            POP(Register.programCounter())
+        )
+    )
+    // add dependencies if not added yet
+    pThrowRuntimeError(data, functionPool)
 }

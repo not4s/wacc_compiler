@@ -92,6 +92,7 @@ abstract class SymbolTable(
         symbol: String,
         fromRegister: Register,
         data: DataDeclaration,
+        type: WAny?
     ): List<WInstruction>
 
     abstract fun asmAssign(
@@ -106,5 +107,5 @@ abstract class SymbolTable(
         data: DataDeclaration,
     ): List<WInstruction>
 
-    abstract fun asmGet(symbol: String, toRegister: Register): List<WInstruction>
+    abstract fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction>
 }

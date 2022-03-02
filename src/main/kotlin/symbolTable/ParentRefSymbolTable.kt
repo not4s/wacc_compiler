@@ -3,7 +3,6 @@ package symbolTable
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
 import instructions.misc.ImmediateOffset
-import instructions.misc.LabelReference
 import instructions.misc.Register
 import instructions.operations.LDR
 import instructions.operations.STR
@@ -22,6 +21,7 @@ class ParentRefSymbolTable(
     constructor(srcFilePath: String) : this(null, true, srcFilePath)
 
     private val dict = mutableMapOf<String, WAny>()
+    private val redeclaredVars = mutableSetOf<String>()
 
     /**
      * Goes through all the "layers" of an array with arbitrary number of dimensions
@@ -89,7 +89,8 @@ class ParentRefSymbolTable(
             parentTable.reassign(symbol, value, errorMessageBuilder)
             return
         }
-        SemanticChecker.checkThatAssignmentTypesMatch(prev, value, errorMessageBuilder,
+        SemanticChecker.checkThatAssignmentTypesMatch(
+            prev, value, errorMessageBuilder,
             failMessage = "Attempted to reassign type of declared $prev to $value"
         )
         dict[symbol] = value
@@ -142,9 +143,10 @@ class ParentRefSymbolTable(
         symbol: String,
         fromRegister: Register,
         data: DataDeclaration,
+        type: WAny? // null if assigning, type if declaring.
     ): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
-        var offset = 0
+        var offset = -data.spOffset
         var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
@@ -154,13 +156,51 @@ class ParentRefSymbolTable(
                     break
                 }
             }
-            return listOf(
-                STR(fromRegister,
-                    Register.stackPointer(),
-                    totalByteSize - offset,
-                    isSignedByte = isSmall))
+            if (type == null) {
+                if (symbol in redeclaredVars) {
+                    // Assigning, variable redeclared.
+                    return listOf(
+                        STR(
+                            fromRegister,
+                            Register.stackPointer(),
+                            totalByteSize - offset,
+                            isSignedByte = isSmall
+                        )
+                    )
+                } else {
+                    // Assigning, variable NOT redeclared. Go to parent.
+                    data.spOffset += totalByteSize
+                    try {
+                        return parentTable?.asmAssign(symbol, fromRegister, data, type)!!
+                    } finally {
+                        data.spOffset -= totalByteSize
+                    }
+                }
+            } else {
+                if (symbol in redeclaredVars) {
+                    // Declaring, variable redeclared.
+                    throw Exception("Double declare")
+                } else {
+                    // Declaring, variable NOT redeclared.
+                    redeclaredVars.add(symbol)
+                    return listOf(
+                        STR(
+                            fromRegister,
+                            Register.stackPointer(),
+                            totalByteSize - offset,
+                            isSignedByte = isSmall
+                        )
+                    )
+                }
+            }
         } else {
-            return parentTable?.asmAssign(symbol, fromRegister, data)!!
+            // Not found in symbol table, go to parent.
+            data.spOffset += totalByteSize
+            try {
+                return parentTable?.asmAssign(symbol, fromRegister, data, type)!!
+            } finally {
+                data.spOffset -= totalByteSize
+            }
         }
     }
 
@@ -182,22 +222,48 @@ class ParentRefSymbolTable(
         TODO("Not yet implemented")
     }
 
-    override fun asmGet(symbol: String, toRegister: Register): List<WInstruction> {
+    override fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
-        var offset = 0
+        var offset = -data.spOffset
+        var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
                 offset += typeToByteSize(v)
                 if (k == symbol) {
+                    isSmall = v is WBool || v is WChar
                     break
                 }
             }
-            return listOf(
-                LDR(toRegister,
-                    ImmediateOffset(Register.stackPointer(), totalByteSize - offset))
-            )
+            if (symbol in redeclaredVars) {
+                // Redeclared in scope, return that
+                return listOf(
+                    LDR(
+                        toRegister,
+                        ImmediateOffset(
+                            Register.stackPointer(),
+                            totalByteSize - offset
+                        ),
+                        isSignedByte = isSmall
+                    )
+                )
+            } else {
+                // Not declared yet. Go to parent.
+                data.spOffset += totalByteSize
+                try {
+                    return parentTable?.asmGet(symbol, toRegister, data)!!
+                } finally {
+                    data.spOffset -= totalByteSize
+                }
+            }
+
         } else {
-            return parentTable?.asmGet(symbol, toRegister)!!
+            // Not found in symbol table, go to parent.
+            data.spOffset += totalByteSize
+            try {
+                return parentTable?.asmGet(symbol, toRegister, data)!!
+            } finally {
+                data.spOffset -= totalByteSize
+            }
         }
     }
 
