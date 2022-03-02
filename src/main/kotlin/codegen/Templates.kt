@@ -19,6 +19,12 @@ const val NULL_TERMINAL_INT = "%d$NULL_CHAR"
 const val LITERAL_TRUE = "true$NULL_CHAR"
 const val LITERAL_FALSE = "false$NULL_CHAR"
 
+const val THROW_RUNTIME_ERROR = "p_throw_runtime_error"
+const val THROW_OVERFLOW_ERROR = "p_throw_overflow_error"
+const val OVERFLOW_ERROR_MESSAGE =
+    "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\\n\\0"
+const val EXIT = "exit"
+
 const val WORD_SIZE = 4
 
 val printFunEnd: List<WInstruction> = listOf(
@@ -54,12 +60,21 @@ fun pPrintBool(data: DataDeclaration): List<WInstruction> {
         Label(P_PRINT_BOOL),
         PUSH(Register.linkRegister()),
         CMP(Register.resultRegister(), Immediate(0)),
-        LDR(Register.resultRegister(), LabelReference(LITERAL_TRUE, data), conditionCode = ConditionCode.NE),
-        LDR(Register.resultRegister(), LabelReference(LITERAL_FALSE, data), conditionCode = ConditionCode.EQ),
+        LDR(
+            Register.resultRegister(),
+            LabelReference(LITERAL_TRUE, data),
+            conditionCode = ConditionCode.NE
+        ),
+        LDR(
+            Register.resultRegister(),
+            LabelReference(LITERAL_FALSE, data),
+            conditionCode = ConditionCode.EQ
+        ),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
         B(PRINTF, link = true)
     ).plus(printFunEnd)
 }
+
 fun pPrintInt(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_PRINT_INT),
@@ -69,4 +84,33 @@ fun pPrintInt(data: DataDeclaration): List<WInstruction> {
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
         B(PRINTF, link = true)
     ).plus(printFunEnd)
+}
+
+fun pThrowRuntimeError(data: DataDeclaration): List<WInstruction> {
+    var instructions: List<WInstruction> = listOf()
+    if (!data.containsLabelDeclaration(THROW_RUNTIME_ERROR)) {
+        instructions = listOf(
+            Label(THROW_RUNTIME_ERROR),
+            B(P_PRINT_STRING),
+            MOV(Register.resultRegister(), Immediate(-1)),
+            B(EXIT)
+        )
+        if (!data.containsLabelDeclaration(P_PRINT_STRING)) {
+            instructions.plus(pPrintString(data))
+        }
+    }
+    return instructions
+}
+
+fun pThrowOverflowError(data: DataDeclaration): List<WInstruction> {
+    var instructions: List<WInstruction> = listOf()
+    if (!data.containsLabelDeclaration(THROW_OVERFLOW_ERROR)) {
+        instructions = listOf(
+            LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data))
+        )
+        if (!data.containsLabelDeclaration(THROW_RUNTIME_ERROR)) {
+            instructions.plus(pThrowRuntimeError(data))
+        }
+    }
+    return instructions
 }
