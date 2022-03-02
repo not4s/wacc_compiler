@@ -19,7 +19,6 @@ class StatVisitor(
     private val registerProvider = RegisterProvider()
 
     override fun visit(ctx: Stat): List<WInstruction> {
-        //
         return when (ctx) {
             is SkipStat -> listOf()
             is ExitStat -> visitExitStat(ctx)
@@ -48,8 +47,28 @@ class StatVisitor(
             }
             is PrintStat -> visitPrintStat(ctx)
             is IfThenStat -> visitIfThenStat(ctx)
+            is WhileStat -> visitWhileStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitWhileStat(ctx: WhileStat): List<WInstruction> {
+        val whileStartLabel: String = funcPool.getAbstractLabel()
+        val whileBodyLabel: String = funcPool.getAbstractLabel()
+
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
+        val condition = exprVisitor.visit(ctx.condition)
+
+        val whileBody: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.doBlock)
+        val jump = B(whileBodyLabel, cond = B.Condition.NE)
+
+        return listOf(B(whileStartLabel))
+            .plus(Label(whileBodyLabel))
+            .plus(whileBody)
+            .plus(Label(whileStartLabel))
+            .plus(condition)
+            .plus(CMP(Register.resultRegister(), Immediate(0)))
+            .plus(jump)
     }
 
     private fun visitIfThenStat(ctx: IfThenStat): List<WInstruction> {
@@ -66,6 +85,7 @@ class StatVisitor(
         val elseCode: List<WInstruction> = offsetStackBy(ctx.elseStat.st.totalByteSize)
             .plus(StatVisitor(data, funcPool).visit(ctx.elseStat))
             .plus(unOffsetStackBy(ctx.elseStat.st.totalByteSize))
+
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
@@ -191,7 +211,12 @@ class StatVisitor(
         // Visit RHS. Result should be in resultStored register.
         return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
             when (ctx.lhs) {
-                is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister(), data, null)
+                is IdentifierSet -> ctx.st.asmAssign(
+                    ctx.lhs.identifier,
+                    Register.resultRegister(),
+                    data,
+                    null
+                )
                 is ArrayElement -> TODO("Array elements assignments not yet implemented")
                 is PairElement -> TODO("Pair elements assignments not yet implemented")
                 else -> throw Exception("An LHS is not one of the three possible ones...what?")
