@@ -88,39 +88,36 @@ fun pPrintInt(data: DataDeclaration): List<WInstruction> {
     ).plus(printFunEnd)
 }
 
-fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool): List<WInstruction> {
-    var instructions: List<WInstruction> = listOf()
-    if (!functionPool.containsFunc(THROW_RUNTIME_ERROR)) {
-        instructions = listOf(
+fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
             Label(THROW_RUNTIME_ERROR),
             B(P_PRINT_STRING),
             MOV(Register.resultRegister(), Immediate(-1)),
             B(EXIT)
         )
-        if (!functionPool.containsFunc(P_PRINT_STRING)) {
-            instructions.plus(pPrintString(data))
-        }
-    }
-    return instructions
+    )
+    // add dependencies if not added yet
+    functionPool.add(pPrintString(data))
 }
 
-fun pThrowOverflowError(data: DataDeclaration, functionPool: FunctionPool): List<WInstruction> {
-    var instructions: List<WInstruction> = listOf()
-    if (!functionPool.containsFunc(THROW_OVERFLOW_ERROR)) {
-        instructions = listOf(
-            LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data))
+fun pThrowOverflowError(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
+            Label(THROW_OVERFLOW_ERROR),
+            LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data)),
+            B(THROW_RUNTIME_ERROR, link = true)
         )
-        if (!functionPool.containsFunc(THROW_RUNTIME_ERROR)) {
-            instructions.plus(pThrowRuntimeError(data, functionPool))
-        }
-    }
-    return instructions
+    )
+    // add dependencies if not added yet
+    pThrowRuntimeError(data, functionPool)
 }
 
-fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool): List<WInstruction> {
-    var instructions: List<WInstruction> = listOf()
-    if (!functionPool.containsFunc(CHECK_DIVIDE_BY_ZERO)) {
-        instructions = listOf(
+
+fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
+            Label(CHECK_DIVIDE_BY_ZERO),
             PUSH(Register.linkRegister()),
             CMP(Register("r1"), Immediate(0)),
             LDR(
@@ -131,9 +128,7 @@ fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool): List<
             B(THROW_RUNTIME_ERROR, cond = B.Condition.EQ),
             POP(Register.resultRegister())
         )
-        if (!functionPool.containsFunc(THROW_RUNTIME_ERROR)) {
-            instructions.plus(pThrowRuntimeError(data, functionPool))
-        }
-    }
-    return instructions
+    )
+    // add dependencies if not added yet
+    pThrowRuntimeError(data, functionPool)
 }

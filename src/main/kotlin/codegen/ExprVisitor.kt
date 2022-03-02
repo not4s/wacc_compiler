@@ -59,7 +59,7 @@ class ExprVisitor(
                     }
 
                     BinOperator.DIV -> {
-                        pThrowOverflowError(data, funcPool)
+                        pCheckDivideByZero(data, funcPool)
                         return instr.plus(
                             listOf(
                                 MOV(Register("r0"), reg1),
