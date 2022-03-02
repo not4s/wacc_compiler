@@ -33,7 +33,7 @@ class StatVisitor(
 
     private fun visitIfThenStat(ctx: IfThenStat): List<WInstruction> {
         // evaluate conditional
-        val exprVisitor = ExprVisitor(registerProvider)
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val condition = exprVisitor.visit(ctx.condition)
 
         val thenBranchLabel: String = funcPool.getAbstractLabel()
