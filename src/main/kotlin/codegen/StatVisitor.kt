@@ -47,12 +47,12 @@ class StatVisitor(
             }
             is PrintStat -> visitPrintStat(ctx)
             is IfThenStat -> visitIfThenStat(ctx)
-            is WhileStat -> vistWhileStat(ctx)
+            is WhileStat -> visitWhileStat(ctx)
             else -> TODO("Not yet implemented")
         }
     }
 
-    private fun vistWhileStat(ctx: WhileStat): List<WInstruction> {
+    private fun visitWhileStat(ctx: WhileStat): List<WInstruction> {
         val whileStartLabel: String = funcPool.getAbstractLabel()
         val whileBodyLabel: String = funcPool.getAbstractLabel()
 
@@ -60,13 +60,14 @@ class StatVisitor(
         val condition = exprVisitor.visit(ctx.condition)
 
         val whileBody: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.doBlock)
-        val jump = B(whileBodyLabel, cond = B.Condition.EQ)
+        val jump = B(whileBodyLabel, cond = B.Condition.NE)
 
         return listOf(B(whileStartLabel))
             .plus(Label(whileBodyLabel))
             .plus(whileBody)
             .plus(Label(whileStartLabel))
             .plus(condition)
+            .plus(CMP(Register.resultRegister(), Immediate(0)))
             .plus(jump)
     }
 
