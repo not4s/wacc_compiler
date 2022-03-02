@@ -1,9 +1,6 @@
 package codegen
 
-<<<<<<< HEAD
 import ast.ArrayLiteral
-=======
->>>>>>> expressions
 import ast.Expr
 import ast.Literal
 import ast.RHS
@@ -17,7 +14,7 @@ import waccType.WInt
 import waccType.WStr
 
 // Stores visiting result in Register.resultRegister.
-class RHSVisitor(val data: DataDeclaration) : ASTVisitor<RHS> {
+class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcPool: FunctionPool) : ASTVisitor<RHS> {
 
     private val registerProvider = RegisterProvider()
 
