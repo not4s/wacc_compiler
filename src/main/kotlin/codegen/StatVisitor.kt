@@ -60,8 +60,12 @@ class StatVisitor(
         val elseBranchLabel: String = funcPool.getAbstractLabel()
         val afterIfLabel: String = funcPool.getAbstractLabel()
 
-        val elseCode: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.elseStat)
-        val thenCode: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.thenStat)
+        val thenCode: List<WInstruction> = offsetStackBy(ctx.thenStat.st.totalByteSize)
+            .plus(StatVisitor(data, funcPool).visit(ctx.thenStat))
+            .plus(unOffsetStackBy(ctx.thenStat.st.totalByteSize))
+        val elseCode: List<WInstruction> = offsetStackBy(ctx.elseStat.st.totalByteSize)
+            .plus(StatVisitor(data, funcPool).visit(ctx.elseStat))
+            .plus(unOffsetStackBy(ctx.elseStat.st.totalByteSize))
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
