@@ -23,28 +23,24 @@ class ExprVisitor(
 
             is IdentifierGet -> {
                 resultStored = Register.resultRegister()
-                ctx.st.asmGet(ctx.identifier, Register.resultRegister())
+                ctx.st.asmGet(ctx.identifier, Register.resultRegister(), data)
             }
             is BinaryOperation -> {
-                var reg1 = registerProvider.get()
-                var reg2 = registerProvider.get()
+
+                val reg1 = Register("r0")
+                val reg2 = Register("r1")
 
                 val instr =
-                    // Evaluate left, result will be in R0.
-                    visit(ctx.left)
-                        .plus(MOV(reg1, Register("r0")))
-                        // Eval right
-                        .plus(visit(ctx.right))
-                        .plus(MOV(reg2, Register("r0")))
-                        // Move to scratch registers
-                        .plus(MOV(Register("r0"), reg1))
-                        .plus(MOV(Register("r1"), reg2))
-                registerProvider.ret()
-                registerProvider.ret()
+                    // Evaluate right, result will be in R0. Push this to stack.
+                    visit(ctx.right)
+                        .plus(PUSH(Register.resultRegister(), data))
+                        // Eval left. Result is stored in R0.
+                        .plus(visit(ctx.left))
+                        // Pop the right result to R1.
+                        .plus(POP(reg2, data))
+
                 resultStored = Register.resultRegister()
 
-                reg1 = Register("r0")
-                reg2 = Register("r1")
                 when (ctx.op) {
 
                     BinOperator.MUL -> {
@@ -91,7 +87,7 @@ class ExprVisitor(
                         return instr.plus(
                             listOf(
                                 addInstr,
-                                B("p_throw_overflow_error", true),
+                                B("p_throw_overflow_error", true, cond = B.Condition.VS),
                             )
                         )
                     }

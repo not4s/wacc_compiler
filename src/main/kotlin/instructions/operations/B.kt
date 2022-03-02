@@ -9,7 +9,8 @@ data class B(
 ) : WInstruction {
 
     enum class Condition {
-        EQ, NE
+        // VS : true if Overflow
+        EQ, NE, VS
     }
 
     override fun toString(): String {
