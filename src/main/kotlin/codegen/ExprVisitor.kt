@@ -25,6 +25,38 @@ class ExprVisitor(
                 resultStored = Register.resultRegister()
                 ctx.st.asmGet(ctx.identifier, Register.resultRegister(), data)
             }
+            is UnaryOperation -> {
+                val instr =
+                    // Evaluate expr, result will be in R0
+                    visit(ctx.operand)
+
+                resultStored = Register.resultRegister()
+
+                when (ctx.operation) {
+
+                    UnOperator.SUB -> {
+                        pThrowOverflowError(data, funcPool)
+                        return instr.plus(
+                            listOf(
+                                NEG(Register.resultRegister(), Register.resultRegister()),
+                                B("p_throw_overflow_error", true, cond = B.Condition.VS),
+                            )
+                        )
+                    }
+                    UnOperator.NOT -> {
+                        return instr.plus(
+                            listOf(
+                                EOR(Register.resultRegister(), Register.resultRegister(), Immediate(1))
+                            )
+                        )
+                    }
+                    UnOperator.CHR, UnOperator.ORD -> {
+                        return instr // char = int lol
+                    }
+
+                    else -> TODO()
+                }
+            }
             is BinaryOperation -> {
 
                 val reg1 = Register("r0")
