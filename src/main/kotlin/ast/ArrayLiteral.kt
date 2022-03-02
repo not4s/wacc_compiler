@@ -9,7 +9,7 @@ import waccType.WUnknown
  **/
 class ArrayLiteral(
     override val st: SymbolTable,
-    private val values: Array<Expr>
+    val values: Array<Expr>
 ) : Expr, RHS {
 
     override val type: WArray

@@ -8,17 +8,14 @@ import instructions.operations.B
 import instructions.operations.LDR
 import instructions.operations.MOV
 import utils.btoi
-import waccType.WBool
-import waccType.WChar
-import waccType.WInt
-import waccType.WStr
+import waccType.*
 
 class StatVisitor(
     val data: DataDeclaration,
     private val funcPool: FunctionPool,
 ) : ASTVisitor<Stat> {
 
-    val registerProvider = RegisterProvider()
+    private val registerProvider = RegisterProvider()
 
     override fun visit(ctx: Stat): List<WInstruction> {
         return when (ctx) {
@@ -51,7 +48,7 @@ class StatVisitor(
         var evalExprInstructions: List<WInstruction> = listOf()
 
         // Add general type things
-        when (ctx.expr.type) {
+        when (val type = ctx.expr.type) {
             is WStr -> {
                 printFun = P_PRINT_STRING
                 data.addDeclaration(NULL_TERMINAL_STRING)
@@ -70,6 +67,15 @@ class StatVisitor(
             }
             is WChar -> {
                 printFun = PUTCHAR
+            }
+            is WArray -> {
+                if (type.elemType is WChar) {
+                    printFun = P_PRINT_STRING
+                    data.addDeclaration(NULL_TERMINAL_STRING)
+                    funcPool.add(pPrintString(data))
+                } else {
+                    TODO("Implement other array elem type prints")
+                }
             }
             else -> TODO("Not yet implemented")
         }
