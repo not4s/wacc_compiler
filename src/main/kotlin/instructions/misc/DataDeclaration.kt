@@ -6,7 +6,6 @@ class DataDeclaration {
 
     private var noNameMsgCounter: Int = 0
     private val declarations = mutableMapOf<String, String>()
-    private val labelDeclarations = mutableListOf<String>()
 
     fun addDeclaration(name: String, value: String) {
         declarations[name] = value
@@ -73,16 +72,6 @@ class DataDeclaration {
                 }
             }
             return size
-        }
-    }
-
-    fun containsLabelDeclaration(label : String) : Boolean {
-        return labelDeclarations.contains(label)
-    }
-
-    fun addLabelDeclaration(label : String) {
-        if(!containsLabelDeclaration(label)) {
-            labelDeclarations.add(label)
         }
     }
 }

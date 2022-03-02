@@ -86,29 +86,29 @@ fun pPrintInt(data: DataDeclaration): List<WInstruction> {
     ).plus(printFunEnd)
 }
 
-fun pThrowRuntimeError(data: DataDeclaration): List<WInstruction> {
+fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool): List<WInstruction> {
     var instructions: List<WInstruction> = listOf()
-    if (!data.containsLabelDeclaration(THROW_RUNTIME_ERROR)) {
+    if (!functionPool.containsFunc(THROW_RUNTIME_ERROR)) {
         instructions = listOf(
             Label(THROW_RUNTIME_ERROR),
             B(P_PRINT_STRING),
             MOV(Register.resultRegister(), Immediate(-1)),
             B(EXIT)
         )
-        if (!data.containsLabelDeclaration(P_PRINT_STRING)) {
+        if (!functionPool.containsFunc(P_PRINT_STRING)) {
             instructions.plus(pPrintString(data))
         }
     }
     return instructions
 }
 
-fun pThrowOverflowError(data: DataDeclaration): List<WInstruction> {
+fun pThrowOverflowError(data: DataDeclaration, functionPool: FunctionPool): List<WInstruction> {
     var instructions: List<WInstruction> = listOf()
-    if (!data.containsLabelDeclaration(THROW_OVERFLOW_ERROR)) {
+    if (!functionPool.containsFunc(THROW_OVERFLOW_ERROR)) {
         instructions = listOf(
             LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data))
         )
-        if (!data.containsLabelDeclaration(THROW_RUNTIME_ERROR)) {
+        if (!functionPool.containsFunc(THROW_RUNTIME_ERROR)) {
             instructions.plus(pThrowRuntimeError(data))
         }
     }
