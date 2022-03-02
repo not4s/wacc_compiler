@@ -43,7 +43,7 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
                     MOV(arrValueStoreReg, immediateOfCorrectType(it)),
                     STR(arrValueStoreReg, mallocResReg, (index++) + WORD_SIZE)
                 )
-            }.reduce(List<WInstruction>::plus)
+            }.fold(listOf()) { a, b -> a.plus(b) } // reduce(List<WInstruction>::plus)
         ).plus(
             listOf(
                 LDR(arrValueStoreReg, LoadImmediate(arrSize)),

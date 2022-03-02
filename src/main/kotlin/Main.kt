@@ -40,6 +40,7 @@ fun main(args: Array<String>) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
+
     val instructions = ProgramVisitor(DataDeclaration()).visit(ast)
 
     translateInstructions(instructions)
