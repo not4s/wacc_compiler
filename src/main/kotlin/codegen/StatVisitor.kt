@@ -24,7 +24,27 @@ class StatVisitor(
             is ExitStat -> visitExitStat(ctx)
             is Declaration -> visitDeclarationStat(ctx)
             is Assignment -> visitAssignStat(ctx)
-            is JoinStat -> visit(ctx.first).plus(visit(ctx.second))
+            is JoinStat -> {
+                if (ctx.first.st !== ctx.st) {
+                    offsetStackBy(ctx.first.st.totalByteSize).plus(
+                        visit(ctx.first)
+                    ).plus(
+                        unOffsetStackBy(ctx.first.st.totalByteSize)
+                    )
+                } else {
+                    visit(ctx.first)
+                }.plus(
+                    if (ctx.second.st !== ctx.st) {
+                        offsetStackBy(ctx.second.st.totalByteSize).plus(
+                            visit(ctx.second)
+                        ).plus(
+                            unOffsetStackBy(ctx.second.st.totalByteSize)
+                        )
+                    } else {
+                        visit(ctx.second)
+                    }
+                )
+            }
             is PrintStat -> visitPrintStat(ctx)
             is IfThenStat -> visitIfThenStat(ctx)
             is WhileStat -> vistWhileStat(ctx)
@@ -58,8 +78,13 @@ class StatVisitor(
         val elseBranchLabel: String = funcPool.getAbstractLabel()
         val afterIfLabel: String = funcPool.getAbstractLabel()
 
-        val elseCode: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.elseStat)
-        val thenCode: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.thenStat)
+        val thenCode: List<WInstruction> = offsetStackBy(ctx.thenStat.st.totalByteSize)
+            .plus(StatVisitor(data, funcPool).visit(ctx.thenStat))
+            .plus(unOffsetStackBy(ctx.thenStat.st.totalByteSize))
+        val elseCode: List<WInstruction> = offsetStackBy(ctx.elseStat.st.totalByteSize)
+            .plus(StatVisitor(data, funcPool).visit(ctx.elseStat))
+            .plus(unOffsetStackBy(ctx.elseStat.st.totalByteSize))
+
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
@@ -161,11 +186,13 @@ class StatVisitor(
         }
 
         registerProvider.ret()
-        return evalExprInstructions.plus(listOf(
-            firstArgInitInstruction,
-            MOV(Register.resultRegister(), ldrDestReg),
-            B(printFun, link = true)
-        )).apply {
+        return evalExprInstructions.plus(
+            listOf(
+                firstArgInitInstruction,
+                MOV(Register.resultRegister(), ldrDestReg),
+                B(printFun, link = true)
+            )
+        ).apply {
             if (ctx.newlineAfter) {
                 return this.plus(B(P_PRINT_LN, link = true))
             }
@@ -175,7 +202,7 @@ class StatVisitor(
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
         return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
-            ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data)
+            ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
         )
     }
 
@@ -183,7 +210,12 @@ class StatVisitor(
         // Visit RHS. Result should be in resultStored register.
         return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
             when (ctx.lhs) {
-                is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister(), data)
+                is IdentifierSet -> ctx.st.asmAssign(
+                    ctx.lhs.identifier,
+                    Register.resultRegister(),
+                    data,
+                    null
+                )
                 is ArrayElement -> TODO("Array elements assignments not yet implemented")
                 is PairElement -> TODO("Pair elements assignments not yet implemented")
                 else -> throw Exception("An LHS is not one of the three possible ones...what?")
