@@ -21,6 +21,7 @@ class ParentRefSymbolTable(
     constructor(srcFilePath: String) : this(null, true, srcFilePath)
 
     private val dict = mutableMapOf<String, WAny>()
+    private val redeclaredVars = mutableSetOf<String>()
 
     /**
      * Goes through all the "layers" of an array with arbitrary number of dimensions
@@ -142,6 +143,7 @@ class ParentRefSymbolTable(
         symbol: String,
         fromRegister: Register,
         data: DataDeclaration,
+        type: WAny? // null if assigning, type if declaring.
     ): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
         var offset = -data.spOffset
@@ -154,16 +156,51 @@ class ParentRefSymbolTable(
                     break
                 }
             }
-            return listOf(
-                STR(
-                    fromRegister,
-                    Register.stackPointer(),
-                    totalByteSize - offset,
-                    isSignedByte = isSmall
-                )
-            )
+            if (type == null) {
+                if (symbol in redeclaredVars) {
+                    // Assigning, variable redeclared.
+                    return listOf(
+                        STR(
+                            fromRegister,
+                            Register.stackPointer(),
+                            totalByteSize - offset,
+                            isSignedByte = isSmall
+                        )
+                    )
+                } else {
+                    // Assigning, variable NOT redeclared. Go to parent.
+                    data.spOffset += totalByteSize
+                    try {
+                        return parentTable?.asmAssign(symbol, fromRegister, data, type)!!
+                    } finally {
+                        data.spOffset -= totalByteSize
+                    }
+                }
+            } else {
+                if (symbol in redeclaredVars) {
+                    // Declaring, variable redeclared.
+                    throw Exception("Double declare")
+                } else {
+                    // Declaring, variable NOT redeclared.
+                    redeclaredVars.add(symbol)
+                    return listOf(
+                        STR(
+                            fromRegister,
+                            Register.stackPointer(),
+                            totalByteSize - offset,
+                            isSignedByte = isSmall
+                        )
+                    )
+                }
+            }
         } else {
-            return parentTable?.asmAssign(symbol, fromRegister, data)!!
+            // Not found in symbol table, go to parent.
+            data.spOffset += totalByteSize
+            try {
+                return parentTable?.asmAssign(symbol, fromRegister, data, type)!!
+            } finally {
+                data.spOffset -= totalByteSize
+            }
         }
     }
 
@@ -197,18 +234,36 @@ class ParentRefSymbolTable(
                     break
                 }
             }
-            return listOf(
-                LDR(
-                    toRegister,
-                    ImmediateOffset(
-                        Register.stackPointer(),
-                        totalByteSize - offset
-                    ),
-                    isSignedByte = isSmall
+            if (symbol in redeclaredVars) {
+                // Redeclared in scope, return that
+                return listOf(
+                    LDR(
+                        toRegister,
+                        ImmediateOffset(
+                            Register.stackPointer(),
+                            totalByteSize - offset
+                        ),
+                        isSignedByte = isSmall
+                    )
                 )
-            )
+            } else {
+                // Not declared yet. Go to parent.
+                data.spOffset += totalByteSize
+                try {
+                    return parentTable?.asmGet(symbol, toRegister, data)!!
+                } finally {
+                    data.spOffset -= totalByteSize
+                }
+            }
+
         } else {
-            return parentTable?.asmGet(symbol, toRegister, data)!!
+            // Not found in symbol table, go to parent.
+            data.spOffset += totalByteSize
+            try {
+                return parentTable?.asmGet(symbol, toRegister, data)!!
+            } finally {
+                data.spOffset -= totalByteSize
+            }
         }
     }
 
