@@ -11,8 +11,8 @@ import waccType.WInt
  **/
 class UnaryOperation(
     override val st: SymbolTable,
-    private val operand: Expr,
-    private val operation: UnOperator,
+    val operand: Expr,
+    val operation: UnOperator,
 ) : Expr {
 
     override fun toString(): String {

@@ -3,7 +3,6 @@ package symbolTable
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
 import instructions.misc.ImmediateOffset
-import instructions.misc.LabelReference
 import instructions.misc.Register
 import instructions.operations.LDR
 import instructions.operations.STR
@@ -89,7 +88,8 @@ class ParentRefSymbolTable(
             parentTable.reassign(symbol, value, errorMessageBuilder)
             return
         }
-        SemanticChecker.checkThatAssignmentTypesMatch(prev, value, errorMessageBuilder,
+        SemanticChecker.checkThatAssignmentTypesMatch(
+            prev, value, errorMessageBuilder,
             failMessage = "Attempted to reassign type of declared $prev to $value"
         )
         dict[symbol] = value
@@ -144,7 +144,7 @@ class ParentRefSymbolTable(
         data: DataDeclaration,
     ): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
-        var offset = 0
+        var offset = -data.spOffset
         var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
@@ -155,10 +155,13 @@ class ParentRefSymbolTable(
                 }
             }
             return listOf(
-                STR(fromRegister,
+                STR(
+                    fromRegister,
                     Register.stackPointer(),
                     totalByteSize - offset,
-                    isSignedByte = isSmall))
+                    isSignedByte = isSmall
+                )
+            )
         } else {
             return parentTable?.asmAssign(symbol, fromRegister, data)!!
         }
@@ -182,22 +185,30 @@ class ParentRefSymbolTable(
         TODO("Not yet implemented")
     }
 
-    override fun asmGet(symbol: String, toRegister: Register): List<WInstruction> {
+    override fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
-        var offset = 0
+        var offset = -data.spOffset
+        var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
                 offset += typeToByteSize(v)
                 if (k == symbol) {
+                    isSmall = v is WBool || v is WChar
                     break
                 }
             }
             return listOf(
-                LDR(toRegister,
-                    ImmediateOffset(Register.stackPointer(), totalByteSize - offset))
+                LDR(
+                    toRegister,
+                    ImmediateOffset(
+                        Register.stackPointer(),
+                        totalByteSize - offset
+                    ),
+                    isSignedByte = isSmall
+                )
             )
         } else {
-            return parentTable?.asmGet(symbol, toRegister)!!
+            return parentTable?.asmGet(symbol, toRegister, data)!!
         }
     }
 

@@ -13,8 +13,7 @@ data class SUB(
     var flagSet: Boolean = false
 
     override fun toString(): String {
-        val sb = "SUB"
-        if (flagSet) sb.plus("S")
-        return "$sb $rDest, $lhs, $rhs"
+        val command = "SUB" + if (flagSet) "S" else ""
+        return "$command $rDest, $lhs, $rhs"
     }
 }

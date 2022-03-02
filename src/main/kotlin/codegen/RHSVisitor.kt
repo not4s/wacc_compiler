@@ -1,6 +1,9 @@
 package codegen
 
+<<<<<<< HEAD
 import ast.ArrayLiteral
+=======
+>>>>>>> expressions
 import ast.Expr
 import ast.Literal
 import ast.RHS
@@ -23,6 +26,7 @@ class RHSVisitor(val data: DataDeclaration) : ASTVisitor<RHS> {
         return when (ctx) {
             is Literal -> visitLiteral(ctx)
             is ArrayLiteral -> visitArrayLiteral(ctx)
+            is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
             else -> TODO("Not yet implemented")
         }
     }
@@ -64,10 +68,15 @@ class RHSVisitor(val data: DataDeclaration) : ASTVisitor<RHS> {
     private fun visitLiteral(ctx: Literal): List<WInstruction> {
         return when (ctx.type) {
             is WInt -> listOf(LDR(Register.resultRegister(), LoadImmediate(ctx.type.value!!)))
-            is WBool -> listOf(LDR(Register.resultRegister(), LoadImmediate(
-                if (ctx.type.value!!) {
-                    1
-                } else 0)))
+            is WBool -> listOf(
+                LDR(
+                    Register.resultRegister(), LoadImmediate(
+                        if (ctx.type.value!!) {
+                            1
+                        } else 0
+                    )
+                )
+            )
             is WChar -> listOf(MOV(Register.resultRegister(), ImmediateChar(ctx.type.value!!)))
             is WStr -> {
                 val reference = data.addDeclaration(ctx.type.value!!)

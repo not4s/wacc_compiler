@@ -18,7 +18,7 @@ class FunctionPool {
             return false
         }
         // If already defined, don't add
-        if ((func.first() as Label).label in declaredFuncs) {
+        if (containsFunc(func.first() as Label)) {
             return false
         }
         // Finally, add
@@ -28,7 +28,15 @@ class FunctionPool {
     }
 
     // Returns all WInstructions as one list
-    fun flatten() : List<WInstruction> {
+    fun flatten(): List<WInstruction> {
         return contents.flatten()
+    }
+
+    fun containsFunc(label: String): Boolean {
+        return label in declaredFuncs
+    }
+
+    fun containsFunc(label: Label): Boolean {
+        return containsFunc(label.label)
     }
 }

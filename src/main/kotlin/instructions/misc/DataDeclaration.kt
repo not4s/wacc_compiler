@@ -6,7 +6,7 @@ class DataDeclaration {
 
     private var noNameMsgCounter: Int = 0
     private val declarations = mutableMapOf<String, String>()
-
+    var spOffset = 0
     fun addDeclaration(literal: String) : String {
         return if (declarations.values.contains(literal)) {
             // find the key corresponding to the value of the literal
@@ -32,7 +32,8 @@ class DataDeclaration {
                 return k
             }
         }
-        throw Exception("Could not find symbol for literal $literal in map: $declarations")
+        // symbol not found. Create a new label.
+        return addDeclaration(literal)
     }
 
     fun getInstructions() : List<WInstruction> {
