@@ -33,7 +33,7 @@ class StatVisitor(
     }
 
     private fun visitExitStat(ctx: ExitStat): List<WInstruction> {
-        val exprVisitor = ExprVisitor(data, registerProvider)
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val evaluationCode = exprVisitor.visit(ctx.expr)
         return evaluationCode.plus(
             listOf(
@@ -97,7 +97,7 @@ class StatVisitor(
                 else -> TODO("Non-String literals are not supported. They will require things like %s %d etc")
             }
         } else {
-            val exprVisitor = ExprVisitor(data, registerProvider)
+            val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
             evalExprInstructions = exprVisitor.visit(ctx.expr)
             firstArgInitInstruction = MOV(ldrDestReg, exprVisitor.resultStored!!)
         }
@@ -121,14 +121,14 @@ class StatVisitor(
 
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider).visit(ctx.rhs).plus(
+        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
             ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data)
         )
     }
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider).visit(ctx.rhs).plus(
+        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
             when (ctx.lhs) {
                 is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister(), data)
                 is ArrayElement -> TODO("Array elements assignments not yet implemented")

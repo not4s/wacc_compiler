@@ -8,6 +8,7 @@ import instructions.operations.*
 class ExprVisitor(
     val data: DataDeclaration,
     private val registerProvider: RegisterProvider,
+    private val funcPool: FunctionPool
 ) : ASTVisitor<Expr> {
 
     var resultStored: Operand2? = null
@@ -17,7 +18,7 @@ class ExprVisitor(
             is Literal -> {
                 // Delegate to RHS visitor of literals
                 resultStored = Register.resultRegister()
-                RHSVisitor(data, registerProvider).visit(ctx)
+                RHSVisitor(data, registerProvider, funcPool).visit(ctx)
             }
 
             is IdentifierGet -> {
@@ -46,7 +47,8 @@ class ExprVisitor(
                 reg2 = Register("r1")
                 when (ctx.op) {
 
-                    BinOperator.MUL ->
+                    BinOperator.MUL -> {
+                        pThrowOverflowError(data, funcPool)
                         return instr.plus(
                             listOf(
                                 SMULL(reg1, reg2, reg1, reg2),
@@ -54,8 +56,10 @@ class ExprVisitor(
                                 B("p_throw_overflow_error", true, B.Condition.NE)
                             )
                         )
+                    }
 
-                    BinOperator.DIV ->
+                    BinOperator.DIV -> {
+                        pThrowOverflowError(data, funcPool)
                         return instr.plus(
                             listOf(
                                 MOV(Register("r0"), reg1),
@@ -65,8 +69,10 @@ class ExprVisitor(
                                 MOV(reg1, Register("r0"))
                             )
                         )
+                    }
 
-                    BinOperator.MOD ->
+                    BinOperator.MOD -> {
+                        pCheckDivideByZero(data, funcPool)
                         return instr.plus(
                             listOf(
                                 MOV(Register("r0"), reg1),
@@ -76,8 +82,10 @@ class ExprVisitor(
                                 MOV(reg1, Register("r1"))
                             )
                         )
+                    }
 
                     BinOperator.ADD -> {
+                        pThrowOverflowError(data, funcPool)
                         val addInstr = ADD(reg1, reg1, reg2)
                         addInstr.flagSet = true
                         return instr.plus(
@@ -89,6 +97,7 @@ class ExprVisitor(
                     }
 
                     BinOperator.SUB -> {
+                        pThrowOverflowError(data, funcPool)
                         val subInstr = SUB(reg1, reg1, reg2)
                         subInstr.flagSet = true
                         return instr.plus(

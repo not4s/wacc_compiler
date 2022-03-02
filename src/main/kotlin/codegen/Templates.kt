@@ -21,8 +21,10 @@ const val LITERAL_FALSE = "false$NULL_CHAR"
 
 const val THROW_RUNTIME_ERROR = "p_throw_runtime_error"
 const val THROW_OVERFLOW_ERROR = "p_throw_overflow_error"
+const val CHECK_DIVIDE_BY_ZERO = "p_check_divide_by_zero"
 const val OVERFLOW_ERROR_MESSAGE =
     "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\\n\\0"
+const val DIVIDE_BY_ZERO_MESSAGE = "DivideByZeroError: divide or modulo by zero\\n\\0"
 const val EXIT = "exit"
 
 const val WORD_SIZE = 4
@@ -109,7 +111,28 @@ fun pThrowOverflowError(data: DataDeclaration, functionPool: FunctionPool): List
             LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data))
         )
         if (!functionPool.containsFunc(THROW_RUNTIME_ERROR)) {
-            instructions.plus(pThrowRuntimeError(data))
+            instructions.plus(pThrowRuntimeError(data, functionPool))
+        }
+    }
+    return instructions
+}
+
+fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool): List<WInstruction> {
+    var instructions: List<WInstruction> = listOf()
+    if (!functionPool.containsFunc(CHECK_DIVIDE_BY_ZERO)) {
+        instructions = listOf(
+            PUSH(Register.linkRegister()),
+            CMP(Register("r1"), Immediate(0)),
+            LDR(
+                Register.resultRegister(),
+                LabelReference(DIVIDE_BY_ZERO_MESSAGE, data),
+                conditionCode = ConditionCode.EQ
+            ),
+            B(THROW_RUNTIME_ERROR, cond = B.Condition.EQ),
+            POP(Register.resultRegister())
+        )
+        if (!functionPool.containsFunc(THROW_RUNTIME_ERROR)) {
+            instructions.plus(pThrowRuntimeError(data, functionPool))
         }
     }
     return instructions
