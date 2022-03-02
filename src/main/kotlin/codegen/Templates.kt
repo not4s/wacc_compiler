@@ -79,7 +79,7 @@ fun pPrintInt(data: DataDeclaration): List<WInstruction> {
 
 fun pReadInt(data: DataDeclaration): List<WInstruction> {
     return listOf(
-        Label(P_PRINT_INT),
+        Label(P_READ_INT),
         PUSH(Register.linkRegister()),
         MOV(Register(1), Register.resultRegister()),
         LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_INT, data)),
@@ -91,7 +91,7 @@ fun pReadInt(data: DataDeclaration): List<WInstruction> {
 
 fun pReadChar(data: DataDeclaration): List<WInstruction> {
     return listOf(
-        Label(P_PRINT_INT),
+        Label(P_READ_CHAR),
         PUSH(Register.linkRegister()),
         MOV(Register(1), Register.resultRegister()),
         LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_CHAR, data)),
@@ -100,10 +100,3 @@ fun pReadChar(data: DataDeclaration): List<WInstruction> {
         POP(Register.programCounter())
     )
 }
-//p_read_char:
-//57              PUSH {lr}
-//58              MOV r1, r0
-//59              LDR r0, =msg_3
-//60              ADD r0, r0, #4
-//61              BL scanf
-//62              POP {pc}
