@@ -79,8 +79,8 @@ class StatVisitor(
             when (ctx.expr.type) {
                 is WStr -> {
                     literal = ctx.expr.type.value ?: throw Exception("Unspecified Literal string")
-                    data.addDeclaration(literal)
-                    firstArgInitInstruction = LDR(ldrDestReg, LabelReference(literal, data))
+                    val reference = data.addDeclaration(literal)
+                    firstArgInitInstruction = LDR(ldrDestReg, LabelReference(reference))
                 }
                 is WBool -> {
                     literal = ctx.expr.type.value.toString() + NULL_CHAR

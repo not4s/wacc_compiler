@@ -32,6 +32,160 @@ symbol-table-test:
   script:
     - mvn test -Dtest=ParentRefSymbolTableTest
 
+invalid/semanticErr/exit:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/exit/*.wacc"
+
+invalid/semanticErr/expressions:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/expressions/*.wacc"
+
+invalid/semanticErr/function:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/function/*.wacc"
+
+invalid/semanticErr/if:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/if/*.wacc"
+
+invalid/semanticErr/IO:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/IO/*.wacc"
+
+invalid/semanticErr/multiple:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/multiple/*.wacc"
+
+invalid/semanticErr/pairs:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/pairs/*.wacc"
+
+invalid/semanticErr/print:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/print/*.wacc"
+
+invalid/semanticErr/read:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/read/*.wacc"
+
+invalid/semanticErr/scope:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/scope/*.wacc"
+
+invalid/semanticErr/variables:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/variables/*.wacc"
+
+invalid/semanticErr/while:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/semanticErr/while/*.wacc"
+
+invalid/syntaxErr/array:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/array/*.wacc"
+
+invalid/syntaxErr/basic:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/basic/*.wacc"
+
+invalid/syntaxErr/expressions:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/expressions/*.wacc"
+
+invalid/syntaxErr/function:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/function/*.wacc"
+
+invalid/syntaxErr/if:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/if/*.wacc"
+
+invalid/syntaxErr/pairs:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/pairs/*.wacc"
+
+invalid/syntaxErr/print:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/print/*.wacc"
+
+invalid/syntaxErr/sequence:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/sequence/*.wacc"
+
+invalid/syntaxErr/variables:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/variables/*.wacc"
+
+invalid/syntaxErr/while:
+  stage: front-end
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testDir.sh "sample_programs/invalid/syntaxErr/while/*.wacc"
+
 .front-end-tests:
   stage: front-end
   script:

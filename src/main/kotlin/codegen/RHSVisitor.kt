@@ -40,9 +40,9 @@ class RHSVisitor(
             )
             is WChar -> listOf(MOV(Register.resultRegister(), ImmediateChar(ctx.type.value!!)))
             is WStr -> {
-                data.addDeclaration(ctx.type.value!!)
+                val reference = data.addDeclaration(ctx.type.value!!)
                 listOf(
-                    LDR(Register.resultRegister(), LabelReference(ctx.type.value, data)),
+                    LDR(Register.resultRegister(), LabelReference(reference))
                 )
             }
             else -> TODO("Not yet implemented")
