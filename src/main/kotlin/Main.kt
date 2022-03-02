@@ -1,8 +1,12 @@
 import antlr.WACCLexer
 import antlr.WACCParser
+import ast.ProgramAST
+import codegen.ProgramVisitor
+import codegen.WInstrToString.Companion.translateInstructions
+import instructions.misc.DataDeclaration
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import semantic.ASTVisitor
+import semantic.ASTProducer
 import symbolTable.ParentRefSymbolTable
 import syntax.SyntaxErrBuilderErrorListener
 import utils.ExitCode
@@ -14,9 +18,7 @@ fun main(args: Array<String>) {
     if (args.isEmpty()) {
         throw IllegalArgumentException("Please provide filepath as argument.")
     }
-    println("You have passed in: ${args.joinToString()}")
     val file = File(args[0])
-    println("Opening file: $file\n")
 
     val input = CharStreams.fromFileName(file.absolutePath)
 
@@ -31,11 +33,14 @@ fun main(args: Array<String>) {
     parser.addErrorListener(SyntaxErrBuilderErrorListener(file))
 
     val tree = parser.program()
+    val ast: ProgramAST
     try {
-        val res = ASTVisitor(ParentRefSymbolTable(file.absolutePath)).visit(tree)
-        println(res)
+        ast = ASTProducer(ParentRefSymbolTable(file.absolutePath)).visit(tree) as ProgramAST
     } catch (e: SemanticException) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
+    val instructions = ProgramVisitor(DataDeclaration()).visit(ast)
+
+    translateInstructions(instructions)
 }

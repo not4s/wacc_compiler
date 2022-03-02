@@ -6,6 +6,7 @@ ANTLR_DIR	 := antlr_config
 SOURCE_DIR	 := src/main/kotlin
 ANTLR_SOURCE_DIR := $(SOURCE_DIR)/antlr
 OUTPUT_DIR	 := bin
+COMPILATION_DIR	:=	wacc_test/compiled_code
 
 # Project tools
 
@@ -32,6 +33,7 @@ all:
 # clean up all of the compiled files
 clean:
 	$(RM) $(OUTPUT_DIR) $(SOURCE_DIR)/antlr
+	$(RM) $(COMPILATION_DIR)
 	mvn clean
 
 .PHONY: all clean

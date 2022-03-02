@@ -1,7 +1,74 @@
-#!/usr/bin/ruby
-# Ruby front-end for your compiler.
-# You are free to change the language used for this script,
-# but do *not* change its name.
+#!/usr/bin/env python3
+import os, sys, shutil, argparse
 
-system("java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar #{ARGV[0]}")
-exit $?.exitstatus
+COMPILE_DIR = 'compiled_code'
+BIN_DIR = f'wacc_test/{COMPILE_DIR}'
+BIN_FILE = 'bin'
+def createRemoteFile(path: str, file_name: str, content: str = ""):
+    if(len(path) != 0):
+        prevDir = os.getcwd()
+        # if compilation directory does not exist, make the directory
+        for d in path.split("/"):
+            if not os.path.exists(d):
+                os.makedirs(d)
+            os.chdir(d)
+
+    # write output
+    with open(file_name, 'w') as f:
+        f.write(content)
+
+    if(len(path) != 0):
+        os.chdir(prevDir)
+
+def compileCode() -> str:
+    if not os.path.isfile(f"{BIN_DIR}/{BIN_FILE}"):
+        createRemoteFile(BIN_DIR, BIN_FILE)
+
+    # the user wants to save the output of the file
+    errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']} > {BIN_DIR}/{BIN_FILE}")
+    # On Unix, the return value is a 16-bit number whose high byte is the exit status (if the signal number is zero)
+    if(errCode >> 8 != 0):
+        sys.exit(errCode >> 8)
+
+    # get output from bin file
+    output = ""
+    with open(f"{BIN_DIR}/{BIN_FILE}", 'r') as f:
+        output = f.read()
+    
+    return output
+
+parser=argparse.ArgumentParser(description='Script compiling a wacc file')
+
+parser.add_argument('src_file', help='file destination of the wacc file')
+parser.add_argument('-d', action="store_true", help='flag indicating the user\'s wish to save the output in the default file location \'wacc_test/compiled_code/\'')
+
+options = parser.parse_args()
+args = vars(options)
+
+# tokenize the path given
+path = args["src_file"]
+
+# check if the file Exists
+if not os.path.isfile(path):
+    print(f"Error: Program not found at {path}")
+    sys.exit()
+
+file_type = path.split('.')[-1]
+# check the file type
+if file_type != 'wacc':
+    print("Error: File given is not a wacc file")
+    sys.exit()
+
+# build path
+file_name = os.path.splitext(os.path.basename(path))[0]
+
+if options.d:
+    output = compileCode()
+
+    # move to wacc_test directory
+    os.chdir("wacc_test")
+
+    createRemoteFile(f"{COMPILE_DIR}{path[len('wacc_test'):-len(f'/{file_name}.wacc')]}", file_name + '.s', output)
+else:
+    output = compileCode()
+    createRemoteFile("", file_name + '.s', output)

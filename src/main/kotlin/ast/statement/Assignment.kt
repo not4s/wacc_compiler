@@ -8,8 +8,8 @@ import symbolTable.SymbolTable
  **/
 class Assignment(
     override val st: SymbolTable,
-    private val lhs: LHS,
-    private val rhs: RHS
+    val lhs: LHS,
+    val rhs: RHS
 ) : Stat {
     override fun toString(): String {
         return "Assignment:\n" + "  (scope:$st)\n${lhs.toString().prependIndent(INDENT)}\n${
