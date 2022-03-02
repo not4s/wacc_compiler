@@ -17,6 +17,7 @@ antlr_config/.antlr
 wacc_test/results
 wacc_test/compiled_code
 wacc_test/sample_programs/myprogs
+wacc_test/reference_cache
 
 # ignore maven target directory
 target
