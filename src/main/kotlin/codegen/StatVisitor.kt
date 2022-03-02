@@ -5,6 +5,7 @@ import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.B
+import instructions.operations.CMP
 import instructions.operations.LDR
 import instructions.operations.MOV
 import utils.btoi
@@ -25,8 +26,35 @@ class StatVisitor(
             is Assignment -> visitAssignStat(ctx)
             is JoinStat -> visit(ctx.first).plus(visit(ctx.second))
             is PrintStat -> visitPrintStat(ctx)
+            is IfThenStat -> visitIfThenStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitIfThenStat(ctx: IfThenStat): List<WInstruction> {
+        // evaluate conditional
+        val exprVisitor = ExprVisitor(registerProvider)
+        val condition = exprVisitor.visit(ctx.condition)
+
+        val thenBranchLabel: String = funcPool.getAbstractLabel()
+        val afterIfLabel: String = funcPool.getAbstractLabel()
+
+        val elseCode: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.elseStat)
+        val thenCode: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.thenStat)
+
+        // compare with false, branch if equal (else branch)
+        val jump = listOf(
+            CMP(exprVisitor.resultStored!! as Register, Immediate(0)),
+            B(thenBranchLabel, cond = B.Condition.EQ)
+        )
+
+        return condition
+            .plus(jump)
+            .plus(elseCode)
+            .plus(B(afterIfLabel))
+            .plus(Label(thenBranchLabel))
+            .plus(thenCode)
+            .plus(Label(afterIfLabel))
     }
 
     private fun visitExitStat(ctx: ExitStat): List<WInstruction> {

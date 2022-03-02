@@ -7,6 +7,13 @@ class FunctionPool {
     private val contents = mutableListOf<List<WInstruction>>()
     private val declaredFuncs = mutableSetOf<String>()
 
+    private var labelIndex = 0
+
+    // gives a new label name to a given
+    fun getAbstractLabel(): String {
+        return "L${labelIndex++}"
+    }
+
     // Returns True if the function declaration was added, otherwise returns False.
     fun add(func: List<WInstruction>): Boolean {
         // Empty: no add
