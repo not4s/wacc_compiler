@@ -68,6 +68,7 @@ class StatVisitor(
             .plus(CMP(Register.resultRegister(), Immediate(0)))
             .plus(jump)
     }
+
     private fun visitReadStat(ctx: ReadStat): List<WInstruction> {
         val output = mutableListOf<WInstruction>()
         val readFun: String
@@ -112,7 +113,6 @@ class StatVisitor(
         val elseCode: List<WInstruction> = offsetStackBy(ctx.elseStat.st.totalByteSize)
             .plus(StatVisitor(data, funcPool).visit(ctx.elseStat))
             .plus(unOffsetStackBy(ctx.elseStat.st.totalByteSize))
-
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
@@ -244,7 +244,19 @@ class StatVisitor(
                     data,
                     null
                 )
-                is ArrayElement -> TODO("Array elements assignments not yet implemented")
+                is ArrayElement -> {
+                    // when assigning an array element it is important to remain inside the bounds
+                    pCheckArrayBounds(data, funcPool)
+
+                    ctx.st.asmAssign(
+                            ctx.lhs.identifier,
+                            ctx.lhs.indices,
+                            Register.resultRegister(),
+                            data,
+                            registerProvider,
+                            funcPool
+                        )
+                }
                 is PairElement -> TODO("Pair elements assignments not yet implemented")
                 else -> throw Exception("An LHS is not one of the three possible ones...what?")
             }

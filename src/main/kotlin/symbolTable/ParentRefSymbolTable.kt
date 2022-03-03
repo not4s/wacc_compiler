@@ -1,11 +1,15 @@
 package symbolTable
 
+import ast.Expr
+import codegen.ExprVisitor
+import codegen.FunctionPool
+import codegen.RegisterProvider
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
 import instructions.misc.ImmediateOffset
+import instructions.misc.Label
 import instructions.misc.Register
-import instructions.operations.LDR
-import instructions.operations.STR
+import instructions.operations.*
 import semantic.SemanticChecker
 import utils.SemanticErrorMessageBuilder
 import waccType.*
@@ -206,11 +210,43 @@ class ParentRefSymbolTable(
 
     override fun asmAssign(
         arrSym: String,
-        indices: Array<WInt>,
+        indices: Array<Expr>,
         fromRegister: Register,
         data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
     ): List<WInstruction> {
-        TODO("Not yet implemented")
+        // STEPS:
+        //    save the fromRegister somewhere somehow in-case it gets overwritten by any of
+        //    the indices' evaluation operations
+        val saveFromRegister = PUSH(fromRegister)
+        //    translate expression(s) in the Array and for each store somewhere somehow
+        //    whilst save the indices backwards on the stack
+        val translatingExpressions = indices.map {
+            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister()))
+        }.flatten()
+        //    get the address in the heap according to the index
+        val intermediateArrayLocationMagic: List<WInstruction> =
+            asmGet(arrSym, Register.resultRegister(), data)
+
+        //    Store the original fromRegister into the address calculated above
+        val storeValueIntoElem = listOf(
+            POP(fromRegister),
+            STR(
+                fromRegister,
+                Register.resultRegister(),
+                0,
+                false
+            )
+        )
+
+        return listOf(Label("# START OF ASM"))
+            .plus(saveFromRegister)
+            .plus(translatingExpressions)
+            .plus(intermediateArrayLocationMagic)
+            .plus(B("p_check_array_bounds", link=true))
+            .plus(storeValueIntoElem)
+            .plus(Label("# END OF ASM"))
     }
 
     override fun asmAssign(

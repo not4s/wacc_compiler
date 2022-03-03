@@ -1,5 +1,8 @@
 package symbolTable
 
+import ast.Expr
+import codegen.FunctionPool
+import codegen.RegisterProvider
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
 import instructions.misc.Register
@@ -96,15 +99,18 @@ abstract class SymbolTable(
     ): List<WInstruction>
 
     abstract fun asmAssign(
-        arrSym: String,
-        indices: Array<WInt>, fromRegister: Register,
+        pairSym: String,
+        fst: Boolean, fromRegister: Register,
         data: DataDeclaration,
     ): List<WInstruction>
 
     abstract fun asmAssign(
-        pairSym: String,
-        fst: Boolean, fromRegister: Register,
+        arrSym: String,
+        indices: Array<Expr>,
+        fromRegister: Register,
         data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
     ): List<WInstruction>
 
     abstract fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction>

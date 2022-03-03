@@ -31,9 +31,9 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
     private fun visitArrayLiteral(ctx: ArrayLiteral): List<WInstruction> {
         val arrSize = ctx.values.size
         val mallocResReg = registerProvider.get()
-        val arrValueStoreReg = registerProvider.get()
+        val arrValueStoreReg = Register.resultRegister()
         var index = 0
-        val returnlist = listOf(
+        return listOf(
             LDR(Register.resultRegister(), LoadImmediate(arrSize * WORD_SIZE)),
             B(MALLOC, link = true),
             MOV(mallocResReg, Register.resultRegister())
@@ -51,7 +51,6 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
                 STR(mallocResReg, Register.stackPointer())
             )
         )
-        return returnlist
     }
 
     private fun immediateOfCorrectType(expr: Expr): Operand2 {
