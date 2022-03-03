@@ -48,8 +48,17 @@ class StatVisitor(
             is IfThenStat -> visitIfThenStat(ctx)
             is WhileStat -> visitWhileStat(ctx)
             is ReturnStat -> visitReturnStat(ctx)
+            is FreeStat -> visitFreeStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitFreeStat(ctx: FreeStat): List<WInstruction> {
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
+        val evaluationCode = exprVisitor.visit(ctx.expression)
+        return evaluationCode.plus(
+            B("free", link = true)
+        )
     }
 
     private fun visitReturnStat(ctx: ReturnStat): List<WInstruction> {
@@ -259,9 +268,7 @@ class StatVisitor(
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider, funcPool, ctx.lhs).visit(ctx.rhs).
-                plus(LHSVisitor(data, registerProvider, funcPool).visit(ctx.lhs))
-            
-        )
+        return RHSVisitor(data, registerProvider, funcPool, ctx.lhs).visit(ctx.rhs)
+            .plus(LHSVisitor(data, registerProvider, funcPool).visit(ctx.lhs))
     }
 }
