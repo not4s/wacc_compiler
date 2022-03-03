@@ -4,11 +4,11 @@ import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
 
+const val P_PRINT_REFERENCE = "p_print_reference"
 const val P_PRINT_STRING = "p_print_string"
 const val P_PRINT_LN = "p_print_ln"
 const val P_PRINT_BOOL = "p_print_bool"
 const val P_PRINT_INT = "p_print_int"
-const val P_PRINT_REFERENCE = "p_print_reference"
 const val P_READ_INT = "p_read_int"
 const val P_READ_CHAR = "p_read_char"
 const val PRINTF = "printf"
@@ -21,8 +21,8 @@ const val PUTS = "puts"
 const val NULL_CHAR = "\\0"
 const val NULL_TERMINAL_STRING = "%.*s$NULL_CHAR"
 const val NULL_TERMINAL_INT = "%d$NULL_CHAR"
-const val NULL_TERMINAL_CHAR = " %c$NULL_CHAR"
-const val NULL_TERMINAL_POINTER = "%p$NULL_CHAR"
+const val NULL_TERMINAL_CHAR = "%c$NULL_CHAR"
+const val NULL_TERMINAL_REFERENCE = "%p$NULL_CHAR"
 const val LITERAL_TRUE = "true$NULL_CHAR"
 const val LITERAL_FALSE = "false$NULL_CHAR"
 
@@ -32,6 +32,8 @@ const val CHECK_DIVIDE_BY_ZERO = "p_check_divide_by_zero"
 const val CHECK_NULL_POINTER = "p_check_null_pointer"
 const val OVERFLOW_ERROR_MESSAGE =
     "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\\n\\0"
+const val CHECK_ARRAY_BOUNDS = "p_check_array_bounds"
+const val ARRAY_BOUNDS_ERROR_MESSAGE = "ArrayIndexOutOfBoundsError: index too large\\n\\0"
 const val DIVIDE_BY_ZERO_MESSAGE = "DivideByZeroError: divide or modulo by zero\\n\\0"
 const val NULL_POINTER_MESSAGE = "NullReferenceError: dereference a null reference\\n\\0"
 const val EXIT = "exit"
@@ -111,7 +113,7 @@ fun pPrintReference(data: DataDeclaration): List<WInstruction> {
         Label(P_PRINT_REFERENCE),
         PUSH(Register.linkRegister()),
         MOV(Register(1), Register.resultRegister()),
-        LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_POINTER, data)),
+        LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data)),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(PAIR_SIZE)),
         B(PRINTF, true),
         MOV(Register.resultRegister(), Immediate(0)),
@@ -169,7 +171,6 @@ fun pThrowOverflowError(data: DataDeclaration, functionPool: FunctionPool) {
     pThrowRuntimeError(data, functionPool)
 }
 
-
 fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool) {
     functionPool.add(
         listOf(
@@ -182,6 +183,25 @@ fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool) {
                 conditionCode = ConditionCode.EQ
             ),
             B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.EQ),
+            POP(Register.programCounter())
+        )
+    )
+    // add dependencies if not added yet
+    pThrowRuntimeError(data, functionPool)
+}
+
+fun pCheckArrayBounds(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
+            Label(CHECK_ARRAY_BOUNDS),
+            PUSH(Register.linkRegister()),
+            CMP(Register.resultRegister(), Immediate(0)),
+            LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data), conditionCode = ConditionCode.LT),
+            B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.LT),
+            LDR(Register("r1"), ImmediateOffset(Register("r4"))),
+            CMP(Register.resultRegister(), Register("r1")),
+            LDR(Register.resultRegister(), LabelReference(ARRAY_BOUNDS_ERROR_MESSAGE, data), conditionCode = ConditionCode.CS),
+            B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.CS),
             POP(Register.programCounter())
         )
     )
@@ -202,4 +222,22 @@ fun pCheckNullPointer(data: DataDeclaration, functionPool: FunctionPool) {
     )
     // add dependencies if not added yet
     pThrowRuntimeError(data, functionPool)
+}
+
+fun pPrintReference(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
+            Label(P_PRINT_REFERENCE),
+            PUSH(Register.linkRegister()),
+            MOV(Register("r1"), Register.resultRegister()),
+            LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data)),
+            ADD(Register.resultRegister(), Register.resultRegister(), Immediate(4)),
+            B(PRINTF, link=true), // TODO: maybe println? but ref compiler says printf...
+            MOV(Register.resultRegister(), Immediate(0)),
+            B(FFLUSH, link=true),
+            POP(Register.programCounter())
+        )
+    )
+    // add dependencies if not added yet
+    functionPool.add(pPrintLn(data))
 }

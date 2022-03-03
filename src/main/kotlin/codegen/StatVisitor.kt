@@ -131,7 +131,6 @@ class StatVisitor(
             .plus(StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.elseStat))
             .plus(unOffsetStackBy(ctx.elseStat.st.totalByteSize))
 
-
         // compare with false, branch if equal (else branch)
         val jump = listOf(
             CMP(exprVisitor.resultStored!! as Register, Immediate(0)),
@@ -189,15 +188,14 @@ class StatVisitor(
             is WArray -> {
                 if (type.elemType is WChar) {
                     printFun = P_PRINT_STRING
-                    data.addDeclaration(NULL_TERMINAL_STRING)
                     funcPool.add(pPrintString(data))
                 } else {
-                    TODO("Implement other array elem type prints")
+                    printFun = P_PRINT_REFERENCE
+                    pPrintReference(data, funcPool)
                 }
             }
             is WPair -> {
                 printFun = P_PRINT_REFERENCE
-                data.addDeclaration(NULL_TERMINAL_POINTER)
                 funcPool.add(pPrintReference(data))
             }
             else -> TODO("Not yet implemented")
@@ -268,7 +266,17 @@ class StatVisitor(
                     null
                 )
                 is ArrayElement -> {
-                    TODO("Array elements assignments not yet implemented")
+                    // when assigning an array element it is important to remain inside the bounds
+                    pCheckArrayBounds(data, funcPool)
+
+                    ctx.st.asmAssign(
+                            ctx.lhs.identifier,
+                            ctx.lhs.indices,
+                            Register.resultRegister(),
+                            data,
+                            registerProvider,
+                            funcPool
+                        )
                 }
                 is PairElement -> {
                     val exprReg = registerProvider.get()

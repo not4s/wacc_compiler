@@ -1,11 +1,12 @@
 package symbolTable
 
+import ast.Expr
+import codegen.ExprVisitor
+import codegen.FunctionPool
+import codegen.RegisterProvider
 import instructions.WInstruction
-import instructions.misc.DataDeclaration
-import instructions.misc.ImmediateOffset
-import instructions.misc.Register
-import instructions.operations.LDR
-import instructions.operations.STR
+import instructions.misc.*
+import instructions.operations.*
 import semantic.SemanticChecker
 import utils.SemanticErrorMessageBuilder
 import waccType.*
@@ -23,6 +24,7 @@ class ParentRefSymbolTable(
     private val dict = mutableMapOf<String, WAny>()
     val redeclaredVars = mutableSetOf<String>()
     var forceOffset = 0
+
     /**
      * Goes through all the "layers" of an array with arbitrary number of dimensions
      * until it reaches non-array element type. It ensures that
@@ -206,11 +208,49 @@ class ParentRefSymbolTable(
 
     override fun asmAssign(
         arrSym: String,
-        indices: Array<WInt>,
+        indices: Array<Expr>,
         fromRegister: Register,
         data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
     ): List<WInstruction> {
-        TODO("Not yet implemented")
+        val isSmall = typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
+        //    save the fromRegister somewhere somehow in-case it gets overwritten by any of
+        //    the indices' evaluation operations
+        val saveFromRegister = PUSH(fromRegister, data)
+        //    translate expression(s) in the Array and for each store somewhere somehow
+        //    whilst save the indices backwards on the stack
+        val translatingExpressions = indices.reversed().map {
+            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
+        }.flatten()
+        //    get the address in the heap according to the index
+        val intermediateArrayLocationMagic: List<WInstruction> =
+            asmGet(arrSym, Register("r4"), data)
+
+        //    Store the original fromRegister into the address calculated above
+        val restoringIndices = indices.map { _ ->
+            listOf(
+                POP(Register.resultRegister(), data),
+                B("p_check_array_bounds", link = true),
+                ADD(Register("r4"), Register("r4"), Immediate(4)),
+                if (isSmall) {
+                    ADD(Register("r4"), Register("r4"), Register.resultRegister())
+                } else {
+                    ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                }
+            )
+        }.flatten()
+
+        return listOf(
+            (saveFromRegister)
+        )
+            .asSequence()
+            .plus(translatingExpressions)
+            .plus(intermediateArrayLocationMagic)
+            .plus(restoringIndices)
+            .plus(POP(Register.resultRegister(), data))
+            .plus(STR(Register.resultRegister(), Register("r4"), isSignedByte = isSmall))
+            .toList()
     }
 
     override fun asmAssign(
@@ -224,7 +264,7 @@ class ParentRefSymbolTable(
 
     override fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
-        var offset = -data.spOffset  + forceOffset
+        var offset = -data.spOffset + forceOffset
         var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
@@ -266,6 +306,48 @@ class ParentRefSymbolTable(
             }
         }
     }
+
+    override fun asmGet(
+        arrSym: String,
+        indices: Array<Expr>,
+        toRegister: Register,
+        data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
+    ): List<WInstruction> {
+        val isSmall = typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
+        val translatingExpressions = indices.reversed().map {
+            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
+        }.flatten()
+        //    get the address in the heap according to the index
+        val intermediateArrayLocationMagic: List<WInstruction> =
+            asmGet(arrSym, Register("r4"), data)
+
+        //    Store the original fromRegister into the address calculated above
+        val restoringIndices = indices.map { _ ->
+            listOf(
+                POP(Register.resultRegister(), data),
+                B("p_check_array_bounds", link = true),
+                ADD(Register("r4"), Register("r4"), Immediate(4)),
+                if (isSmall) {
+                    ADD(Register("r4"), Register("r4"), Register.resultRegister())
+                } else {
+                    ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                },
+                LDR(Register("r4"), Register("r4"), isSignedByte = isSmall)
+            )
+        }.flatten()
+
+        return listOf<WInstruction>(
+        )
+            .asSequence()
+            .plus(translatingExpressions)
+            .plus(intermediateArrayLocationMagic)
+            .plus(restoringIndices)
+            .plus(MOV(toRegister, Register("r4")))
+            .toList()
+    }
+
 
     override fun toString(): String {
         val radix = 16
