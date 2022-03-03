@@ -20,7 +20,8 @@ const val PUTS = "puts"
 const val NULL_CHAR = "\\0"
 const val NULL_TERMINAL_STRING = "%.*s$NULL_CHAR"
 const val NULL_TERMINAL_INT = "%d$NULL_CHAR"
-const val NULL_TERMINAL_CHAR = " %c$NULL_CHAR"
+const val NULL_TERMINAL_CHAR = "%c$NULL_CHAR"
+const val NULL_TERMINAL_ARR = "%p$NULL_CHAR"
 const val LITERAL_TRUE = "true$NULL_CHAR"
 const val LITERAL_FALSE = "false$NULL_CHAR"
 
@@ -29,6 +30,8 @@ const val THROW_OVERFLOW_ERROR = "p_throw_overflow_error"
 const val CHECK_DIVIDE_BY_ZERO = "p_check_divide_by_zero"
 const val OVERFLOW_ERROR_MESSAGE =
     "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\\n\\0"
+const val CHECK_ARRAY_BOUNDS = "p_check_array_bounds"
+const val ARRAY_BOUNDS_ERROR_MESSAGE = "ArrayIndexOutOfBoundsError: index too large\\n\\0"
 const val DIVIDE_BY_ZERO_MESSAGE = "DivideByZeroError: divide or modulo by zero\\n\\0"
 const val EXIT = "exit"
 
@@ -155,6 +158,25 @@ fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool) {
                 conditionCode = ConditionCode.EQ
             ),
             B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.EQ),
+            POP(Register.programCounter())
+        )
+    )
+    // add dependencies if not added yet
+    pThrowRuntimeError(data, functionPool)
+}
+
+fun pCheckArrayBounds(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
+            Label(CHECK_ARRAY_BOUNDS),
+            PUSH(Register.linkRegister()),
+            CMP(Register.resultRegister(), Immediate(0)),
+            LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_ARR), conditionCode = ConditionCode.LT),
+            B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.LT),
+            LDR(Register("r1"), ImmediateOffset(Register("r1"))),
+            CMP(Register.resultRegister(), Register("r1")),
+            LDR(Register.resultRegister(), LabelReference(ARRAY_BOUNDS_ERROR_MESSAGE), conditionCode = ConditionCode.CS),
+            B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.CS),
             POP(Register.programCounter())
         )
     )
