@@ -207,15 +207,20 @@ class RHSVisitor(
     }
 
     private fun visitPairElement(ctx: PairElement): List<WInstruction> {
-        val nextReg = rp.get()
-        val offset = if (ctx.first) 0 else PAIR_SIZE
+        val tempReg = rp.get()
+        val offset = if (ctx.first) 0 else WORD_SIZE
         var charOrBool = false
-        if (lhs is IdentifierSet) charOrBool = (lhs.type is WChar || lhs.type is WBool)
+        if (lhs is IdentifierSet) {
+            charOrBool = (lhs.type is WChar || lhs.type is WBool)
+        }
         data.addDeclaration(NULL_POINTER_MESSAGE)
         pCheckNullPointer(data, funcPool)
-        val instr = visit(ctx.expr).plus(MOV(Register.resultRegister(), nextReg)).plus(B(CHECK_NULL_POINTER, true))
-            .plus(LDR(nextReg, ImmediateOffset(nextReg, offset)))
-            .plus(LDR(nextReg, ImmediateOffset(nextReg), charOrBool))
+        val instr = listOf(Label("# jopa"))
+            .plus(visit(ctx.expr))
+            .plus(listOf(Label("# jopa2")))
+            .plus(B(CHECK_NULL_POINTER, link = true))
+            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister(), offset)))
+            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister()), isSignedByte = true))
         rp.ret()
 
         return instr
