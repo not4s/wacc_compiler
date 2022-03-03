@@ -244,12 +244,17 @@ class StatVisitor(
                     data,
                     null
                 )
-                is ArrayElement -> TODO("Array elements assignments not yet implemented")
-                is PairElement -> TODO("Pair elements assignments not yet implemented")
+                is ArrayElement -> {
+                    TODO("Array elements assignments not yet implemented")
+                }
+                is PairElement -> {
+                    val exprReg = registerProvider.get()
+                    val pairElemReg = registerProvider.get()
+                    ExprVisitor(data, registerProvider, funcPool).visit(ctx.lhs.expr).
+                        plus(STR(exprReg, pairElemReg, 0))
+                }
                 else -> throw Exception("An LHS is not one of the three possible ones...what?")
             }
         )
     }
-
-
 }

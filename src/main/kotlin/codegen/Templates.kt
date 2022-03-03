@@ -27,12 +27,18 @@ const val LITERAL_FALSE = "false$NULL_CHAR"
 const val THROW_RUNTIME_ERROR = "p_throw_runtime_error"
 const val THROW_OVERFLOW_ERROR = "p_throw_overflow_error"
 const val CHECK_DIVIDE_BY_ZERO = "p_check_divide_by_zero"
+const val CHECK_NULL_POINTER = "p_check_null_pointer"
 const val OVERFLOW_ERROR_MESSAGE =
     "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\\n\\0"
 const val DIVIDE_BY_ZERO_MESSAGE = "DivideByZeroError: divide or modulo by zero\\n\\0"
 const val EXIT = "exit"
 
 const val WORD_SIZE = 4
+const val PAIR_SIZE = 4
+const val INT_SIZE  = 4
+const val STR_SIZE  = 4
+const val BOOL_SIZE = 1
+const val CHAR_SIZE = 1
 
 val printFunEnd: List<WInstruction> = listOf(
     MOV(Register.resultRegister(), Immediate(0)),

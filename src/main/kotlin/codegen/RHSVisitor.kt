@@ -3,8 +3,12 @@ package codegen
 import ast.ArrayLiteral
 import ast.Expr
 import ast.Literal
+import ast.LHS
 import ast.RHS
 import ast.NewPairRHS
+import ast.IdentifierGet
+import ast.PairElement
+import ast.PairLiteral
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
@@ -13,7 +17,12 @@ import waccType.*
 import kotlin.collections.listOf
 
 // Stores visiting result in Register.resultRegister.
-class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcPool: FunctionPool) : ASTVisitor<RHS> {
+class RHSVisitor(
+    val data: DataDeclaration,
+    val rp : RegisterProvider,
+    val funcPool: FunctionPool,
+    val lhs: LHS? = null
+    ): ASTVisitor<RHS> {
 
     private val registerProvider = RegisterProvider()
 
@@ -22,8 +31,10 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
         return when (ctx) {
             is Literal -> visitLiteral(ctx)
             is ArrayLiteral -> visitArrayLiteral(ctx)
-            is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
             is NewPairRHS -> visitNewPair(ctx)
+            is PairLiteral -> visitPairLiteral(ctx)
+            is PairElement -> visitPairElement(ctx)
+            is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
             else -> TODO("Not yet implemented")
         }
     }
@@ -86,24 +97,26 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
     }
 
     private fun visitNewPair(ctx: NewPairRHS): List<WInstruction> {
-        val mallocResReg = registerProvider.get()
-        val pairValueStoreReg = registerProvider.get()
+        val mallocResReg = rp.get()
+        val pairValueStoreReg = rp.get()
         
-        return listOf<WInstruction>(B(("malloc"), true)).
+        return listOf<WInstruction>(B((MALLOC), true)).
+            // TODO: allocate heap memory?
             // assembly for the first new element
             plus(MOV(mallocResReg, Register.resultRegister())).
             plus(visitElem(ctx.left.type, pairValueStoreReg, 0)).    
-            plus(B("malloc", true)).
+            plus(B(MALLOC, true)).
             plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
                  ctx.left.type is WBool || ctx.right.type is WChar)).
             plus(STR(Register.resultRegister(), mallocResReg)).
             
             // assembly for the second new element
-            plus(visitElem(ctx.right.type, pairValueStoreReg, WORD_SIZE)).
-            plus(B("malloc", true)).
+            plus(visitElem(ctx.right.type, pairValueStoreReg, PAIR_SIZE)).
+            plus(B(MALLOC, true)).
             plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
                      ctx.left.type is WBool || ctx.right.type is WChar)).
-            plus(STR(Register.resultRegister(), mallocResReg, WORD_SIZE)).
+            plus(STR(Register.resultRegister(), mallocResReg, PAIR_SIZE)).
+            // TODO: STR r4, [sp + sp heap offset]
             plus(STR(mallocResReg, Register.stackPointer()))
     }
 
@@ -116,37 +129,55 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
             is WInt -> {
                 return listOf<WInstruction>(
                     LDR(pairValueStoreReg, LoadImmediate(ctx.value!!)),
-                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
+                    LDR(Register.resultRegister(), LoadImmediate(INT_SIZE))
                 )
             }
             is WStr -> {
                 DataDeclaration().addDeclaration(ctx.value!!)
                 return listOf<WInstruction>(
-                    LDR(pairValueStoreReg, LabelReference(ctx.value!!)),
-                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
+                    LDR(pairValueStoreReg, LabelReference(ctx.value)),
+                    LDR(Register.resultRegister(), LoadImmediate(STR_SIZE))
                 )
             }
             is WBool -> {
-                val intVal: Int
-                if(ctx.value!!) intVal = 1 else intVal = 0 
                 return listOf<WInstruction>(
-                    MOV(pairValueStoreReg, Immediate(intVal)),
-                    LDR(Register.resultRegister(), LoadImmediate(1))
+                    MOV(pairValueStoreReg, Immediate(btoi(ctx.value!!))),
+                    LDR(Register.resultRegister(), LoadImmediate(BOOL_SIZE))
                 )
             }
             is WChar -> {
                 return listOf<WInstruction>(
                     MOV(pairValueStoreReg, ImmediateChar(ctx.value!!)),
-                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
+                    LDR(Register.resultRegister(), LoadImmediate(CHAR_SIZE))
                 )
             }
             is WPair -> {
                 return listOf<WInstruction>(
                     LDR(pairValueStoreReg, ImmediateOffset(Register.stackPointer(), offset)),
-                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
+                    LDR(Register.resultRegister(), LoadImmediate(PAIR_SIZE))
                 )
             }
             else -> throw error("Unreachable")
         }
+    }
+
+    private fun visitPairLiteral(ctx: PairLiteral): List<WInstruction> {
+        val pairLiteralStoreReg = rp.get()
+        return listOf<WInstruction>(
+            LDR(pairLiteralStoreReg, LoadImmediate(0)),
+            STR(pairLiteralStoreReg, Register.stackPointer()))
+    }
+
+    private fun visitPairElement(ctx: PairElement): List<WInstruction> {
+        val nextReg = rp.get()
+        val offset = if(ctx.first) 0 else WORD_SIZE
+        val charOrBool = lhs!!.type is WChar || lhs.type is WBool
+        data.addDeclaration(CHECK_NULL_POINTER)
+        return visit(ctx.expr).
+                plus(MOV(Register.resultRegister(), nextReg)).
+                plus(B(CHECK_NULL_POINTER, true)).
+                plus(LDR(nextReg, ImmediateOffset(nextReg, offset))).
+                plus(LDR(nextReg, ImmediateOffset(nextReg), charOrBool)).
+                plus(STR(nextReg, Register.stackPointer(), offset, charOrBool))
     }
 }
