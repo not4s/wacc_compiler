@@ -1,5 +1,5 @@
 package instructions.misc
 
 enum class ConditionCode {
-    NE, EQ
+    NE, EQ, LT, CS
 }
