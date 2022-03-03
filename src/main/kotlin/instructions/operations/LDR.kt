@@ -13,6 +13,12 @@ data class LDR(
 ) : WInstruction {
     override fun toString(): String {
         val instruction = "LDR${conditionCode ?: ""}" + if (isSignedByte) "SB" else ""
-        return "$instruction $rDest, $src"
+        return "$instruction $rDest, ${
+            if (src is Register) {
+                "[${src}]"
+            } else {
+                "$src"
+            }
+        } "
     }
 }

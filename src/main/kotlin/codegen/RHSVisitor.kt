@@ -8,10 +8,7 @@ import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
 import utils.btoi
-import waccType.WBool
-import waccType.WChar
-import waccType.WInt
-import waccType.WStr
+import waccType.*
 
 // Stores visiting result in Register.resultRegister.
 class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcPool: FunctionPool) : ASTVisitor<RHS> {

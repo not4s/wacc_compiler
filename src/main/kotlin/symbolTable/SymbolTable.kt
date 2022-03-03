@@ -114,4 +114,12 @@ abstract class SymbolTable(
     ): List<WInstruction>
 
     abstract fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction>
+    abstract fun asmGet(
+        arrSym: String,
+        indices: Array<Expr>,
+        toRegister: Register,
+        data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
+    ): List<WInstruction>
 }

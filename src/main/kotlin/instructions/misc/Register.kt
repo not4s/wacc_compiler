@@ -1,6 +1,6 @@
 package instructions.misc
 
-data class Register(val rName: String) : Operand2 {
+data class Register(val rName: String) : Operand2, Loadable {
 
     constructor(num: Int) : this("r$num")
 
