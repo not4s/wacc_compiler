@@ -3,6 +3,7 @@ package codegen
 
 import ast.ProgramAST
 import ast.Stat
+import ast.WACCFunction
 import ast.statement.ReturnStat
 import instructions.WInstruction
 import instructions.misc.*
@@ -22,7 +23,7 @@ class ProgramVisitor(
         )
 
         val functionDeclarations: List<WInstruction> = ctx.functions.map {
-            visitBody(it.body, "f_" + it.identifier)
+            visitFunc(it)
         }.flatten()
 
 //        val program = listOf(Label("main"), PUSH(Register.linkRegister()))
@@ -48,6 +49,13 @@ class ProgramVisitor(
             .plus(functionDeclarations)
             .plus(program)
             .plus(funcPool.flatten())
+    }
+
+    private fun visitFunc(ctx: WACCFunction): List<WInstruction> {
+//        ctx.params.map { (symbol, type) ->
+//            ctx.st.asmAssign(symbol, , data, type)
+//        }
+        return visitBody(ctx.body, "f_${ctx.identifier}")
     }
 
     /**

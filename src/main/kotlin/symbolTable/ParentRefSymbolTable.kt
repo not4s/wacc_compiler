@@ -158,7 +158,7 @@ class ParentRefSymbolTable(
             }
             if (type == null) {
                 if (symbol in redeclaredVars) {
-                    // Assigning, variable redeclared.
+                    // Assigning, variable redeclare.
                     return listOf(
                         STR(
                             fromRegister,
@@ -168,7 +168,7 @@ class ParentRefSymbolTable(
                         )
                     )
                 } else {
-                    // Assigning, variable NOT redeclared. Go to parent.
+                    // Assigning, variable NOT redeclare. Go to parent.
                     data.spOffset += totalByteSize
                     try {
                         return parentTable?.asmAssign(symbol, fromRegister, data, type)!!
@@ -178,10 +178,10 @@ class ParentRefSymbolTable(
                 }
             } else {
                 if (symbol in redeclaredVars) {
-                    // Declaring, variable redeclared.
+                    // Declaring, variable redeclare.
                     throw Exception("Double declare")
                 } else {
-                    // Declaring, variable NOT redeclared.
+                    // Declaring, variable NOT redeclare.
                     redeclaredVars.add(symbol)
                     return listOf(
                         STR(
@@ -235,7 +235,7 @@ class ParentRefSymbolTable(
                 }
             }
             if (symbol in redeclaredVars) {
-                // Redeclared in scope, return that
+                // Redeclare in scope, return that
                 return listOf(
                     LDR(
                         toRegister,
