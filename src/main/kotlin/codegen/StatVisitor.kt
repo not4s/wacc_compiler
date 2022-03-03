@@ -48,8 +48,17 @@ class StatVisitor(
             is IfThenStat -> visitIfThenStat(ctx)
             is WhileStat -> visitWhileStat(ctx)
             is ReturnStat -> visitReturnStat(ctx)
+            is FreeStat -> visitFreeStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitFreeStat(ctx: FreeStat): List<WInstruction> {
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
+        val evaluationCode = exprVisitor.visit(ctx.expression)
+        return evaluationCode.plus(
+            B("free", link = true)
+        )
     }
 
     private fun visitReturnStat(ctx: ReturnStat): List<WInstruction> {
