@@ -34,6 +34,7 @@ const val OVERFLOW_ERROR_MESSAGE =
     "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\\n\\0"
 const val CHECK_ARRAY_BOUNDS = "p_check_array_bounds"
 const val ARRAY_BOUNDS_ERROR_MESSAGE = "ArrayIndexOutOfBoundsError: index too large\\n\\0"
+const val ARRAY_NEGATIVE_ERROR_MESSAGE = "ArrayIndexOutOfBoundsError: negative index\\n\\0"
 const val DIVIDE_BY_ZERO_MESSAGE = "DivideByZeroError: divide or modulo by zero\\n\\0"
 const val NULL_POINTER_MESSAGE = "NullReferenceError: dereference a null reference\\n\\0"
 const val EXIT = "exit"
@@ -198,7 +199,7 @@ fun pCheckArrayBounds(data: DataDeclaration, functionPool: FunctionPool) {
             CMP(Register.resultRegister(), Immediate(0)),
             LDR(
                 Register.resultRegister(),
-                LabelReference(NULL_TERMINAL_REFERENCE, data),
+                LabelReference(ARRAY_NEGATIVE_ERROR_MESSAGE, data),
                 conditionCode = ConditionCode.LT
             ),
             B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.LT),
