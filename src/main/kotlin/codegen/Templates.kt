@@ -4,6 +4,7 @@ import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
 
+const val P_PRINT_REFERENCE = "p_print_reference"
 const val P_PRINT_STRING = "p_print_string"
 const val P_PRINT_LN = "p_print_ln"
 const val P_PRINT_BOOL = "p_print_bool"
@@ -21,7 +22,7 @@ const val NULL_CHAR = "\\0"
 const val NULL_TERMINAL_STRING = "%.*s$NULL_CHAR"
 const val NULL_TERMINAL_INT = "%d$NULL_CHAR"
 const val NULL_TERMINAL_CHAR = "%c$NULL_CHAR"
-const val NULL_TERMINAL_ARR = "%p$NULL_CHAR"
+const val NULL_TERMINAL_REFERENCE = "%p$NULL_CHAR"
 const val LITERAL_TRUE = "true$NULL_CHAR"
 const val LITERAL_FALSE = "false$NULL_CHAR"
 
@@ -171,7 +172,7 @@ fun pCheckArrayBounds(data: DataDeclaration, functionPool: FunctionPool) {
             Label(CHECK_ARRAY_BOUNDS),
             PUSH(Register.linkRegister()),
             CMP(Register.resultRegister(), Immediate(0)),
-            LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_ARR, data), conditionCode = ConditionCode.LT),
+            LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data), conditionCode = ConditionCode.LT),
             B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.LT),
             LDR(Register("r1"), ImmediateOffset(Register("r1"))),
             CMP(Register.resultRegister(), Register("r1")),
@@ -182,4 +183,22 @@ fun pCheckArrayBounds(data: DataDeclaration, functionPool: FunctionPool) {
     )
     // add dependencies if not added yet
     pThrowRuntimeError(data, functionPool)
+}
+
+fun pPrintReference(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(
+        listOf(
+            Label(P_PRINT_REFERENCE),
+            PUSH(Register.linkRegister()),
+            MOV(Register("r1"), Register.resultRegister()),
+            LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data)),
+            ADD(Register.resultRegister(), Register.resultRegister(), Immediate(4)),
+            B(PRINTF, link=true), // TODO: maybe println? but ref compiler says printf...
+            MOV(Register.resultRegister(), Immediate(0)),
+            B(FFLUSH, link=true),
+            POP(Register.programCounter())
+        )
+    )
+    // add dependencies if not added yet
+    functionPool.add(pPrintLn(data))
 }

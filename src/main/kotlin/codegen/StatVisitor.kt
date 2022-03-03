@@ -174,7 +174,9 @@ class StatVisitor(
                     data.addDeclaration(NULL_TERMINAL_STRING)
                     funcPool.add(pPrintString(data))
                 } else {
-                    TODO("Implement other array elem type prints")
+                    printFun = P_PRINT_REFERENCE
+                    data.addDeclaration(NULL_TERMINAL_REFERENCE)
+                    pPrintReference(data, funcPool)
                 }
             }
             else -> TODO("Not yet implemented")
