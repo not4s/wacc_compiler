@@ -73,11 +73,11 @@ abstract class SymbolTable(
     fun typeToByteSize(value: WAny): Int {
         // Bools, chars are 1 byte
         // Ints, string pointers, array pointers are 4
-        // Pairs are 2 pointers, 8 bytes.
+        // Pairs are stored in a pointer, 4 bytes.
         return when (value) {
             is WBool, is WChar -> 1
             is WInt, is WStr, is WArray -> 4
-            is WPair, is IncompleteWPair -> 8
+            is WPair, is IncompleteWPair -> 4
             else -> 0
         }
     }
