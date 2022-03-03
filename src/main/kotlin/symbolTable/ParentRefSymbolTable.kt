@@ -231,7 +231,6 @@ class ParentRefSymbolTable(
             listOf(
                 POP(Register.resultRegister(), data),
                 B("p_check_array_bounds", link = true),
-                STR(Register("r4"), Register("r4")),
                 ADD(Register("r4"), Register("r4"), Immediate(4)),
                 ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
             )
@@ -302,6 +301,43 @@ class ParentRefSymbolTable(
             }
         }
     }
+
+    override fun asmGet(
+        arrSym: String,
+        indices: Array<Expr>,
+        toRegister: Register,
+        data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
+    ): List<WInstruction> {
+        val translatingExpressions = indices.map {
+            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
+        }.flatten()
+        //    get the address in the heap according to the index
+        val intermediateArrayLocationMagic: List<WInstruction> =
+            asmGet(arrSym, Register("r4"), data)
+
+        //    Store the original fromRegister into the address calculated above
+        val restoringIndices = indices.map { _ ->
+            listOf(
+                POP(Register.resultRegister(), data),
+                B("p_check_array_bounds", link = true),
+                ADD(Register("r4"), Register("r4"), Immediate(4)),
+                ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+            )
+        }.flatten()
+
+        return listOf<WInstruction>(
+        )
+            .asSequence()
+            .plus(translatingExpressions)
+            .plus(intermediateArrayLocationMagic)
+            .plus(restoringIndices)
+            .plus(LDR(Register("r4"), Register("r4")))
+            .plus(MOV(toRegister, Register("r4")))
+            .toList()
+    }
+
 
     override fun toString(): String {
         val radix = 16

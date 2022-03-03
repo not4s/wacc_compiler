@@ -198,7 +198,7 @@ fun pCheckArrayBounds(data: DataDeclaration, functionPool: FunctionPool) {
             CMP(Register.resultRegister(), Immediate(0)),
             LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data), conditionCode = ConditionCode.LT),
             B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.LT),
-            LDR(Register("r1"), ImmediateOffset(Register("r1"))),
+            LDR(Register("r1"), ImmediateOffset(Register("r4"))),
             CMP(Register.resultRegister(), Register("r1")),
             LDR(Register.resultRegister(), LabelReference(ARRAY_BOUNDS_ERROR_MESSAGE, data), conditionCode = ConditionCode.CS),
             B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.CS),
