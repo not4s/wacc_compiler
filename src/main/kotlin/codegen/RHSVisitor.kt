@@ -9,6 +9,7 @@ import ast.NewPairRHS
 import ast.IdentifierGet
 import ast.PairElement
 import ast.PairLiteral
+import ast.IdentifierSet
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
@@ -100,24 +101,32 @@ class RHSVisitor(
         val mallocResReg = rp.get()
         val pairValueStoreReg = rp.get()
         
-        return listOf<WInstruction>(B((MALLOC), true)).
-            // TODO: allocate heap memory?
-            // assembly for the first new element
-            plus(MOV(mallocResReg, Register.resultRegister())).
-            plus(visitElem(ctx.left.type, pairValueStoreReg, 0)).    
-            plus(B(MALLOC, true)).
-            plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
-                 ctx.left.type is WBool || ctx.right.type is WChar)).
-            plus(STR(Register.resultRegister(), mallocResReg)).
-            
-            // assembly for the second new element
-            plus(visitElem(ctx.right.type, pairValueStoreReg, PAIR_SIZE)).
-            plus(B(MALLOC, true)).
-            plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
-                     ctx.left.type is WBool || ctx.right.type is WChar)).
-            plus(STR(Register.resultRegister(), mallocResReg, PAIR_SIZE)).
-            // TODO: STR r4, [sp + sp heap offset]
-            plus(STR(mallocResReg, Register.stackPointer()))
+        val instr 
+            = listOf<WInstruction>(
+                // TODO: allocate heap memory?
+                // assembly for the first new element
+                B((MALLOC), true)).
+                plus(MOV(mallocResReg, Register.resultRegister())).
+                plus(visitElem(ctx.left.type, pairValueStoreReg, 0)).    
+                plus(B(MALLOC, true)).
+                plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
+                    ctx.left.type is WBool || ctx.right.type is WChar)).
+                plus(STR(Register.resultRegister(), mallocResReg)).
+                
+                // assembly for the second new element
+                plus(visitElem(ctx.right.type, pairValueStoreReg, PAIR_SIZE)).
+                plus(B(MALLOC, true)).
+                plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
+                        ctx.left.type is WBool || ctx.right.type is WChar)).
+                plus(STR(Register.resultRegister(), mallocResReg, PAIR_SIZE)).
+                // TODO: STR r4, [sp + sp heap offset]
+                plus(STR(mallocResReg, Register.stackPointer())
+                )
+    
+        rp.ret()
+        rp.ret()
+
+        return instr
     }
 
     private fun visitElem(
@@ -163,21 +172,27 @@ class RHSVisitor(
 
     private fun visitPairLiteral(ctx: PairLiteral): List<WInstruction> {
         val pairLiteralStoreReg = rp.get()
-        return listOf<WInstruction>(
-            LDR(pairLiteralStoreReg, LoadImmediate(0)),
-            STR(pairLiteralStoreReg, Register.stackPointer()))
+        val instr = listOf<WInstruction>(
+                        LDR(pairLiteralStoreReg, LoadImmediate(0)),
+                        STR(pairLiteralStoreReg, Register.stackPointer()))
+        rp.ret()
+        return instr
     }
 
     private fun visitPairElement(ctx: PairElement): List<WInstruction> {
         val nextReg = rp.get()
-        val offset = if(ctx.first) 0 else WORD_SIZE
-        val charOrBool = lhs!!.type is WChar || lhs.type is WBool
+        val offset = if(ctx.first) 0 else PAIR_SIZE
+        var charOrBool = false
+        if(lhs is IdentifierSet) charOrBool = (lhs.type is WChar || lhs.type is WBool)
         data.addDeclaration(CHECK_NULL_POINTER)
-        return visit(ctx.expr).
+        val instr
+            = visit(ctx.expr).
                 plus(MOV(Register.resultRegister(), nextReg)).
                 plus(B(CHECK_NULL_POINTER, true)).
                 plus(LDR(nextReg, ImmediateOffset(nextReg, offset))).
                 plus(LDR(nextReg, ImmediateOffset(nextReg), charOrBool)).
                 plus(STR(nextReg, Register.stackPointer(), offset, charOrBool))
+        rp.ret()
+        return instr
     }
 }

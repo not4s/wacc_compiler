@@ -177,6 +177,11 @@ class StatVisitor(
                     TODO("Implement other array elem type prints")
                 }
             }
+            is WPair -> {
+                printFun = P_PRINT_REFERENCE
+                data.addDeclaration(NULL_TERMINAL_POINTER)
+                funcPool.add(pPrintReference(data))
+            }
             else -> TODO("Not yet implemented")
         }
 
@@ -236,7 +241,7 @@ class StatVisitor(
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
+        return RHSVisitor(data, registerProvider, funcPool, ctx.lhs).visit(ctx.rhs).plus(
             when (ctx.lhs) {
                 is IdentifierSet -> ctx.st.asmAssign(
                     ctx.lhs.identifier,
@@ -250,8 +255,14 @@ class StatVisitor(
                 is PairElement -> {
                     val exprReg = registerProvider.get()
                     val pairElemReg = registerProvider.get()
-                    ExprVisitor(data, registerProvider, funcPool).visit(ctx.lhs.expr).
+                    try {
+                        ExprVisitor(data, registerProvider, funcPool).visit(ctx.lhs.expr).
                         plus(STR(exprReg, pairElemReg, 0))
+                    } finally {
+                        registerProvider.ret()
+                        registerProvider.ret()
+                    }
+                    
                 }
                 else -> throw Exception("An LHS is not one of the three possible ones...what?")
             }
