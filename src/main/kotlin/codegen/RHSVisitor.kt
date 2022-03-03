@@ -30,12 +30,13 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
         val evalCodes: List<WInstruction> = ctx.params.map {
             val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
             val evalCode = exprVisitor.visit(it)
-            val storeInstr = PUSH(Register.resultRegister())
+            val storeInstr = PUSH(Register.resultRegister(), null)
             evalCode.plus(storeInstr)
         }.flatten()
         return evalCodes.plus(
             listOf(
-                B(funcLabel(ctx.identifier), link = true)
+                B(funcLabel(ctx.identifier), link = true),
+                ADD(Register.stackPointer(), Register.stackPointer(), Immediate(ctx.params.size * 4))
             )
         )
     }

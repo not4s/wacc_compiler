@@ -7,7 +7,7 @@ import ast.WACCFunction
 import ast.statement.ReturnStat
 import instructions.WInstruction
 import instructions.misc.*
-import instructions.operations.*
+import instructions.operations.PUSH
 
 
 class ProgramVisitor(
@@ -21,6 +21,8 @@ class ProgramVisitor(
             BlankLine(),
             Section(".global", "main"),
         )
+
+        val program = visitBody(ctx.body, "main", listOf())
 
         val functionDeclarations: List<WInstruction> = ctx.functions.map {
             visitFunc(it)
@@ -42,7 +44,6 @@ class ProgramVisitor(
 //                    LTORG()
 //                )
 //            )
-        val program = visitBody(ctx.body, "main")
 
         return (data.takeUnless { it.isEmpty() }?.getInstructions() ?: listOf())
             .plus(programInitialisation)
@@ -52,20 +53,33 @@ class ProgramVisitor(
     }
 
     private fun visitFunc(ctx: WACCFunction): List<WInstruction> {
-        ctx.params.map { (symbol, type) ->
-            ctx.st.asmAssign(symbol, Register.resultRegister(), data, type)
-        }
-        return visitBody(ctx.body, "f_${ctx.identifier}")
+//        val paramAssigns = ctx.params.map { (symbol, type) ->
+//            listOf(POP(Register.resultRegister(), null)).plus(
+//                ctx.body.st.asmAssign(symbol, Register.resultRegister(), data, type)
+//            )
+//        }.flatten()
+        return visitBody(ctx.body, "f_${ctx.identifier}", listOf())
     }
 
     /**
      * If visitBody() function gets main, then it treats it as having return 0 at the end
      */
-    private fun visitBody(body: Stat, funcName: String): List<WInstruction> {
-        return listOf(Label(funcName), PUSH(Register.linkRegister()))
+    private fun visitBody(body: Stat, funcName: String, paramsAssign: List<WInstruction>): List<WInstruction> {
+        return listOf(
+            Label(funcName)
+        )
+            .plus(
+                paramsAssign
+            )
+            .plus(
+                PUSH(
+                    Register.linkRegister()
+                )
+            )
             .plus(
                 // Offset initial SP
-                offsetStackBy(body.st.totalByteSize))
+                offsetStackBy(body.st.totalByteSize)
+            )
             .plus(
                 StatVisitor(data, funcPool, body.st.totalByteSize).visit(body)
             ).plus(
@@ -74,16 +88,7 @@ class ProgramVisitor(
                 else
                     listOf()
             )
-//            .plus(
-//                // Un-offset initial SP
-//                unOffsetStackBy(body.st.totalByteSize)
-//            ).plus(
-//                // TODO("Move this into visit ReturnStat")
-//                listOf(
-//                    LDR(Register("r0"), LoadImmediate(0)),
-//                    POP(Register.programCounter()),
-//                    LTORG()
-//                )
-//            )
+            .toList() as List<WInstruction>
+
     }
 }
