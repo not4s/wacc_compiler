@@ -33,15 +33,15 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
         val mallocResReg = registerProvider.get()
         val arrValueStoreReg = registerProvider.get()
         var index = 0
-        return listOf(
-            LDR(Register.resultRegister(), LoadImmediate(arrSize + WORD_SIZE)),
+        val returnlist = listOf(
+            LDR(Register.resultRegister(), LoadImmediate(arrSize * WORD_SIZE)),
             B(MALLOC, link = true),
             MOV(mallocResReg, Register.resultRegister())
         ).plus(
             ctx.values.map {
                 listOf(
                     MOV(arrValueStoreReg, immediateOfCorrectType(it)),
-                    STR(arrValueStoreReg, mallocResReg, (index++) + WORD_SIZE)
+                    STR(arrValueStoreReg, mallocResReg, (1 + index++) * WORD_SIZE)
                 )
             }.fold(listOf()) { a, b -> a.plus(b) } // reduce(List<WInstruction>::plus)
         ).plus(
@@ -51,6 +51,7 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
                 STR(mallocResReg, Register.stackPointer())
             )
         )
+        return returnlist
     }
 
     private fun immediateOfCorrectType(expr: Expr): Operand2 {
