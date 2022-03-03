@@ -52,9 +52,9 @@ class ProgramVisitor(
     }
 
     private fun visitFunc(ctx: WACCFunction): List<WInstruction> {
-//        ctx.params.map { (symbol, type) ->
-//            ctx.st.asmAssign(symbol, , data, type)
-//        }
+        ctx.params.map { (symbol, type) ->
+            ctx.st.asmAssign(symbol, Register.resultRegister(), data, type)
+        }
         return visitBody(ctx.body, "f_${ctx.identifier}")
     }
 

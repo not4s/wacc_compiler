@@ -1,9 +1,6 @@
 package codegen
 
-import ast.ArrayLiteral
-import ast.Expr
-import ast.Literal
-import ast.RHS
+import ast.*
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
@@ -24,8 +21,15 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
             is Literal -> visitLiteral(ctx)
             is ArrayLiteral -> visitArrayLiteral(ctx)
             is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
+            is FunctionCall -> visitFunctionCall(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitFunctionCall(ctx: FunctionCall): List<WInstruction> {
+        return listOf(
+            B(funcLabel(ctx.identifier), link = true)
+        )
     }
 
     private fun visitArrayLiteral(ctx: ArrayLiteral): List<WInstruction> {
