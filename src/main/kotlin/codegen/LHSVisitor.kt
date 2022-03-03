@@ -22,6 +22,7 @@ class LHSVisitor(
             is IdentifierSet -> {
                 val freeRegister = registerProvider.get()
                 resultStored = freeRegister
+                registerProvider.ret()
                 ctx.st.asmGet(ctx.identifier, freeRegister, data)
             }
             is ArrayElement -> TODO()

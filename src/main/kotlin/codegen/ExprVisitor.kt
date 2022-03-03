@@ -196,7 +196,12 @@ class ExprVisitor(
                     else -> TODO()
                 }
             }
-            else -> TODO()
+            is PairLiteral -> {
+                // Delegate to RHS visitor of literals
+                resultStored = Register.resultRegister()
+                RHSVisitor(data, registerProvider, funcPool).visit(ctx)
+            }
+            else -> TODO("Context is $ctx and its type is ${ctx::class}")
         }
 
     }

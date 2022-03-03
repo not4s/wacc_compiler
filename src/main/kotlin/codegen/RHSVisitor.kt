@@ -170,14 +170,14 @@ class RHSVisitor(
                 )
             }
             is WBool -> {
-                return listOf<WInstruction>(
+                return listOf(
                     MOV(pairValueStoreReg, Immediate(btoi(ctx.value!!))),
                     // Load the size of Bool from the heap
                     LDR(Register.resultRegister(), LoadImmediate(BOOL_SIZE))
                 )
             }
             is WChar -> {
-                return listOf<WInstruction>(
+                return listOf(
                     MOV(pairValueStoreReg, ImmediateChar(ctx.value!!)),
                     // Load the size of Char from the heap
                     LDR(Register.resultRegister(), LoadImmediate(CHAR_SIZE))
@@ -190,7 +190,13 @@ class RHSVisitor(
                     LDR(Register.resultRegister(), LoadImmediate(PAIR_SIZE))
                 )
             }
-            else -> throw error("Unreachable")
+            is WPairNull -> {
+                return listOf(
+                    LDR(pairValueStoreReg, LoadImmediate(0)),
+                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
+                )
+            }
+            else -> throw Exception("Unreachable ${ctx::class}")
         }
     }
 

@@ -209,7 +209,12 @@ class StatVisitor(
                 data.addDeclaration(NULL_TERMINAL_POINTER)
                 funcPool.add(pPrintReference(data))
             }
-            else -> TODO("Not yet implemented")
+            is WPairNull -> {
+                printFun = P_PRINT_REFERENCE
+                data.addDeclaration(NULL_TERMINAL_POINTER)
+                funcPool.add(pPrintReference(data))
+            }
+            else -> TODO("Print stat visitor not impl. Context is $ctx and type is $type")
         }
 
         // Specific literal check
