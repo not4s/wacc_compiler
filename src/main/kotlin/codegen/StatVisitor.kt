@@ -94,25 +94,26 @@ class StatVisitor(
                 readFun = P_READ_INT
                 data.addDeclaration(NULL_TERMINAL_INT)
                 funcPool.add(pReadInt(data))
-                output.add(ADD(Register.resultRegister(), Register.stackPointer(), Immediate(0)))
             }
             is WChar -> {
                 readFun = P_READ_CHAR
                 data.addDeclaration(NULL_TERMINAL_CHAR)
                 funcPool.add(pReadChar(data))
-                output.add(ADD(Register.resultRegister(), Register.stackPointer(), Immediate(0)))
             }
             else -> throw Exception("Can only read chars or ints")
         }
 
-        return output.plus(
-            B(readFun, link = true)
-        ).plus(
-            when (ctx.lhs) {
-                is IdentifierSet -> ctx.st.asmGet(ctx.lhs.identifier, Register.resultRegister(), data)
-                else -> TODO()
-            }
-        )
+        return output.plus(PUSH(Register.resultRegister()))
+            .plus(MOV(Register.resultRegister(), Register.stackPointer()))
+            .plus(
+                B(readFun, link = true)
+            ).plus(POP(Register.resultRegister()))
+            .plus(
+                when (ctx.lhs) {
+                    is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister(), data, null)
+                    else -> TODO()
+                }
+            )
 
     }
 
@@ -270,24 +271,29 @@ class StatVisitor(
                     pCheckArrayBounds(data, funcPool)
 
                     ctx.st.asmAssign(
-                            ctx.lhs.identifier,
-                            ctx.lhs.indices,
-                            Register.resultRegister(),
-                            data,
-                            registerProvider,
-                            funcPool
-                        )
+                        ctx.lhs.identifier,
+                        ctx.lhs.indices,
+                        Register.resultRegister(),
+                        data,
+                        registerProvider,
+                        funcPool
+                    )
                 }
                 is PairElement -> {
                     val exprReg = registerProvider.get()
                     val pairElemReg = registerProvider.get()
                     try {
-                            listOf(LDR(pairElemReg, ImmediateOffset(Register.stackPointer(), btoi(ctx.lhs.first) * PAIR_SIZE)))
+                        listOf(
+                            LDR(
+                                pairElemReg,
+                                ImmediateOffset(Register.stackPointer(), btoi(ctx.lhs.first) * PAIR_SIZE)
+                            )
+                        )
                     } finally {
                         registerProvider.ret()
                         registerProvider.ret()
                     }
-                    
+
                 }
                 else -> throw Exception("An LHS is not one of the three possible ones...what?")
             }
