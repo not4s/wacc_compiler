@@ -201,13 +201,9 @@ class RHSVisitor(
     }
 
     private fun visitPairLiteral(): List<WInstruction> {
-        val pairLiteralStoreReg = rp.get()
-        val instr = listOf(
-            LDR(pairLiteralStoreReg, LoadImmediate(0)),
-            STR(pairLiteralStoreReg, Register.stackPointer())
+        return listOf(
+            LDR(Register.resultRegister(), LoadImmediate(0))
         )
-        rp.ret()
-        return instr
     }
 
     private fun visitPairElement(ctx: PairElement): List<WInstruction> {

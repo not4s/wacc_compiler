@@ -266,8 +266,8 @@ class StatVisitor(
 
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
-            ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
+        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs)
+            .plus(ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
         )
     }
 
