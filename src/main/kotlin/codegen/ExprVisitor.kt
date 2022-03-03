@@ -28,6 +28,7 @@ class ExprVisitor(
 
             is ArrayElement -> {
                 resultStored = Register.resultRegister()
+                pCheckArrayBounds(data, funcPool)
                 ctx.st.asmGet(ctx.identifier, ctx.indices, Register.resultRegister(), data, registerProvider, funcPool)
             }
 
@@ -60,7 +61,13 @@ class ExprVisitor(
                         return instr // char = int lol
                     }
 
-                    else -> TODO()
+                    UnOperator.LEN -> {
+                        return instr.plus(
+                            listOf(
+                                LDR(Register.resultRegister(), Register.resultRegister())
+                            )
+                        )
+                    }
                 }
             }
             is BinaryOperation -> {
