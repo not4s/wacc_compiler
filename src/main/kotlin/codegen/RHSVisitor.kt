@@ -4,14 +4,13 @@ import ast.ArrayLiteral
 import ast.Expr
 import ast.Literal
 import ast.RHS
+import ast.NewPairRHS
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
 import utils.btoi
-import waccType.WBool
-import waccType.WChar
-import waccType.WInt
-import waccType.WStr
+import waccType.*
+import kotlin.collections.listOf
 
 // Stores visiting result in Register.resultRegister.
 class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcPool: FunctionPool) : ASTVisitor<RHS> {
@@ -24,6 +23,7 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
             is Literal -> visitLiteral(ctx)
             is ArrayLiteral -> visitArrayLiteral(ctx)
             is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
+            is NewPairRHS -> visitNewPair(ctx)
             else -> TODO("Not yet implemented")
         }
     }
@@ -85,5 +85,68 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
         }
     }
 
+    private fun visitNewPair(ctx: NewPairRHS): List<WInstruction> {
+        val mallocResReg = registerProvider.get()
+        val pairValueStoreReg = registerProvider.get()
+        
+        return listOf<WInstruction>(B(("malloc"), true)).
+            // assembly for the first new element
+            plus(MOV(mallocResReg, Register.resultRegister())).
+            plus(visitElem(ctx.left.type, pairValueStoreReg, 0)).    
+            plus(B("malloc", true)).
+            plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
+                 ctx.left.type is WBool || ctx.right.type is WChar)).
+            plus(STR(Register.resultRegister(), mallocResReg)).
+            
+            // assembly for the second new element
+            plus(visitElem(ctx.right.type, pairValueStoreReg, WORD_SIZE)).
+            plus(B("malloc", true)).
+            plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
+                     ctx.left.type is WBool || ctx.right.type is WChar)).
+            plus(STR(Register.resultRegister(), mallocResReg, WORD_SIZE)).
+            plus(STR(mallocResReg, Register.stackPointer()))
+    }
 
+    private fun visitElem(
+        ctx: WAny,
+        pairValueStoreReg: Register,
+        offset: Int
+    ): List<WInstruction> {
+        when(ctx) {
+            is WInt -> {
+                return listOf<WInstruction>(
+                    LDR(pairValueStoreReg, LoadImmediate(ctx.value!!)),
+                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
+                )
+            }
+            is WStr -> {
+                DataDeclaration().addDeclaration(ctx.value!!)
+                return listOf<WInstruction>(
+                    LDR(pairValueStoreReg, LabelReference(ctx.value!!)),
+                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
+                )
+            }
+            is WBool -> {
+                val intVal: Int
+                if(ctx.value!!) intVal = 1 else intVal = 0 
+                return listOf<WInstruction>(
+                    MOV(pairValueStoreReg, Immediate(intVal)),
+                    LDR(Register.resultRegister(), LoadImmediate(1))
+                )
+            }
+            is WChar -> {
+                return listOf<WInstruction>(
+                    MOV(pairValueStoreReg, ImmediateChar(ctx.value!!)),
+                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
+                )
+            }
+            is WPair -> {
+                return listOf<WInstruction>(
+                    LDR(pairValueStoreReg, ImmediateOffset(Register.stackPointer(), offset)),
+                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
+                )
+            }
+            else -> throw error("Unreachable")
+        }
+    }
 }

@@ -107,8 +107,8 @@ class PairLiteral(
  **/
 class NewPairRHS(
     override val st: SymbolTable,
-    private val left: Expr,
-    private val right: Expr,
+    val left: Expr,
+    val right: Expr,
     override val type: WPair,
 ) : RHS {
     override fun toString(): String {
