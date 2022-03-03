@@ -25,6 +25,7 @@ class LHSVisitor(
                 ctx.st.asmGet(ctx.identifier, freeRegister, data)
             }
             is ArrayElement -> TODO()
+
             is PairElement -> {
                 val exprReg = registerProvider.get()
                 val pairElemReg = registerProvider.get()

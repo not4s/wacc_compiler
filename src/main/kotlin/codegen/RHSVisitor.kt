@@ -129,13 +129,13 @@ class RHSVisitor(
                 plus(STR(Register.resultRegister(), mallocResReg, PAIR_SIZE)).
                 plus(
                     when(lhs) {
-                        is IdentifierSet -> ctx.st.asmAssign(lhs.identifier, Register(4), data, null)
+                        is IdentifierSet -> ctx.st.asmAssign(lhs.identifier, mallocResReg, data, null)
                         else -> listOf()
                     }
                 ).
                 plus(
                     when(lhs) {
-                        is IdentifierSet -> ctx.st.asmGet(lhs.identifier, Register(4), data)
+                        is IdentifierSet -> ctx.st.asmGet(lhs.identifier, mallocResReg, data)
                         else -> listOf()
                     }
                 )
