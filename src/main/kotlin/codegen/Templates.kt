@@ -40,8 +40,8 @@ const val EXIT = "exit"
 
 const val WORD_SIZE = 4
 const val PAIR_SIZE = 4
-const val INT_SIZE  = 4
-const val STR_SIZE  = 4
+const val INT_SIZE = 4
+const val STR_SIZE = 4
 const val BOOL_SIZE = 1
 const val CHAR_SIZE = 1
 
@@ -150,9 +150,9 @@ fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool) {
     functionPool.add(
         listOf(
             Label(THROW_RUNTIME_ERROR),
-            B(P_PRINT_STRING, link=true),
+            B(P_PRINT_STRING, link = true),
             MOV(Register.resultRegister(), Immediate(-1)),
-            B(EXIT, link=true)
+            B(EXIT, link = true)
         )
     )
     // add dependencies if not added yet
@@ -182,7 +182,7 @@ fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool) {
                 LabelReference(DIVIDE_BY_ZERO_MESSAGE, data),
                 conditionCode = ConditionCode.EQ
             ),
-            B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.EQ),
+            B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.EQ),
             POP(Register.programCounter())
         )
     )
@@ -196,12 +196,20 @@ fun pCheckArrayBounds(data: DataDeclaration, functionPool: FunctionPool) {
             Label(CHECK_ARRAY_BOUNDS),
             PUSH(Register.linkRegister()),
             CMP(Register.resultRegister(), Immediate(0)),
-            LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data), conditionCode = ConditionCode.LT),
-            B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.LT),
+            LDR(
+                Register.resultRegister(),
+                LabelReference(NULL_TERMINAL_REFERENCE, data),
+                conditionCode = ConditionCode.LT
+            ),
+            B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.LT),
             LDR(Register("r1"), ImmediateOffset(Register("r4"))),
             CMP(Register.resultRegister(), Register("r1")),
-            LDR(Register.resultRegister(), LabelReference(ARRAY_BOUNDS_ERROR_MESSAGE, data), conditionCode = ConditionCode.CS),
-            B(THROW_RUNTIME_ERROR, link=true, cond = B.Condition.CS),
+            LDR(
+                Register.resultRegister(),
+                LabelReference(ARRAY_BOUNDS_ERROR_MESSAGE, data),
+                conditionCode = ConditionCode.CS
+            ),
+            B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.CS),
             POP(Register.programCounter())
         )
     )
@@ -215,7 +223,12 @@ fun pCheckNullPointer(data: DataDeclaration, functionPool: FunctionPool) {
             Label(CHECK_NULL_POINTER),
             PUSH(Register.linkRegister()),
             CMP(Register("r0"), Immediate(0)),
-            LDR(Register.resultRegister(), LabelReference(NULL_POINTER_MESSAGE, data), false, ConditionCode.EQ),
+            LDR(
+                Register.resultRegister(),
+                LabelReference(NULL_POINTER_MESSAGE, data),
+                false,
+                ConditionCode.EQ
+            ),
             B(THROW_RUNTIME_ERROR, true, B.Condition.EQ),
             POP(Register.programCounter())
         )
@@ -232,9 +245,9 @@ fun pPrintReference(data: DataDeclaration, functionPool: FunctionPool) {
             MOV(Register("r1"), Register.resultRegister()),
             LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data)),
             ADD(Register.resultRegister(), Register.resultRegister(), Immediate(4)),
-            B(PRINTF, link=true), // TODO: maybe println? but ref compiler says printf...
+            B(PRINTF, link = true),
             MOV(Register.resultRegister(), Immediate(0)),
-            B(FFLUSH, link=true),
+            B(FFLUSH, link = true),
             POP(Register.programCounter())
         )
     )
