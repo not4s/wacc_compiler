@@ -11,6 +11,7 @@ import waccType.*
 class StatVisitor(
     val data: DataDeclaration,
     private val funcPool: FunctionPool,
+    private val returnUnOffsetByteSize: Int? = null
 ) : ASTVisitor<Stat> {
 
     private val registerProvider = RegisterProvider()
@@ -46,8 +47,23 @@ class StatVisitor(
             is ReadStat -> visitReadStat(ctx)
             is IfThenStat -> visitIfThenStat(ctx)
             is WhileStat -> visitWhileStat(ctx)
+            is ReturnStat -> visitReturnStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitReturnStat(ctx: ReturnStat): List<WInstruction> {
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
+        val evaluationCode = exprVisitor.visit(ctx.expression)
+        return evaluationCode
+            .plus(unOffsetStackBy(returnUnOffsetByteSize ?: throw Exception("Cannot restore stack offset")))
+            .plus(
+                listOf(
+                    MOV(Register.resultRegister(), exprVisitor.resultStored ?: throw Exception("no expression result")),
+                    POP(Register.programCounter()),
+                    LTORG()
+                )
+            )
     }
 
     private fun visitWhileStat(ctx: WhileStat): List<WInstruction> {
@@ -68,6 +84,7 @@ class StatVisitor(
             .plus(CMP(Register.resultRegister(), Immediate(0)))
             .plus(jump)
     }
+
     private fun visitReadStat(ctx: ReadStat): List<WInstruction> {
         val output = mutableListOf<WInstruction>()
         val readFun: String
