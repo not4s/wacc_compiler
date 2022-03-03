@@ -88,7 +88,7 @@ class ProgramVisitor(
                 else
                     listOf()
             )
-            .toList() as List<WInstruction>
+            .toList()
 
     }
 }
