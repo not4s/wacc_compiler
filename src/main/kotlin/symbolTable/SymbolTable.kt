@@ -73,17 +73,7 @@ abstract class SymbolTable(
 
     abstract fun createChildScope(): SymbolTable
 
-    fun typeToByteSize(value: WAny): Int {
-        // Bools, chars are 1 byte
-        // Ints, string pointers, array pointers are 4
-        // Pairs are stored in a pointer, 4 bytes.
-        return when (value) {
-            is WBool, is WChar -> 1
-            is WInt, is WStr, is WArray -> 4
-            is WPair, is IncompleteWPair -> 4
-            else -> 0
-        }
-    }
+
 
     val totalByteSize: Int
         get() {
@@ -122,4 +112,16 @@ abstract class SymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction>
+}
+
+fun typeToByteSize(value: WAny): Int {
+    // Bools, chars are 1 byte
+    // Ints, string pointers, array pointers are 4
+    // Pairs are stored in a pointer, 4 bytes.
+    return when (value) {
+        is WBool, is WChar -> 1
+        is WInt, is WStr, is WArray -> 4
+        is WPair, is IncompleteWPair -> 4
+        else -> 0
+    }
 }

@@ -24,6 +24,7 @@ class ParentRefSymbolTable(
     private val dict = mutableMapOf<String, WAny>()
     val redeclaredVars = mutableSetOf<String>()
     var forceOffset = 0
+
     /**
      * Goes through all the "layers" of an array with arbitrary number of dimensions
      * until it reaches non-array element type. It ensures that
@@ -213,13 +214,13 @@ class ParentRefSymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        // STEPS:
+        val isSmall = typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
         //    save the fromRegister somewhere somehow in-case it gets overwritten by any of
         //    the indices' evaluation operations
         val saveFromRegister = PUSH(fromRegister, data)
         //    translate expression(s) in the Array and for each store somewhere somehow
         //    whilst save the indices backwards on the stack
-        val translatingExpressions = indices.map {
+        val translatingExpressions = indices.reversed().map {
             ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
         }.flatten()
         //    get the address in the heap according to the index
@@ -232,7 +233,11 @@ class ParentRefSymbolTable(
                 POP(Register.resultRegister(), data),
                 B("p_check_array_bounds", link = true),
                 ADD(Register("r4"), Register("r4"), Immediate(4)),
-                ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                if (isSmall) {
+                    ADD(Register("r4"), Register("r4"), Register.resultRegister())
+                } else {
+                    ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                }
             )
         }.flatten()
 
@@ -244,7 +249,7 @@ class ParentRefSymbolTable(
             .plus(intermediateArrayLocationMagic)
             .plus(restoringIndices)
             .plus(POP(Register.resultRegister(), data))
-            .plus(STR(Register.resultRegister(), Register("r4")))
+            .plus(STR(Register.resultRegister(), Register("r4"), isSignedByte = isSmall))
             .toList()
     }
 
@@ -259,7 +264,7 @@ class ParentRefSymbolTable(
 
     override fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
-        var offset = -data.spOffset  + forceOffset
+        var offset = -data.spOffset + forceOffset
         var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
@@ -310,7 +315,8 @@ class ParentRefSymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        val translatingExpressions = indices.map {
+        val isSmall = typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
+        val translatingExpressions = indices.reversed().map {
             ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
         }.flatten()
         //    get the address in the heap according to the index
@@ -323,7 +329,12 @@ class ParentRefSymbolTable(
                 POP(Register.resultRegister(), data),
                 B("p_check_array_bounds", link = true),
                 ADD(Register("r4"), Register("r4"), Immediate(4)),
-                ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                if (isSmall) {
+                    ADD(Register("r4"), Register("r4"), Register.resultRegister())
+                } else {
+                    ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                },
+                LDR(Register("r4"), Register("r4"), isSignedByte = isSmall)
             )
         }.flatten()
 
@@ -333,7 +344,6 @@ class ParentRefSymbolTable(
             .plus(translatingExpressions)
             .plus(intermediateArrayLocationMagic)
             .plus(restoringIndices)
-            .plus(LDR(Register("r4"), Register("r4")))
             .plus(MOV(toRegister, Register("r4")))
             .toList()
     }
