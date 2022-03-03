@@ -283,7 +283,6 @@ class StatVisitor(
                     )
                 }
                 is PairElement -> {
-                    val exprReg = registerProvider.get()
                     val pairElemReg = registerProvider.get()
                     try {
                         listOf(
@@ -293,7 +292,6 @@ class StatVisitor(
                             )
                         )
                     } finally {
-                        registerProvider.ret()
                         registerProvider.ret()
                     }
 

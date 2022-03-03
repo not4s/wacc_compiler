@@ -64,31 +64,25 @@ class ProgramVisitor(
     /**
      * If visitBody() function gets main, then it treats it as having return 0 at the end
      */
-    private fun visitBody(body: Stat, funcName: String, paramsAssign: List<WInstruction>): List<WInstruction> {
+    private fun visitBody(
+        body: Stat,
+        funcName: String,
+        paramsAssign: List<WInstruction>
+    ): List<WInstruction> {
         return listOf(
             Label(funcName)
         )
-            .plus(
-                paramsAssign
-            )
-            .plus(
-                PUSH(
-                    Register.linkRegister()
-                )
-            )
+            .plus(paramsAssign)
+            .plus(PUSH(Register.linkRegister()))
             .plus(
                 // Offset initial SP
                 offsetStackBy(body.st.totalByteSize)
             )
-            .plus(
-                StatVisitor(data, funcPool, body.st.totalByteSize).visit(body)
-            ).plus(
+            .plus(StatVisitor(data, funcPool, body.st.totalByteSize).visit(body)).plus(
                 if (funcName == "main")
                     StatVisitor(data, funcPool, body.st.totalByteSize).visit(ReturnStat.zero())
                 else
                     listOf()
             )
-            .toList() as List<WInstruction>
-
     }
 }
