@@ -21,8 +21,8 @@ class ParentRefSymbolTable(
     constructor(srcFilePath: String) : this(null, true, srcFilePath)
 
     private val dict = mutableMapOf<String, WAny>()
-    private val redeclaredVars = mutableSetOf<String>()
-
+    val redeclaredVars = mutableSetOf<String>()
+    var forceOffset = 0
     /**
      * Goes through all the "layers" of an array with arbitrary number of dimensions
      * until it reaches non-array element type. It ensures that
@@ -146,7 +146,7 @@ class ParentRefSymbolTable(
         type: WAny? // null if assigning, type if declaring.
     ): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
-        var offset = -data.spOffset
+        var offset = -data.spOffset + forceOffset
         var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
@@ -158,7 +158,7 @@ class ParentRefSymbolTable(
             }
             if (type == null) {
                 if (symbol in redeclaredVars) {
-                    // Assigning, variable redeclared.
+                    // Assigning, variable redeclare.
                     return listOf(
                         STR(
                             fromRegister,
@@ -168,7 +168,7 @@ class ParentRefSymbolTable(
                         )
                     )
                 } else {
-                    // Assigning, variable NOT redeclared. Go to parent.
+                    // Assigning, variable NOT redeclare. Go to parent.
                     data.spOffset += totalByteSize
                     try {
                         return parentTable?.asmAssign(symbol, fromRegister, data, type)!!
@@ -178,10 +178,10 @@ class ParentRefSymbolTable(
                 }
             } else {
                 if (symbol in redeclaredVars) {
-                    // Declaring, variable redeclared.
+                    // Declaring, variable redeclare.
                     throw Exception("Double declare")
                 } else {
-                    // Declaring, variable NOT redeclared.
+                    // Declaring, variable NOT redeclare.
                     redeclaredVars.add(symbol)
                     return listOf(
                         STR(
@@ -224,7 +224,7 @@ class ParentRefSymbolTable(
 
     override fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
-        var offset = -data.spOffset
+        var offset = -data.spOffset  + forceOffset
         var isSmall = false
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
@@ -235,7 +235,7 @@ class ParentRefSymbolTable(
                 }
             }
             if (symbol in redeclaredVars) {
-                // Redeclared in scope, return that
+                // Redeclare in scope, return that
                 return listOf(
                     LDR(
                         toRegister,
@@ -250,7 +250,7 @@ class ParentRefSymbolTable(
                 // Not declared yet. Go to parent.
                 data.spOffset += totalByteSize
                 try {
-                    return parentTable?.asmGet(symbol, toRegister, data)!!
+                    return parentTable!!.asmGet(symbol, toRegister, data)
                 } finally {
                     data.spOffset -= totalByteSize
                 }
@@ -260,7 +260,7 @@ class ParentRefSymbolTable(
             // Not found in symbol table, go to parent.
             data.spOffset += totalByteSize
             try {
-                return parentTable?.asmGet(symbol, toRegister, data)!!
+                return parentTable!!.asmGet(symbol, toRegister, data)
             } finally {
                 data.spOffset -= totalByteSize
             }

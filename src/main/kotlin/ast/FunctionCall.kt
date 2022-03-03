@@ -11,7 +11,7 @@ import waccType.WAny
 class FunctionCall(
     override val st: SymbolTable,
     val identifier: String,
-    private val params: Array<Expr>,
+    val params: Array<Expr>,
     parserCtx: ParserRuleContext,
 ) : RHS {
 

@@ -40,6 +40,10 @@ val printFunEnd: List<WInstruction> = listOf(
     POP(Register.programCounter())
 )
 
+fun funcLabel(funcName: String): String {
+    return "f_$funcName"
+}
+
 fun pPrintString(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_PRINT_STRING),

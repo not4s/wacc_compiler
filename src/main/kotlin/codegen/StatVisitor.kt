@@ -11,6 +11,7 @@ import waccType.*
 class StatVisitor(
     val data: DataDeclaration,
     private val funcPool: FunctionPool,
+    private val returnUnOffsetByteSize: Int? = null
 ) : ASTVisitor<Stat> {
 
     private val registerProvider = RegisterProvider()
@@ -46,19 +47,35 @@ class StatVisitor(
             is ReadStat -> visitReadStat(ctx)
             is IfThenStat -> visitIfThenStat(ctx)
             is WhileStat -> visitWhileStat(ctx)
+            is ReturnStat -> visitReturnStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitReturnStat(ctx: ReturnStat): List<WInstruction> {
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
+        val evaluationCode = exprVisitor.visit(ctx.expression)
+        return evaluationCode
+            .plus(unOffsetStackBy(returnUnOffsetByteSize ?: throw Exception("Cannot restore stack offset")))
+            .plus(
+                listOf(
+                    MOV(Register.resultRegister(), exprVisitor.resultStored ?: throw Exception("no expression result")),
+                    POP(Register.programCounter()),
+                    LTORG()
+                )
+            )
     }
 
     private fun visitWhileStat(ctx: WhileStat): List<WInstruction> {
         val whileStartLabel: String = funcPool.getAbstractLabel()
         val whileBodyLabel: String = funcPool.getAbstractLabel()
 
+
+        val whileBody: List<WInstruction> = StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.doBlock)
+        val jump = B(whileBodyLabel, cond = B.Condition.NE)
+
         val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val condition = exprVisitor.visit(ctx.condition)
-
-        val whileBody: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.doBlock)
-        val jump = B(whileBodyLabel, cond = B.Condition.NE)
 
         return listOf(B(whileStartLabel))
             .plus(Label(whileBodyLabel))
@@ -68,6 +85,7 @@ class StatVisitor(
             .plus(CMP(Register.resultRegister(), Immediate(0)))
             .plus(jump)
     }
+
     private fun visitReadStat(ctx: ReadStat): List<WInstruction> {
         val output = mutableListOf<WInstruction>()
         val readFun: String
@@ -107,10 +125,10 @@ class StatVisitor(
         val afterIfLabel: String = funcPool.getAbstractLabel()
 
         val thenCode: List<WInstruction> = offsetStackBy(ctx.thenStat.st.totalByteSize)
-            .plus(StatVisitor(data, funcPool).visit(ctx.thenStat))
+            .plus(StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.thenStat))
             .plus(unOffsetStackBy(ctx.thenStat.st.totalByteSize))
         val elseCode: List<WInstruction> = offsetStackBy(ctx.elseStat.st.totalByteSize)
-            .plus(StatVisitor(data, funcPool).visit(ctx.elseStat))
+            .plus(StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.elseStat))
             .plus(unOffsetStackBy(ctx.elseStat.st.totalByteSize))
 
 

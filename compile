@@ -34,13 +34,14 @@ def compileCode() -> str:
     output = ""
     with open(f"{BIN_DIR}/{BIN_FILE}", 'r') as f:
         output = f.read()
-    
+
     return output
 
 parser=argparse.ArgumentParser(description='Script compiling a wacc file')
 
 parser.add_argument('src_file', help='file destination of the wacc file')
 parser.add_argument('-d', action="store_true", help='flag indicating the user\'s wish to save the output in the default file location \'wacc_test/compiled_code/\'')
+parser.add_argument('-p', action="store_true", help="if you want to print, and don't want to create file")
 
 options = parser.parse_args()
 args = vars(options)
@@ -69,6 +70,9 @@ if options.d:
     os.chdir("wacc_test")
 
     createRemoteFile(f"{COMPILE_DIR}{path[len('wacc_test'):-len(f'/{file_name}.wacc')]}", file_name + '.s', output)
+elif options.p:
+    output = compileCode()
+    print(output)
 else:
     output = compileCode()
     createRemoteFile("", file_name + '.s', output)
