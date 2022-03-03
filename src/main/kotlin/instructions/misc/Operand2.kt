@@ -17,7 +17,6 @@ data class Immediate(val value: Int) : Operand2 {
     override fun toString(): String {
         return "#$value"
     }
-    fun asLoadable(): LoadImmediate = LoadImmediate(value)
 }
 
 data class ImmediateChar(val value: Char) : Operand2 {
