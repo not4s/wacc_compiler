@@ -5,10 +5,7 @@ import codegen.ExprVisitor
 import codegen.FunctionPool
 import codegen.RegisterProvider
 import instructions.WInstruction
-import instructions.misc.DataDeclaration
-import instructions.misc.ImmediateOffset
-import instructions.misc.Label
-import instructions.misc.Register
+import instructions.misc.*
 import instructions.operations.*
 import semantic.SemanticChecker
 import utils.SemanticErrorMessageBuilder
@@ -219,34 +216,37 @@ class ParentRefSymbolTable(
         // STEPS:
         //    save the fromRegister somewhere somehow in-case it gets overwritten by any of
         //    the indices' evaluation operations
-        val saveFromRegister = PUSH(fromRegister)
+        val saveFromRegister = PUSH(fromRegister, data)
         //    translate expression(s) in the Array and for each store somewhere somehow
         //    whilst save the indices backwards on the stack
         val translatingExpressions = indices.map {
-            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister()))
+            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
         }.flatten()
         //    get the address in the heap according to the index
         val intermediateArrayLocationMagic: List<WInstruction> =
-            asmGet(arrSym, Register.resultRegister(), data)
+            asmGet(arrSym, Register("r4"), data)
 
         //    Store the original fromRegister into the address calculated above
-        val storeValueIntoElem = listOf(
-            POP(fromRegister),
-            STR(
-                fromRegister,
-                Register.resultRegister(),
-                0,
-                false
+        val restoringIndices = indices.map { _ ->
+            listOf(
+                POP(Register.resultRegister(), data),
+                B("p_check_array_bounds", link = true),
+                STR(Register("r4"), Register("r4")),
+                ADD(Register("r4"), Register("r4"), Immediate(4)),
+                ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
             )
-        )
+        }.flatten()
 
-        return listOf(Label("# START OF ASM"))
-            .plus(saveFromRegister)
+        return listOf(
+            (saveFromRegister)
+        )
+            .asSequence()
             .plus(translatingExpressions)
             .plus(intermediateArrayLocationMagic)
-            .plus(B("p_check_array_bounds", link=true))
-            .plus(storeValueIntoElem)
-            .plus(Label("# END OF ASM"))
+            .plus(restoringIndices)
+            .plus(POP(Register.resultRegister(), data))
+            .plus(STR(Register.resultRegister(), Register("r4")))
+            .toList()
     }
 
     override fun asmAssign(

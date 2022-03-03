@@ -32,6 +32,12 @@ data class ShiftedRegister(val reg: Register, val value: Int): Operand2 {
     }   
 }
 
+data class LSLRegister(val reg: Register, val value: Int): Operand2 {
+    override fun toString(): String {
+        return "$reg, LSL #$value"
+    }
+}
+
 data class LabelReference(val name: String) : Loadable {
 
     constructor(literal: String, data: DataDeclaration) : this(data.getSymbolFromLiteral(literal))

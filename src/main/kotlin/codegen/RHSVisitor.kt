@@ -48,7 +48,7 @@ class RHSVisitor(val data: DataDeclaration, val rp : RegisterProvider, val funcP
             listOf(
                 LDR(arrValueStoreReg, LoadImmediate(arrSize)),
                 STR(arrValueStoreReg, mallocResReg),
-                STR(mallocResReg, Register.stackPointer())
+                MOV(Register.resultRegister(), mallocResReg)
             )
         )
     }
