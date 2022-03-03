@@ -256,8 +256,7 @@ class StatVisitor(
                     val exprReg = registerProvider.get()
                     val pairElemReg = registerProvider.get()
                     try {
-                        ExprVisitor(data, registerProvider, funcPool).visit(ctx.lhs.expr).
-                        plus(STR(exprReg, pairElemReg, 0))
+                            listOf(LDR(pairElemReg, ImmediateOffset(Register.stackPointer(), btoi(ctx.lhs.first) * PAIR_SIZE)))
                     } finally {
                         registerProvider.ret()
                         registerProvider.ret()

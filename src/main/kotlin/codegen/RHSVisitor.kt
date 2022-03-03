@@ -16,6 +16,7 @@ import instructions.operations.*
 import utils.btoi
 import waccType.*
 import kotlin.collections.listOf
+import codegen.ASTVisitor
 
 // Stores visiting result in Register.resultRegister.
 class RHSVisitor(
@@ -103,24 +104,35 @@ class RHSVisitor(
         
         val instr 
             = listOf<WInstruction>(
-                // TODO: allocate heap memory?
-                // assembly for the first new element
-                B((MALLOC), true)).
+                // allocate memory for both the elements
+                LDR(Register.resultRegister(), LoadImmediate(PAIR_SIZE * 2))).
+                plus(B((MALLOC), true)).
                 plus(MOV(mallocResReg, Register.resultRegister())).
-                plus(visitElem(ctx.left.type, pairValueStoreReg, 0)).    
+
+                // evaluate the first new element
+                plus(visitElem(ctx.left.type, pairValueStoreReg, 0)).
                 plus(B(MALLOC, true)).
                 plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
-                    ctx.left.type is WBool || ctx.right.type is WChar)).
+                     ctx.type.leftType is WBool || ctx.type.leftType is WChar)).
                 plus(STR(Register.resultRegister(), mallocResReg)).
                 
-                // assembly for the second new element
+                // evaluate the second new element
                 plus(visitElem(ctx.right.type, pairValueStoreReg, PAIR_SIZE)).
                 plus(B(MALLOC, true)).
                 plus(STR(pairValueStoreReg, Register.resultRegister(), 0,
-                        ctx.left.type is WBool || ctx.right.type is WChar)).
+                     ctx.type.rightType is WBool || ctx.type.rightType is WChar)).
                 plus(STR(Register.resultRegister(), mallocResReg, PAIR_SIZE)).
-                // TODO: STR r4, [sp + sp heap offset]
-                plus(STR(mallocResReg, Register.stackPointer())
+                plus(
+                    when(lhs) {
+                        is IdentifierSet -> ctx.st.asmAssign(lhs.identifier, Register(4), data, null)
+                        else -> listOf()
+                    }
+                ).
+                plus(
+                    when(lhs) {
+                        is IdentifierSet -> ctx.st.asmGet(lhs.identifier, Register(4), data)
+                        else -> listOf()
+                    }
                 )
     
         rp.ret()
@@ -138,6 +150,7 @@ class RHSVisitor(
             is WInt -> {
                 return listOf<WInstruction>(
                     LDR(pairValueStoreReg, LoadImmediate(ctx.value!!)),
+                    // Load the size of Int from the heap
                     LDR(Register.resultRegister(), LoadImmediate(INT_SIZE))
                 )
             }
@@ -145,24 +158,28 @@ class RHSVisitor(
                 DataDeclaration().addDeclaration(ctx.value!!)
                 return listOf<WInstruction>(
                     LDR(pairValueStoreReg, LabelReference(ctx.value)),
+                    // Load the size of Str from the heap
                     LDR(Register.resultRegister(), LoadImmediate(STR_SIZE))
                 )
             }
             is WBool -> {
                 return listOf<WInstruction>(
                     MOV(pairValueStoreReg, Immediate(btoi(ctx.value!!))),
+                    // Load the size of Bool from the heap
                     LDR(Register.resultRegister(), LoadImmediate(BOOL_SIZE))
                 )
             }
             is WChar -> {
                 return listOf<WInstruction>(
                     MOV(pairValueStoreReg, ImmediateChar(ctx.value!!)),
+                    // Load the size of Char from the heap
                     LDR(Register.resultRegister(), LoadImmediate(CHAR_SIZE))
                 )
             }
             is WPair -> {
                 return listOf<WInstruction>(
                     LDR(pairValueStoreReg, ImmediateOffset(Register.stackPointer(), offset)),
+                    // Load the size of Pair from the heap
                     LDR(Register.resultRegister(), LoadImmediate(PAIR_SIZE))
                 )
             }
@@ -184,15 +201,16 @@ class RHSVisitor(
         val offset = if(ctx.first) 0 else PAIR_SIZE
         var charOrBool = false
         if(lhs is IdentifierSet) charOrBool = (lhs.type is WChar || lhs.type is WBool)
-        data.addDeclaration(CHECK_NULL_POINTER)
+        data.addDeclaration(NULL_POINTER_MESSAGE)
+        pCheckNullPointer(data, funcPool)
         val instr
             = visit(ctx.expr).
                 plus(MOV(Register.resultRegister(), nextReg)).
                 plus(B(CHECK_NULL_POINTER, true)).
                 plus(LDR(nextReg, ImmediateOffset(nextReg, offset))).
-                plus(LDR(nextReg, ImmediateOffset(nextReg), charOrBool)).
-                plus(STR(nextReg, Register.stackPointer(), offset, charOrBool))
+                plus(LDR(nextReg, ImmediateOffset(nextReg), charOrBool))
         rp.ret()
+
         return instr
     }
 }
