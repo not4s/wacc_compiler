@@ -25,6 +25,13 @@ class ExprVisitor(
                 resultStored = Register.resultRegister()
                 ctx.st.asmGet(ctx.identifier, Register.resultRegister(), data)
             }
+
+            is ArrayElement -> {
+                resultStored = Register.resultRegister()
+                pCheckArrayBounds(data, funcPool)
+                ctx.st.asmGet(ctx.identifier, ctx.indices, Register.resultRegister(), data, registerProvider, funcPool)
+            }
+
             is UnaryOperation -> {
                 val instr =
                     // Evaluate expr, result will be in R0
@@ -54,7 +61,13 @@ class ExprVisitor(
                         return instr // char = int lol
                     }
 
-                    else -> TODO()
+                    UnOperator.LEN -> {
+                        return instr.plus(
+                            listOf(
+                                LDR(Register.resultRegister(), Register.resultRegister())
+                            )
+                        )
+                    }
                 }
             }
             is BinaryOperation -> {

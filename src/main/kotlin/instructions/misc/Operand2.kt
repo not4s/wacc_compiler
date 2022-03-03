@@ -17,7 +17,6 @@ data class Immediate(val value: Int) : Operand2 {
     override fun toString(): String {
         return "#$value"
     }
-    fun asLoadable(): LoadImmediate = LoadImmediate(value)
 }
 
 data class ImmediateChar(val value: Char) : Operand2 {
@@ -30,6 +29,12 @@ data class ShiftedRegister(val reg: Register, val value: Int): Operand2 {
     override fun toString(): String {
         return "$reg, ASR #$value"
     }   
+}
+
+data class LSLRegister(val reg: Register, val value: Int): Operand2 {
+    override fun toString(): String {
+        return "$reg, LSL #$value"
+    }
 }
 
 data class LabelReference(val name: String) : Loadable {

@@ -10,7 +10,7 @@ data class B(
 
     enum class Condition {
         // VS : true if Overflow
-        EQ, NE, VS
+        EQ, NE, VS, LT, CS
     }
 
     override fun toString(): String {

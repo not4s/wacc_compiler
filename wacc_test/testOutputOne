@@ -59,7 +59,7 @@ def extractGoodStuffFromRefCompile(refCompileOutput: str):
 def compareOutput() -> str:
     # emulate WACC assembly code
     subprocess.run(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s", shell=True)
-    sp = subprocess.run(f"qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
+    sp = subprocess.run(f"timeout 20s qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
 
     # get output from program
     wacc_emulated_output = str(sp.stdout)
@@ -107,6 +107,10 @@ if not os.path.isfile(path):
     print(f"Error: Program not found at {path}")
     sys.exit()
 
+if "IO/read" in path or "IO/IO" in path:
+    print(f"Skipping IO input test: {path}")
+    sys.exit()
+
 # check the file type
 if path.split('.')[-1] != 'wacc':
     print("Error: File given is not a wacc file")
@@ -118,7 +122,7 @@ path_to_assembly = path[:-len(test_name)-len(".wacc")]
 # change directory to WACC_06/
 os.chdir("..")
 
-errCode = os.system(f"./compile wacc_test/{path} -d")
+errCode = os.system(f"timeout 20s ./compile wacc_test/{path} -d")
 # if the error code is because of an invalid program compilation
 if (errCode >> 8 in [100, 200]):
     os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")

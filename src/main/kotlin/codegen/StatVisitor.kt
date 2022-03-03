@@ -11,6 +11,7 @@ import waccType.*
 class StatVisitor(
     val data: DataDeclaration,
     private val funcPool: FunctionPool,
+    private val returnUnOffsetByteSize: Int? = null
 ) : ASTVisitor<Stat> {
 
     private val registerProvider = RegisterProvider()
@@ -46,19 +47,35 @@ class StatVisitor(
             is ReadStat -> visitReadStat(ctx)
             is IfThenStat -> visitIfThenStat(ctx)
             is WhileStat -> visitWhileStat(ctx)
+            is ReturnStat -> visitReturnStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitReturnStat(ctx: ReturnStat): List<WInstruction> {
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
+        val evaluationCode = exprVisitor.visit(ctx.expression)
+        return evaluationCode
+            .plus(unOffsetStackBy(returnUnOffsetByteSize ?: throw Exception("Cannot restore stack offset")))
+            .plus(
+                listOf(
+                    MOV(Register.resultRegister(), exprVisitor.resultStored ?: throw Exception("no expression result")),
+                    POP(Register.programCounter()),
+                    LTORG()
+                )
+            )
     }
 
     private fun visitWhileStat(ctx: WhileStat): List<WInstruction> {
         val whileStartLabel: String = funcPool.getAbstractLabel()
         val whileBodyLabel: String = funcPool.getAbstractLabel()
 
+
+        val whileBody: List<WInstruction> = StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.doBlock)
+        val jump = B(whileBodyLabel, cond = B.Condition.NE)
+
         val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val condition = exprVisitor.visit(ctx.condition)
-
-        val whileBody: List<WInstruction> = StatVisitor(data, funcPool).visit(ctx.doBlock)
-        val jump = B(whileBodyLabel, cond = B.Condition.NE)
 
         return listOf(B(whileStartLabel))
             .plus(Label(whileBodyLabel))
@@ -68,6 +85,7 @@ class StatVisitor(
             .plus(CMP(Register.resultRegister(), Immediate(0)))
             .plus(jump)
     }
+
     private fun visitReadStat(ctx: ReadStat): List<WInstruction> {
         val output = mutableListOf<WInstruction>()
         val readFun: String
@@ -107,12 +125,11 @@ class StatVisitor(
         val afterIfLabel: String = funcPool.getAbstractLabel()
 
         val thenCode: List<WInstruction> = offsetStackBy(ctx.thenStat.st.totalByteSize)
-            .plus(StatVisitor(data, funcPool).visit(ctx.thenStat))
+            .plus(StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.thenStat))
             .plus(unOffsetStackBy(ctx.thenStat.st.totalByteSize))
         val elseCode: List<WInstruction> = offsetStackBy(ctx.elseStat.st.totalByteSize)
-            .plus(StatVisitor(data, funcPool).visit(ctx.elseStat))
+            .plus(StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.elseStat))
             .plus(unOffsetStackBy(ctx.elseStat.st.totalByteSize))
-
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
@@ -171,11 +188,15 @@ class StatVisitor(
             is WArray -> {
                 if (type.elemType is WChar) {
                     printFun = P_PRINT_STRING
-                    data.addDeclaration(NULL_TERMINAL_STRING)
                     funcPool.add(pPrintString(data))
                 } else {
-                    TODO("Implement other array elem type prints")
+                    printFun = P_PRINT_REFERENCE
+                    pPrintReference(data, funcPool)
                 }
+            }
+            is WPair -> {
+                printFun = P_PRINT_REFERENCE
+                funcPool.add(pPrintReference(data))
             }
             else -> TODO("Not yet implemented")
         }
@@ -236,7 +257,7 @@ class StatVisitor(
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
+        return RHSVisitor(data, registerProvider, funcPool, ctx.lhs).visit(ctx.rhs).plus(
             when (ctx.lhs) {
                 is IdentifierSet -> ctx.st.asmAssign(
                     ctx.lhs.identifier,
@@ -244,12 +265,32 @@ class StatVisitor(
                     data,
                     null
                 )
-                is ArrayElement -> TODO("Array elements assignments not yet implemented")
-                is PairElement -> TODO("Pair elements assignments not yet implemented")
+                is ArrayElement -> {
+                    // when assigning an array element it is important to remain inside the bounds
+                    pCheckArrayBounds(data, funcPool)
+
+                    ctx.st.asmAssign(
+                            ctx.lhs.identifier,
+                            ctx.lhs.indices,
+                            Register.resultRegister(),
+                            data,
+                            registerProvider,
+                            funcPool
+                        )
+                }
+                is PairElement -> {
+                    val exprReg = registerProvider.get()
+                    val pairElemReg = registerProvider.get()
+                    try {
+                            listOf(LDR(pairElemReg, ImmediateOffset(Register.stackPointer(), btoi(ctx.lhs.first) * PAIR_SIZE)))
+                    } finally {
+                        registerProvider.ret()
+                        registerProvider.ret()
+                    }
+                    
+                }
                 else -> throw Exception("An LHS is not one of the three possible ones...what?")
             }
         )
     }
-
-
 }

@@ -1,5 +1,8 @@
 package symbolTable
 
+import ast.Expr
+import codegen.FunctionPool
+import codegen.RegisterProvider
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
 import instructions.misc.Register
@@ -70,17 +73,7 @@ abstract class SymbolTable(
 
     abstract fun createChildScope(): SymbolTable
 
-    fun typeToByteSize(value: WAny): Int {
-        // Bools, chars are 1 byte
-        // Ints, string pointers, array pointers are 4
-        // Pairs are 2 pointers, 8 bytes.
-        return when (value) {
-            is WBool, is WChar -> 1
-            is WInt, is WStr, is WArray -> 4
-            is WPair, is IncompleteWPair -> 8
-            else -> 0
-        }
-    }
+
 
     val totalByteSize: Int
         get() {
@@ -96,16 +89,39 @@ abstract class SymbolTable(
     ): List<WInstruction>
 
     abstract fun asmAssign(
-        arrSym: String,
-        indices: Array<WInt>, fromRegister: Register,
-        data: DataDeclaration,
-    ): List<WInstruction>
-
-    abstract fun asmAssign(
         pairSym: String,
         fst: Boolean, fromRegister: Register,
         data: DataDeclaration,
     ): List<WInstruction>
 
+    abstract fun asmAssign(
+        arrSym: String,
+        indices: Array<Expr>,
+        fromRegister: Register,
+        data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
+    ): List<WInstruction>
+
     abstract fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction>
+    abstract fun asmGet(
+        arrSym: String,
+        indices: Array<Expr>,
+        toRegister: Register,
+        data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
+    ): List<WInstruction>
+}
+
+fun typeToByteSize(value: WAny): Int {
+    // Bools, chars are 1 byte
+    // Ints, string pointers, array pointers are 4
+    // Pairs are stored in a pointer, 4 bytes.
+    return when (value) {
+        is WBool, is WChar -> 1
+        is WInt, is WStr, is WArray -> 4
+        is WPair, is IncompleteWPair -> 4
+        else -> 0
+    }
 }

@@ -4,6 +4,7 @@ import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import ast.*
 import ast.statement.*
+import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
 import syntax.SyntaxChecker
 import utils.*
@@ -453,17 +454,19 @@ class ASTProducer(
      */
     private fun visitFuncParams(ctx: WACCParser.FuncContext): WACCFunction {
         val params: MutableMap<String, WAny> = mutableMapOf()
-        val funScope = st.createChildScope()
+        val funScope = ParentRefSymbolTable(null, false, st.srcFilePath)
+        funScope.forceOffset = -4 // Accounts for extra space between LR and stack frame.
         if (ctx.paramList() != null) {
             for (p in ctx.paramList().param()) {
                 val id = p.IDENTIFIER().text
+                funScope.redeclaredVars.add(id)
                 val ty = (safeVisit(WACCType(st, WUnknown())) { this.visit(p.type()) } as WACCType).type
                 params[id] = ty
                 funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
             }
         }
         return WACCFunction(
-            funScope,
+            funScope.createChildScope(),
             ctx.IDENTIFIER().text,
             params,
             SkipStat(st),
