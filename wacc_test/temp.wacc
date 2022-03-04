@@ -1,0 +1,9 @@
+begin
+  pair(int, int) p = newpair(13, 37) ;
+  int x = fst p ;
+
+  int y = snd p ;
+
+  exit x + y
+
+end

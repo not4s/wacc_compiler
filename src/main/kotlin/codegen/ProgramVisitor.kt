@@ -24,26 +24,7 @@ class ProgramVisitor(
 
         val program = visitBody(ctx.body, "main", listOf())
 
-        val functionDeclarations: List<WInstruction> = ctx.functions.map {
-            visitFunc(it)
-        }.flatten()
-
-//        val program = listOf(Label("main"), PUSH(Register.linkRegister()))
-//            .plus(
-//                // Offset initial SP
-//                offsetStackBy(ctx.body.st.totalByteSize))
-//            .plus(
-//                StatVisitor(data, funcPool).visit(ctx.body)
-//            ).plus(
-//                // Un-offset initial SP
-//                unOffsetStackBy(ctx.body.st.totalByteSize)
-//            ).plus(
-//                listOf(
-//                    LDR(Register("r0"), LoadImmediate(0)),
-//                    POP(Register.programCounter()),
-//                    LTORG()
-//                )
-//            )
+        val functionDeclarations: List<WInstruction> = ctx.functions.map { visitFunc(it) }.flatten()
 
         return (data.takeUnless { it.isEmpty() }?.getInstructions() ?: listOf())
             .plus(programInitialisation)
@@ -53,42 +34,28 @@ class ProgramVisitor(
     }
 
     private fun visitFunc(ctx: WACCFunction): List<WInstruction> {
-//        val paramAssigns = ctx.params.map { (symbol, type) ->
-//            listOf(POP(Register.resultRegister(), null)).plus(
-//                ctx.body.st.asmAssign(symbol, Register.resultRegister(), data, type)
-//            )
-//        }.flatten()
-        return visitBody(ctx.body, "f_${ctx.identifier}", listOf())
+        return visitBody(ctx.body, funcLabel(ctx.identifier), listOf())
     }
 
     /**
      * If visitBody() function gets main, then it treats it as having return 0 at the end
      */
-    private fun visitBody(body: Stat, funcName: String, paramsAssign: List<WInstruction>): List<WInstruction> {
-        return listOf(
-            Label(funcName)
-        )
-            .plus(
-                paramsAssign
-            )
-            .plus(
-                PUSH(
-                    Register.linkRegister()
-                )
-            )
-            .plus(
-                // Offset initial SP
-                offsetStackBy(body.st.totalByteSize)
-            )
-            .plus(
-                StatVisitor(data, funcPool, body.st.totalByteSize).visit(body)
-            ).plus(
+    private fun visitBody(
+        body: Stat,
+        funcName: String,
+        paramsAssign: List<WInstruction>
+    ): List<WInstruction> {
+        return listOf(Label(funcName))
+            .asSequence()
+            .plus(paramsAssign)
+            .plus(PUSH(Register.linkRegister()))
+            .plus(offsetStackBy(body.st.totalByteSize)) // Offset initial SP
+            .plus(StatVisitor(data, funcPool, body.st.totalByteSize).visit(body)).plus(
                 if (funcName == "main")
                     StatVisitor(data, funcPool, body.st.totalByteSize).visit(ReturnStat.zero())
                 else
                     listOf()
             )
-            .toList() as List<WInstruction>
-
+            .toList()
     }
 }

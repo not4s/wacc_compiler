@@ -30,6 +30,12 @@ def compareStrings(correct: str, received: str) -> str:
         differences += f"{diff}\n"
     return differences[:-1]
 
+# removes all occurrances of any addresses that will be printed by the compiler.
+# assumes that the user won't be printing an numbers in the same format as the
+# address, i.e. 0x[0-9]+ = .*
+def removeAddressOccurances(consoleOutput: str) -> str:
+    return re.sub( "0x[0-9]+", '', consoleOutput)
+
 # goes to the wacc_test directory and returns the previous working directory
 # assumes that wacc_test is a parent on the cwd
 def goToWaccTestDir() -> str:
@@ -59,11 +65,15 @@ def extractGoodStuffFromRefCompile(refCompileOutput: str):
 def compareOutput() -> str:
     # emulate WACC assembly code
     subprocess.run(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s", shell=True)
-    sp = subprocess.run(f"timeout 20s qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
-
-    # get output from program
-    wacc_emulated_output = str(sp.stdout)
-    wacc_exit_code = sp.returncode
+    try:
+        sp = subprocess.run(f"timeout 10s qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
+        # get output from program
+        wacc_emulated_output = str(sp.stdout)
+        wacc_exit_code = sp.returncode
+    except UnicodeDecodeError:
+        print(f"WARNING: The file {test_name} could not be decoded (utf-8?)")
+        wacc_emulated_output = ""
+        wacc_exit_code = -1
 
     # compare output from refCompile to output from program; go into refCompile's directory
     prevDirectory = goToWaccTestDir()
@@ -75,7 +85,7 @@ def compareOutput() -> str:
     refCompiler_emulated_output += f"\nExit code returned: {ref_exit_code}"
     wacc_emulated_output += f"\nExit code returned: {wacc_exit_code}"
 
-    return compareStrings(refCompiler_emulated_output, wacc_emulated_output)
+    return compareStrings(removeAddressOccurances(refCompiler_emulated_output), removeAddressOccurances(wacc_emulated_output))
 
 def compareAssembly() -> str:
     # get assembly from refCompile
@@ -94,7 +104,7 @@ parser=argparse.ArgumentParser(description='Script testing correctness of the co
 parser.add_argument('src_file', help='file destination of the wacc file')
 parser.add_argument('-x', action="store_true", help='compares the output of the file')
 parser.add_argument('-a', action="store_true", help='compares the assembly output of the file')
-parser.add_argument('-p', default="default_input", type=str, nargs=1, help='optional input into file (by default set to \"defulat_input\")')
+parser.add_argument('-p', default="default_input", type=str, nargs=1, help='optional input into file (by default set to \"default_input\")')
 
 options = parser.parse_args()
 args = vars(options)
@@ -107,10 +117,6 @@ if not os.path.isfile(path):
     print(f"Error: Program not found at {path}")
     sys.exit()
 
-if "IO/read" in path or "IO/IO" in path:
-    print(f"Skipping IO input test: {path}")
-    sys.exit()
-
 # check the file type
 if path.split('.')[-1] != 'wacc':
     print("Error: File given is not a wacc file")
@@ -118,6 +124,12 @@ if path.split('.')[-1] != 'wacc':
 
 test_name = path.split('/')[-1].split('.')[0]
 path_to_assembly = path[:-len(test_name)-len(".wacc")]
+
+with open(path, 'r') as f:
+    wacc_sourceCode = f.read()
+    if("read" in wacc_sourceCode):
+        print(f"Skipping IO input test: {path}")
+        sys.exit()
 
 # change directory to WACC_06/
 os.chdir("..")
@@ -142,7 +154,7 @@ stringBuffer = ""
 fail: bool = False
 
 # cwd = directory of .s file
-if(options.a):
+if options.a:
     stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in assembly\n{REFCOMPILER_SPLIT}\n"
     diff = compareAssembly()
     if len(diff) != 0:
@@ -152,7 +164,7 @@ if(options.a):
         stringBuffer += "Assembly code matches\n"
 
 # if no argmuents provided by default compares output
-if(options.x or (not options.x and not options.x)):
+if options.x or (not options.x and not options.a):
     stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
     diff = compareOutput()
     if len(diff) != 0:

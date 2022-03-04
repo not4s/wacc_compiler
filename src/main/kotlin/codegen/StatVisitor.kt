@@ -48,8 +48,17 @@ class StatVisitor(
             is IfThenStat -> visitIfThenStat(ctx)
             is WhileStat -> visitWhileStat(ctx)
             is ReturnStat -> visitReturnStat(ctx)
+            is FreeStat -> visitFreeStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitFreeStat(ctx: FreeStat): List<WInstruction> {
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
+        val evaluationCode = exprVisitor.visit(ctx.expression)
+        return evaluationCode.plus(
+            B("free", link = true)
+        )
     }
 
     private fun visitReturnStat(ctx: ReturnStat): List<WInstruction> {
@@ -59,7 +68,7 @@ class StatVisitor(
             .plus(unOffsetStackBy(returnUnOffsetByteSize ?: throw Exception("Cannot restore stack offset")))
             .plus(
                 listOf(
-                    MOV(Register.resultRegister(), exprVisitor.resultStored ?: throw Exception("no expression result")),
+                    MOV(Register.resultRegister(), Register.resultRegister()),
                     POP(Register.programCounter()),
                     LTORG()
                 )
@@ -137,7 +146,7 @@ class StatVisitor(
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
-            CMP(exprVisitor.resultStored!! as Register, Immediate(0)),
+            CMP(Register.resultRegister(), Immediate(0)),
             B(elseBranchLabel, cond = B.Condition.EQ)
         )
 
@@ -155,7 +164,7 @@ class StatVisitor(
         val evaluationCode = exprVisitor.visit(ctx.expr)
         return evaluationCode.plus(
             listOf(
-                MOV(Register.resultRegister(), exprVisitor.resultStored!!),
+                MOV(Register.resultRegister(), Register.resultRegister()),
                 B("exit", link = true)
             )
         )
@@ -202,7 +211,12 @@ class StatVisitor(
                 printFun = P_PRINT_REFERENCE
                 funcPool.add(pPrintReference(data))
             }
-            else -> TODO("Not yet implemented")
+            is WPairNull -> {
+                printFun = P_PRINT_REFERENCE
+                data.addDeclaration(NULL_TERMINAL_POINTER)
+                funcPool.add(pPrintReference(data))
+            }
+            else -> TODO("Print stat visitor not impl. Context is $ctx and type is $type")
         }
 
         // Specific literal check
@@ -230,7 +244,7 @@ class StatVisitor(
         } else {
             val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
             evalExprInstructions = exprVisitor.visit(ctx.expr)
-            firstArgInitInstruction = MOV(ldrDestReg, exprVisitor.resultStored!!)
+            firstArgInitInstruction = MOV(ldrDestReg, Register.resultRegister())
         }
 
         if (ctx.newlineAfter) {
@@ -254,52 +268,13 @@ class StatVisitor(
 
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
-            ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
+        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs)
+            .plus(ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
         )
     }
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
-        // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider, funcPool, ctx.lhs).visit(ctx.rhs).plus(
-            when (ctx.lhs) {
-                is IdentifierSet -> ctx.st.asmAssign(
-                    ctx.lhs.identifier,
-                    Register.resultRegister(),
-                    data,
-                    null
-                )
-                is ArrayElement -> {
-                    // when assigning an array element it is important to remain inside the bounds
-                    pCheckArrayBounds(data, funcPool)
-
-                    ctx.st.asmAssign(
-                        ctx.lhs.identifier,
-                        ctx.lhs.indices,
-                        Register.resultRegister(),
-                        data,
-                        registerProvider,
-                        funcPool
-                    )
-                }
-                is PairElement -> {
-                    val exprReg = registerProvider.get()
-                    val pairElemReg = registerProvider.get()
-                    try {
-                        listOf(
-                            LDR(
-                                pairElemReg,
-                                ImmediateOffset(Register.stackPointer(), btoi(ctx.lhs.first) * PAIR_SIZE)
-                            )
-                        )
-                    } finally {
-                        registerProvider.ret()
-                        registerProvider.ret()
-                    }
-
-                }
-                else -> throw Exception("An LHS is not one of the three possible ones...what?")
-            }
-        )
+        return RHSVisitor(data, registerProvider, funcPool, ctx.lhs).visit(ctx.rhs)
+            .plus(LHSVisitor(data, registerProvider, funcPool).visit(ctx.lhs))
     }
 }

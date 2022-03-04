@@ -201,7 +201,7 @@ valid/advanced:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/advanced/*.wacc"
 
-.valid/array:
+valid/array:
   stage: back-end
   interruptible: true
   script:
@@ -257,7 +257,7 @@ valid/IO/print:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/IO/print/*.wacc"
 
-.valid/IO/read:
+valid/IO/read:
   stage: back-end
   interruptible: true
   script:
@@ -271,7 +271,7 @@ valid/IO/print:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/pairs/*.wacc"
 
-.valid/runtimeErr/arrayOutOfBounds:
+valid/runtimeErr/arrayOutOfBounds:
   stage: back-end
   interruptible: true
   script:
@@ -285,7 +285,7 @@ valid/runtimeErr/divideByZero:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/runtimeErr/divideByZero/*.wacc"
 
-.valid/runtimeErr/integerOverflow:
+valid/runtimeErr/integerOverflow:
   stage: back-end
   interruptible: true
   script:
@@ -320,7 +320,7 @@ valid/variables:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/variables/*.wacc"
 
-.valid/while:
+valid/while:
   stage: back-end
   interruptible: true
   script:
