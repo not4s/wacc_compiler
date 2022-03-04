@@ -30,6 +30,12 @@ def compareStrings(correct: str, received: str) -> str:
         differences += f"{diff}\n"
     return differences[:-1]
 
+# removes all occurrances of any addresses that will be printed by the compiler.
+# assumes that the user won't be printing an numbers in the same format as the
+# address, i.e. 0x[0-9]+ = .*
+def removeAddressOccurances(consoleOutput: str) -> str:
+    return re.sub( "0x[0-9]+", '', consoleOutput)
+
 # goes to the wacc_test directory and returns the previous working directory
 # assumes that wacc_test is a parent on the cwd
 def goToWaccTestDir() -> str:
@@ -75,7 +81,7 @@ def compareOutput() -> str:
     refCompiler_emulated_output += f"\nExit code returned: {ref_exit_code}"
     wacc_emulated_output += f"\nExit code returned: {wacc_exit_code}"
 
-    return compareStrings(refCompiler_emulated_output, wacc_emulated_output)
+    return compareStrings(removeAddressOccurances(refCompiler_emulated_output), removeAddressOccurances(wacc_emulated_output))
 
 def compareAssembly() -> str:
     # get assembly from refCompile
@@ -107,10 +113,6 @@ if not os.path.isfile(path):
     print(f"Error: Program not found at {path}")
     sys.exit()
 
-if "IO/read" in path or "IO/IO" in path:
-    print(f"Skipping IO input test: {path}")
-    sys.exit()
-
 # check the file type
 if path.split('.')[-1] != 'wacc':
     print("Error: File given is not a wacc file")
@@ -118,6 +120,12 @@ if path.split('.')[-1] != 'wacc':
 
 test_name = path.split('/')[-1].split('.')[0]
 path_to_assembly = path[:-len(test_name)-len(".wacc")]
+
+with open(path, 'r') as f:
+    wacc_sourceCode = f.read()
+    if("read" in wacc_sourceCode):
+        print(f"Skipping IO input test: {path}")
+        sys.exit()
 
 # change directory to WACC_06/
 os.chdir("..")
