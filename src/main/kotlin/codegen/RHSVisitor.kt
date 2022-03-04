@@ -61,7 +61,7 @@ class RHSVisitor(
                 ExprVisitor(data, registerProvider, funcPool).visit(it).plus(
                     STR(arrValueStoreReg, mallocResReg, WORD_SIZE + (index++) * typeToByteSize(ctx.type.elemType))
                 )
-            }.fold(listOf()) { a, b -> a.plus(b) } // reduce(List<WInstruction>::plus)
+            }.fold(listOf()) { a, b -> a.plus(b) }
         ).plus(
             listOf(
                 LDR(arrValueStoreReg, LoadImmediate(arrSize)),

@@ -115,12 +115,9 @@ fun pPrintReference(data: DataDeclaration): List<WInstruction> {
         PUSH(Register.linkRegister()),
         MOV(Register(1), Register.resultRegister()),
         LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data)),
-        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(PAIR_SIZE)),
+        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
         B(PRINTF, true),
-        MOV(Register.resultRegister(), Immediate(0)),
-        B(FFLUSH, true),
-        POP(Register.programCounter())
-    )
+    ).plus(printFunEnd)
 }
 
 fun pReadInt(data: DataDeclaration): List<WInstruction> {
@@ -147,111 +144,110 @@ fun pReadChar(data: DataDeclaration): List<WInstruction> {
     )
 }
 
-fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool) {
-    functionPool.add(
-        listOf(
-            Label(THROW_RUNTIME_ERROR),
-            B(P_PRINT_STRING, link = true),
-            MOV(Register.resultRegister(), Immediate(-1)),
-            B(EXIT, link = true)
-        )
+fun pThrowRuntimeError(data: DataDeclaration): List<WInstruction> {
+    return listOf(
+        Label(THROW_RUNTIME_ERROR),
+        B(P_PRINT_STRING, link = true),
+        MOV(Register.resultRegister(), Immediate(-1)),
+        B(EXIT, link = true)
     )
+}
+
+fun pThrowOverflowError(data: DataDeclaration): List<WInstruction> {
+    return listOf(
+        Label(THROW_OVERFLOW_ERROR),
+        LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data)),
+        B(THROW_RUNTIME_ERROR, link = true)
+    )
+
+}
+
+fun pCheckDivideByZero(data: DataDeclaration): List<WInstruction> {
+    return listOf(
+        Label(CHECK_DIVIDE_BY_ZERO),
+        PUSH(Register.linkRegister()),
+        CMP(Register("r1"), Immediate(0)),
+        LDR(
+            Register.resultRegister(),
+            LabelReference(DIVIDE_BY_ZERO_MESSAGE, data),
+            conditionCode = ConditionCode.EQ
+        ),
+        B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.EQ),
+        POP(Register.programCounter())
+    )
+}
+
+fun pCheckArrayBounds(data: DataDeclaration): List<WInstruction> {
+    return listOf(
+        Label(CHECK_ARRAY_BOUNDS),
+        PUSH(Register.linkRegister()),
+        CMP(Register.resultRegister(), Immediate(0)),
+        LDR(
+            Register.resultRegister(),
+            LabelReference(ARRAY_NEGATIVE_ERROR_MESSAGE, data),
+            conditionCode = ConditionCode.LT
+        ),
+        B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.LT),
+        LDR(Register("r1"), ImmediateOffset(Register("r4"))),
+        CMP(Register.resultRegister(), Register("r1")),
+        LDR(
+            Register.resultRegister(),
+            LabelReference(ARRAY_BOUNDS_ERROR_MESSAGE, data),
+            conditionCode = ConditionCode.CS
+        ),
+        B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.CS),
+        POP(Register.programCounter())
+    )
+}
+
+fun pCheckNullPointer(data: DataDeclaration) : List<WInstruction> {
+    return listOf(
+        Label(CHECK_NULL_POINTER),
+        PUSH(Register.linkRegister()),
+        CMP(Register("r0"), Immediate(0)),
+        LDR(
+            Register.resultRegister(),
+            LabelReference(NULL_POINTER_MESSAGE, data),
+            false,
+            ConditionCode.EQ
+        ),
+        B(THROW_RUNTIME_ERROR, true, B.Condition.EQ),
+        POP(Register.programCounter())
+    )
+}
+
+fun pPrintReference(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(pPrintReference(data))
+    // add dependencies if not added yet
+    functionPool.add(pPrintLn(data))
+}
+
+fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool) {
+    functionPool.add(pThrowRuntimeError(data))
     // add dependencies if not added yet
     functionPool.add(pPrintString(data))
 }
 
 fun pThrowOverflowError(data: DataDeclaration, functionPool: FunctionPool) {
-    functionPool.add(
-        listOf(
-            Label(THROW_OVERFLOW_ERROR),
-            LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data)),
-            B(THROW_RUNTIME_ERROR, link = true)
-        )
-    )
+    functionPool.add(pThrowOverflowError(data))
     // add dependencies if not added yet
     pThrowRuntimeError(data, functionPool)
 }
 
 fun pCheckDivideByZero(data: DataDeclaration, functionPool: FunctionPool) {
-    functionPool.add(
-        listOf(
-            Label(CHECK_DIVIDE_BY_ZERO),
-            PUSH(Register.linkRegister()),
-            CMP(Register("r1"), Immediate(0)),
-            LDR(
-                Register.resultRegister(),
-                LabelReference(DIVIDE_BY_ZERO_MESSAGE, data),
-                conditionCode = ConditionCode.EQ
-            ),
-            B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.EQ),
-            POP(Register.programCounter())
-        )
-    )
+    functionPool.add(pCheckDivideByZero(data))
     // add dependencies if not added yet
     pThrowRuntimeError(data, functionPool)
 }
 
 fun pCheckArrayBounds(data: DataDeclaration, functionPool: FunctionPool) {
-    functionPool.add(
-        listOf(
-            Label(CHECK_ARRAY_BOUNDS),
-            PUSH(Register.linkRegister()),
-            CMP(Register.resultRegister(), Immediate(0)),
-            LDR(
-                Register.resultRegister(),
-                LabelReference(ARRAY_NEGATIVE_ERROR_MESSAGE, data),
-                conditionCode = ConditionCode.LT
-            ),
-            B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.LT),
-            LDR(Register("r1"), ImmediateOffset(Register("r4"))),
-            CMP(Register.resultRegister(), Register("r1")),
-            LDR(
-                Register.resultRegister(),
-                LabelReference(ARRAY_BOUNDS_ERROR_MESSAGE, data),
-                conditionCode = ConditionCode.CS
-            ),
-            B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.CS),
-            POP(Register.programCounter())
-        )
-    )
+    functionPool.add(pCheckArrayBounds(data))
     // add dependencies if not added yet
     pThrowRuntimeError(data, functionPool)
 }
 
 fun pCheckNullPointer(data: DataDeclaration, functionPool: FunctionPool) {
-    functionPool.add(
-        listOf(
-            Label(CHECK_NULL_POINTER),
-            PUSH(Register.linkRegister()),
-            CMP(Register("r0"), Immediate(0)),
-            LDR(
-                Register.resultRegister(),
-                LabelReference(NULL_POINTER_MESSAGE, data),
-                false,
-                ConditionCode.EQ
-            ),
-            B(THROW_RUNTIME_ERROR, true, B.Condition.EQ),
-            POP(Register.programCounter())
-        )
-    )
+    functionPool.add(pCheckNullPointer(data))
     // add dependencies if not added yet
     pThrowRuntimeError(data, functionPool)
-}
-
-fun pPrintReference(data: DataDeclaration, functionPool: FunctionPool) {
-    functionPool.add(
-        listOf(
-            Label(P_PRINT_REFERENCE),
-            PUSH(Register.linkRegister()),
-            MOV(Register("r1"), Register.resultRegister()),
-            LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data)),
-            ADD(Register.resultRegister(), Register.resultRegister(), Immediate(4)),
-            B(PRINTF, link = true),
-            MOV(Register.resultRegister(), Immediate(0)),
-            B(FFLUSH, link = true),
-            POP(Register.programCounter())
-        )
-    )
-    // add dependencies if not added yet
-    functionPool.add(pPrintLn(data))
 }
