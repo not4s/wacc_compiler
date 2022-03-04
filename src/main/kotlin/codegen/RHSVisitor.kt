@@ -4,6 +4,7 @@ import ast.*
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
+import symbolTable.typeToByteSize
 import utils.btoi
 import waccType.*
 
@@ -104,101 +105,58 @@ class RHSVisitor(
     }
 
     private fun visitNewPair(ctx: NewPairRHS): List<WInstruction> {
-        val mallocResReg = rp.get()
-        val pairValueStoreReg = rp.get()
 
-        val instr = listOf<WInstruction>(
-            // allocate memory for both the elements
-            LDR(Register.resultRegister(), LoadImmediate(PAIR_SIZE * 2))
+
+        return listOf<WInstruction>().plus(
+            // Visit first element
+            ExprVisitor(data, rp, funcPool).visit(ctx.left)
+        ).plus(
+            listOf(
+                // Move it to r1
+                MOV(Register("r9"), Register.resultRegister()),
+                // Malloc space
+                LDR(Register.resultRegister(), LoadImmediate(typeToByteSize(ctx.left.type))),
+                B(MALLOC, link = true),
+                // STR r1 to r0
+                STR(Register("r9"), Register.resultRegister(), isSignedByte = typeToByteSize(ctx.left.type) == 1),
+                PUSH(Register.resultRegister(), data)
+            )
+        ).plus(
+            // Visit first element
+            ExprVisitor(data, rp, funcPool).visit(ctx.right)
+        ).plus(
+            listOf(
+                // Move it to r1
+                MOV(Register("r9"), Register.resultRegister()),
+                // Malloc space
+                LDR(Register.resultRegister(), LoadImmediate(typeToByteSize(ctx.right.type))),
+                B(MALLOC, link = true),
+                // STR r1 to r0
+                STR(Register("r9"), Register.resultRegister(), isSignedByte = typeToByteSize(ctx.right.type) == 1),
+                PUSH(Register.resultRegister(), data)
+            )
+        ).plus(
+            // Now stack has first, second pointers.
+            // Malloc space for pair
+            LDR(Register.resultRegister(), LoadImmediate(8))
+        ).plus(
+            // Convert to ptr
+            B(MALLOC, link = true)
+        ).plus(
+            listOf(
+                // Pop SECOND element, store.
+                POP(Register("r1"), data),
+                STR(Register("r1"), Register.resultRegister(), offset = 4)
+            )
+        ).plus(
+            listOf(
+                // Pop FIRST element, store.
+                POP(Register("r1"), data),
+                STR(Register("r1"), Register.resultRegister())
+            )
         )
-            .plus(B((MALLOC), true))
-            .plus(MOV(mallocResReg, Register.resultRegister()))
-            .plus(visitElem(ctx.left.type, pairValueStoreReg, 0))
-            .plus(B(MALLOC, true))
-            .plus(
-                STR(
-                    pairValueStoreReg, Register.resultRegister(), 0,
-                    ctx.type.leftType is WBool || ctx.type.leftType is WChar
-                )
-            ).plus(STR(Register.resultRegister(), mallocResReg))
-            .plus(visitElem(ctx.right.type, pairValueStoreReg, PAIR_SIZE))
-            .plus(B(MALLOC, true))
-            .plus(
-                STR(
-                    pairValueStoreReg, Register.resultRegister(), 0,
-                    ctx.type.rightType is WBool || ctx.type.rightType is WChar
-                )
-            ).plus(STR(Register.resultRegister(), mallocResReg, PAIR_SIZE))
-            .plus(
-                when (lhs) {
-                    is IdentifierSet -> ctx.st.asmAssign(lhs.identifier, Register(4), data, null)
-                    else -> listOf()
-                }
-            )
-            .plus(
-                when (lhs) {
-                    is IdentifierSet -> ctx.st.asmGet(lhs.identifier, Register(4), data)
-                    else -> listOf()
-                }
-            )
-
-        rp.ret()
-        rp.ret()
-
-        return instr
     }
 
-    private fun visitElem(
-        ctx: WAny,
-        pairValueStoreReg: Register,
-        offset: Int
-    ): List<WInstruction> {
-        when (ctx) {
-            is WInt -> {
-                return listOf<WInstruction>(
-                    LDR(pairValueStoreReg, LoadImmediate(ctx.value!!)),
-                    // Load the size of Int from the heap
-                    LDR(Register.resultRegister(), LoadImmediate(INT_SIZE))
-                )
-            }
-            is WStr -> {
-                DataDeclaration().addDeclaration(ctx.value!!)
-                return listOf<WInstruction>(
-                    LDR(pairValueStoreReg, LabelReference(ctx.value)),
-                    // Load the size of Str from the heap
-                    LDR(Register.resultRegister(), LoadImmediate(STR_SIZE))
-                )
-            }
-            is WBool -> {
-                return listOf(
-                    MOV(pairValueStoreReg, Immediate(btoi(ctx.value!!))),
-                    // Load the size of Bool from the heap
-                    LDR(Register.resultRegister(), LoadImmediate(BOOL_SIZE))
-                )
-            }
-            is WChar -> {
-                return listOf(
-                    MOV(pairValueStoreReg, ImmediateChar(ctx.value!!)),
-                    // Load the size of Char from the heap
-                    LDR(Register.resultRegister(), LoadImmediate(CHAR_SIZE))
-                )
-            }
-            is WPair -> {
-                return listOf<WInstruction>(
-                    LDR(pairValueStoreReg, ImmediateOffset(Register.stackPointer(), offset)),
-                    // Load the size of Pair from the heap
-                    LDR(Register.resultRegister(), LoadImmediate(PAIR_SIZE))
-                )
-            }
-            is WPairNull -> {
-                return listOf(
-                    LDR(pairValueStoreReg, LoadImmediate(0)),
-                    LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE))
-                )
-            }
-            else -> throw Exception("Unreachable ${ctx::class}")
-        }
-    }
 
     private fun visitPairLiteral(): List<WInstruction> {
         return listOf(
@@ -214,11 +172,11 @@ class RHSVisitor(
 //        }
         data.addDeclaration(NULL_POINTER_MESSAGE)
         pCheckNullPointer(data, funcPool)
-        val instr = listOf(Label("# jopa"))
+        val instr = listOf<WInstruction>()
             .plus(visit(ctx.expr))
-            .plus(listOf(Label("# jopa2")))
             .plus(B(CHECK_NULL_POINTER, link = true))
-            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister(), offset), isSignedByte = charOrBool))
+            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister(), offset)))
+            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister()), isSignedByte = charOrBool))
         return instr
     }
 }
