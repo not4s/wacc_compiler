@@ -454,7 +454,7 @@ class ASTProducer(
      */
     private fun visitFuncParams(ctx: WACCParser.FuncContext): WACCFunction {
         val params: MutableMap<String, WAny> = mutableMapOf()
-        val funScope = ParentRefSymbolTable(null, false, st.srcFilePath)
+        val funScope = st.createChildScope() as ParentRefSymbolTable
         funScope.forceOffset = -4 // Accounts for extra space between LR and stack frame.
         if (ctx.paramList() != null) {
             for (p in ctx.paramList().param()) {
