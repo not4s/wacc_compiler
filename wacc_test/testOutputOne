@@ -34,7 +34,7 @@ def compareStrings(correct: str, received: str) -> str:
 # assumes that the user won't be printing an numbers in the same format as the
 # address, i.e. 0x[0-9]+ = .*
 def removeAddressOccurances(consoleOutput: str) -> str:
-    return re.sub( "0x[0-9]+", '', consoleOutput)
+    return re.sub( "0x[a-f0-9]+", '', consoleOutput)
 
 # goes to the wacc_test directory and returns the previous working directory
 # assumes that wacc_test is a parent on the cwd
@@ -65,15 +65,11 @@ def extractGoodStuffFromRefCompile(refCompileOutput: str):
 def compareOutput() -> str:
     # emulate WACC assembly code
     subprocess.run(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s", shell=True)
-    try:
-        sp = subprocess.run(f"timeout 10s qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
-        # get output from program
-        wacc_emulated_output = str(sp.stdout)
-        wacc_exit_code = sp.returncode
-    except UnicodeDecodeError:
-        print(f"WARNING: The file {test_name} could not be decoded (utf-8?)")
-        wacc_emulated_output = ""
-        wacc_exit_code = -1
+    sp = subprocess.run(f"timeout 20s qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
+
+    # get output from program
+    wacc_emulated_output = str(sp.stdout)
+    wacc_exit_code = sp.returncode
 
     # compare output from refCompile to output from program; go into refCompile's directory
     prevDirectory = goToWaccTestDir()
@@ -154,7 +150,7 @@ stringBuffer = ""
 fail: bool = False
 
 # cwd = directory of .s file
-if options.a:
+if(options.a):
     stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in assembly\n{REFCOMPILER_SPLIT}\n"
     diff = compareAssembly()
     if len(diff) != 0:
@@ -164,7 +160,7 @@ if options.a:
         stringBuffer += "Assembly code matches\n"
 
 # if no argmuents provided by default compares output
-if options.x or (not options.x and not options.a):
+if(options.x or (not options.x and not options.x)):
     stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
     diff = compareOutput()
     if len(diff) != 0:
