@@ -144,7 +144,7 @@ fun pReadChar(data: DataDeclaration): List<WInstruction> {
     )
 }
 
-fun pThrowRuntimeError(data: DataDeclaration): List<WInstruction> {
+fun pThrowRuntimeError(): List<WInstruction> {
     return listOf(
         Label(THROW_RUNTIME_ERROR),
         B(P_PRINT_STRING, link = true),
@@ -223,7 +223,7 @@ fun pPrintReference(data: DataDeclaration, functionPool: FunctionPool) {
 }
 
 fun pThrowRuntimeError(data: DataDeclaration, functionPool: FunctionPool) {
-    functionPool.add(pThrowRuntimeError(data))
+    functionPool.add(pThrowRuntimeError())
     // add dependencies if not added yet
     functionPool.add(pPrintString(data))
 }
