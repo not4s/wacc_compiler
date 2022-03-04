@@ -60,7 +60,7 @@ def compareOutput() -> str:
     # emulate WACC assembly code
     subprocess.run(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s", shell=True)
     try:
-        sp = subprocess.run(f"timeout 20s qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
+        sp = subprocess.run(f"timeout 10s qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
         # get output from program
         wacc_emulated_output = str(sp.stdout)
         wacc_exit_code = sp.returncode

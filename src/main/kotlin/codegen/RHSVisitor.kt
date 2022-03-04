@@ -219,8 +219,7 @@ class RHSVisitor(
             .plus(visit(ctx.expr))
             .plus(listOf(Label("# jopa2")))
             .plus(B(CHECK_NULL_POINTER, link = true))
-            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister(), offset)))
-            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister()), isSignedByte = true))
+            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister(), offset), isSignedByte = charOrBool))
         rp.ret()
 
         return instr
