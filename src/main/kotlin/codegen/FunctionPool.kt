@@ -9,7 +9,7 @@ class FunctionPool {
 
     private var labelIndex = 0
 
-    // gives a new label name to a given
+    // gives an anonymous new label name
     fun getAbstractLabel(): String {
         return "L${labelIndex++}"
     }
