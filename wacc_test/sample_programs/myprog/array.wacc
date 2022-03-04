@@ -1,4 +1,0 @@
-begin
-    int[] x = [1, 2] ;
-    println x
-end

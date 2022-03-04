@@ -194,7 +194,7 @@ invalid/syntaxErr/while:
 
 ########## BACK END TESTS ##########
 
-.valid/advanced:
+valid/advanced:
   stage: back-end
   interruptible: true
   script:
@@ -222,14 +222,14 @@ valid/basic/skip:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/basic/skip/*.wacc"
 
-.valid/expressions:
+valid/expressions:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/expressions/*.wacc"
 
-.valid/function/nested_functions:
+valid/function/nested_functions:
   stage: back-end
   interruptible: true
   script:
@@ -250,7 +250,7 @@ valid/if:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/if/*.wacc"
 
-.valid/IO/print:
+valid/IO/print:
   stage: back-end
   interruptible: true
   script:
@@ -271,21 +271,21 @@ valid/if:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/pairs/*.wacc"
 
-.valid/runtimeErr/arrayOutOfBounds:
+valid/runtimeErr/arrayOutOfBounds:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/runtimeErr/arrayOutOfBounds/*.wacc"
 
-.valid/runtimeErr/divideByZero:
+valid/runtimeErr/divideByZero:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/runtimeErr/divideByZero/*.wacc"
 
-.valid/runtimeErr/integerOverflow:
+valid/runtimeErr/integerOverflow:
   stage: back-end
   interruptible: true
   script:

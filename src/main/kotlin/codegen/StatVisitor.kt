@@ -71,7 +71,10 @@ class StatVisitor(
         val whileBodyLabel: String = funcPool.getAbstractLabel()
 
 
-        val whileBody: List<WInstruction> = StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.doBlock)
+        val whileBody: List<WInstruction> =
+            offsetStackBy(ctx.doBlock.st.totalByteSize)
+                .plus(StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.doBlock))
+                .plus(unOffsetStackBy(ctx.doBlock.st.totalByteSize))
         val jump = B(whileBodyLabel, cond = B.Condition.NE)
 
         val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
@@ -280,7 +283,6 @@ class StatVisitor(
                     )
                 }
                 is PairElement -> {
-                    val exprReg = registerProvider.get()
                     val pairElemReg = registerProvider.get()
                     try {
                         listOf(
@@ -290,7 +292,6 @@ class StatVisitor(
                             )
                         )
                     } finally {
-                        registerProvider.ret()
                         registerProvider.ret()
                     }
 

@@ -24,7 +24,7 @@ class RHSVisitor(
             is Literal -> visitLiteral(ctx)
             is ArrayLiteral -> visitArrayLiteral(ctx)
             is NewPairRHS -> visitNewPair(ctx)
-            is PairLiteral -> visitPairLiteral(ctx)
+            is PairLiteral -> visitPairLiteral()
             is PairElement -> visitPairElement(ctx)
             is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
             is FunctionCall -> visitFunctionCall(ctx)
@@ -61,7 +61,7 @@ class RHSVisitor(
                 ExprVisitor(data, registerProvider, funcPool).visit(it).plus(
                     STR(arrValueStoreReg, mallocResReg, WORD_SIZE + (index++) * typeToByteSize(ctx.type.elemType))
                 )
-            }.fold(listOf()) { a, b -> a.plus(b) } // reduce(List<WInstruction>::plus)
+            }.fold(listOf()) { a, b -> a.plus(b) }
         ).plus(
             listOf(
                 LDR(arrValueStoreReg, LoadImmediate(arrSize)),
@@ -181,9 +181,9 @@ class RHSVisitor(
         }
     }
 
-    private fun visitPairLiteral(ctx: PairLiteral): List<WInstruction> {
+    private fun visitPairLiteral(): List<WInstruction> {
         val pairLiteralStoreReg = rp.get()
-        val instr = listOf<WInstruction>(
+        val instr = listOf(
             LDR(pairLiteralStoreReg, LoadImmediate(0)),
             STR(pairLiteralStoreReg, Register.stackPointer())
         )

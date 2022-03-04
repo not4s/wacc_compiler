@@ -94,7 +94,7 @@ parser=argparse.ArgumentParser(description='Script testing correctness of the co
 parser.add_argument('src_file', help='file destination of the wacc file')
 parser.add_argument('-x', action="store_true", help='compares the output of the file')
 parser.add_argument('-a', action="store_true", help='compares the assembly output of the file')
-parser.add_argument('-p', default="default_input", type=str, nargs=1, help='optional input into file (by default set to \"defulat_input\")')
+parser.add_argument('-p', default="default_input", type=str, nargs=1, help='optional input into file (by default set to \"default_input\")')
 
 options = parser.parse_args()
 args = vars(options)
