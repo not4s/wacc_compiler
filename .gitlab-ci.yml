@@ -236,7 +236,7 @@ valid/function/nested_functions:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/function/nested_functions/*.wacc"
 
-.valid/function/simple_functions:
+valid/function/simple_functions:
   stage: back-end
   interruptible: true
   script:
@@ -264,7 +264,7 @@ valid/IO/read:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/IO/read/*.wacc"
 
-.valid/pairs:
+valid/pairs:
   stage: back-end
   interruptible: true
   script:
@@ -292,14 +292,14 @@ valid/runtimeErr/integerOverflow:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/runtimeErr/integerOverflow/*.wacc"
 
-.valid/runtimeErr/nullDereference:
+valid/runtimeErr/nullDereference:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/runtimeErr/nullDereference/*.wacc"
 
-.valid/scope:
+valid/scope:
   stage: back-end
   interruptible: true
   script:

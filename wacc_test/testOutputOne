@@ -34,7 +34,7 @@ def compareStrings(correct: str, received: str) -> str:
 # assumes that the user won't be printing an numbers in the same format as the
 # address, i.e. 0x[0-9]+ = .*
 def removeAddressOccurances(consoleOutput: str) -> str:
-    return re.sub( "0x[0-9]+", '', consoleOutput)
+    return re.sub( "0x[a-f0-9]+", '', consoleOutput)
 
 # goes to the wacc_test directory and returns the previous working directory
 # assumes that wacc_test is a parent on the cwd
@@ -154,7 +154,7 @@ stringBuffer = ""
 fail: bool = False
 
 # cwd = directory of .s file
-if options.a:
+if(options.a):
     stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in assembly\n{REFCOMPILER_SPLIT}\n"
     diff = compareAssembly()
     if len(diff) != 0:
