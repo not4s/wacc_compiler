@@ -6,9 +6,10 @@ import ast.LHS
 import ast.PairElement
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
+import instructions.misc.ImmediateOffset
 import instructions.misc.Operand2
 import instructions.misc.Register
-import instructions.operations.MOV
+import instructions.operations.LDR
 import instructions.operations.POP
 import instructions.operations.PUSH
 import instructions.operations.STR
@@ -33,10 +34,10 @@ class LHSVisitor(
                     PUSH(Register.resultRegister(), data),
                 ).plus(ExprVisitor(data, registerProvider, funcPool).visit(ctx.expr))
                     .plus(POP(Register("r1"), data)).plus(
-                        STR(Register.resultRegister(), Register.resultRegister(), offset = if (ctx.first) 0 else 4)
+                        LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister(), offset = if (ctx.first) 0 else 4))
 
                     ).plus(
-                        MOV(Register.resultRegister(), Register("r1"))
+                        STR(Register("r1"), Register.resultRegister())
                     )
             }
             else -> throw Exception("Unknown LHS $ctx")
