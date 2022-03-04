@@ -43,5 +43,7 @@ fun main(args: Array<String>) {
 
     val instructions = ProgramVisitor(DataDeclaration()).visit(ast)
 
-    translateInstructions(instructions)
+    val code = translateInstructions(instructions)
+
+    println(code)
 }

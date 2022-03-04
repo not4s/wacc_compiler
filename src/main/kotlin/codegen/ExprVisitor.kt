@@ -2,7 +2,10 @@ package codegen
 
 import ast.*
 import instructions.WInstruction
-import instructions.misc.*
+import instructions.misc.DataDeclaration
+import instructions.misc.Immediate
+import instructions.misc.Register
+import instructions.misc.ShiftedRegister
 import instructions.operations.*
 
 class ExprVisitor(
@@ -10,34 +13,24 @@ class ExprVisitor(
     private val registerProvider: RegisterProvider,
     private val funcPool: FunctionPool
 ) : ASTVisitor<Expr> {
-
-    var resultStored: Operand2? = null
-
     override fun visit(ctx: Expr): List<WInstruction> {
         return when (ctx) {
             is Literal -> {
-                // Delegate to RHS visitor of literals
-                resultStored = Register.resultRegister()
                 RHSVisitor(data, registerProvider, funcPool).visit(ctx)
             }
 
             is IdentifierGet -> {
-                resultStored = Register.resultRegister()
                 ctx.st.asmGet(ctx.identifier, Register.resultRegister(), data)
             }
 
             is ArrayElement -> {
-                resultStored = Register.resultRegister()
                 pCheckArrayBounds(data, funcPool)
                 ctx.st.asmGet(ctx.identifier, ctx.indices, Register.resultRegister(), data, registerProvider, funcPool)
             }
 
             is UnaryOperation -> {
-                val instr =
-                    // Evaluate expr, result will be in R0
-                    visit(ctx.operand)
-
-                resultStored = Register.resultRegister()
+                // Evaluate expr, result will be in R0
+                val instr = visit(ctx.operand)
 
                 when (ctx.operation) {
 
@@ -70,6 +63,7 @@ class ExprVisitor(
                     }
                 }
             }
+
             is BinaryOperation -> {
 
                 val reg1 = Register("r0")
@@ -84,13 +78,11 @@ class ExprVisitor(
                         // Pop the right result to R1.
                         .plus(POP(reg2, data))
 
-                resultStored = Register.resultRegister()
-
-                when (ctx.op) {
+                return when (ctx.op) {
 
                     BinOperator.MUL -> {
                         pThrowOverflowError(data, funcPool)
-                        return instr.plus(
+                        instr.plus(
                             listOf(
                                 SMULL(reg1, reg2, reg1, reg2),
                                 CMP(reg2, ShiftedRegister(reg1, 31)),
@@ -101,7 +93,7 @@ class ExprVisitor(
 
                     BinOperator.DIV -> {
                         pCheckDivideByZero(data, funcPool)
-                        return instr.plus(
+                        instr.plus(
                             listOf(
                                 B("p_check_divide_by_zero", true),
                                 B("__aeabi_idiv", true),
@@ -111,7 +103,7 @@ class ExprVisitor(
 
                     BinOperator.MOD -> {
                         pCheckDivideByZero(data, funcPool)
-                        return instr.plus(
+                        instr.plus(
                             listOf(
                                 MOV(Register("r0"), reg1),
                                 MOV(Register("r1"), reg2),
@@ -126,7 +118,7 @@ class ExprVisitor(
                         pThrowOverflowError(data, funcPool)
                         val addInstr = ADD(reg1, reg1, reg2)
                         addInstr.flagSet = true
-                        return instr.plus(
+                        instr.plus(
                             listOf(
                                 addInstr,
                                 B("p_throw_overflow_error", true, cond = B.Condition.VS),
@@ -138,7 +130,7 @@ class ExprVisitor(
                         pThrowOverflowError(data, funcPool)
                         val subInstr = SUB(reg1, reg1, reg2)
                         subInstr.flagSet = true
-                        return instr.plus(
+                        instr.plus(
                             listOf(
                                 subInstr,
                                 B("p_throw_overflow_error", true, cond = B.Condition.VS),
@@ -146,70 +138,61 @@ class ExprVisitor(
                         )
                     }
 
-                    BinOperator.GT ->
-                        return instr.plus(
-                            listOf(
-                                CMP(reg1, reg2),
-                                MOV(reg1, Immediate(1), MOV.Condition.GT),
-                                MOV(reg1, Immediate(0), MOV.Condition.LE)
-                            )
+                    BinOperator.GT -> instr.plus(
+                        listOf(
+                            CMP(reg1, reg2),
+                            MOV(reg1, Immediate(1), MOV.Condition.GT),
+                            MOV(reg1, Immediate(0), MOV.Condition.LE)
                         )
+                    )
 
-                    BinOperator.GEQ ->
-                        return instr.plus(
-                            listOf(
-                                CMP(reg1, reg2),
-                                MOV(reg1, Immediate(1), MOV.Condition.GE),
-                                MOV(reg1, Immediate(0), MOV.Condition.LT)
-                            )
+                    BinOperator.GEQ -> instr.plus(
+                        listOf(
+                            CMP(reg1, reg2),
+                            MOV(reg1, Immediate(1), MOV.Condition.GE),
+                            MOV(reg1, Immediate(0), MOV.Condition.LT)
                         )
+                    )
 
-                    BinOperator.LT ->
-                        return instr.plus(
-                            listOf(
-                                CMP(reg1, reg2),
-                                MOV(reg1, Immediate(1), MOV.Condition.LT),
-                                MOV(reg1, Immediate(0), MOV.Condition.GE)
-                            )
+                    BinOperator.LT -> instr.plus(
+                        listOf(
+                            CMP(reg1, reg2),
+                            MOV(reg1, Immediate(1), MOV.Condition.LT),
+                            MOV(reg1, Immediate(0), MOV.Condition.GE)
                         )
+                    )
 
-                    BinOperator.LEQ ->
-                        return instr.plus(
-                            listOf(
-                                CMP(reg1, reg2),
-                                MOV(reg1, Immediate(1), MOV.Condition.LE),
-                                MOV(reg1, Immediate(0), MOV.Condition.GT)
-                            )
+                    BinOperator.LEQ -> instr.plus(
+                        listOf(
+                            CMP(reg1, reg2),
+                            MOV(reg1, Immediate(1), MOV.Condition.LE),
+                            MOV(reg1, Immediate(0), MOV.Condition.GT)
                         )
+                    )
 
-                    BinOperator.EQ ->
-                        return instr.plus(
-                            listOf(
-                                CMP(reg1, reg2),
-                                MOV(reg1, Immediate(1), MOV.Condition.EQ),
-                                MOV(reg1, Immediate(0), MOV.Condition.NE)
-                            )
+                    BinOperator.EQ -> instr.plus(
+                        listOf(
+                            CMP(reg1, reg2),
+                            MOV(reg1, Immediate(1), MOV.Condition.EQ),
+                            MOV(reg1, Immediate(0), MOV.Condition.NE)
                         )
+                    )
 
-                    BinOperator.NEQ ->
-                        return instr.plus(
-                            listOf(
-                                CMP(reg1, reg2),
-                                MOV(reg1, Immediate(1), MOV.Condition.NE),
-                                MOV(reg1, Immediate(0), MOV.Condition.EQ)
-                            )
+                    BinOperator.NEQ -> instr.plus(
+                        listOf(
+                            CMP(reg1, reg2),
+                            MOV(reg1, Immediate(1), MOV.Condition.NE),
+                            MOV(reg1, Immediate(0), MOV.Condition.EQ)
                         )
+                    )
 
-                    BinOperator.AND ->
-                        return instr.plus(AND(reg1, reg1, reg2))
+                    BinOperator.AND -> instr.plus(AND(reg1, reg1, reg2))
 
-                    BinOperator.OR ->
-                        return instr.plus(ORR(reg1, reg1, reg2))
-
-                    else -> TODO()
+                    BinOperator.OR -> instr.plus(ORR(reg1, reg1, reg2))
                 }
             }
-            else -> TODO()
+
+            else -> throw Exception("Visitor for ${ctx::class} not implemented")
         }
 
     }

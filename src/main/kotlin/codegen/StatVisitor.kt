@@ -59,7 +59,7 @@ class StatVisitor(
             .plus(unOffsetStackBy(returnUnOffsetByteSize ?: throw Exception("Cannot restore stack offset")))
             .plus(
                 listOf(
-                    MOV(Register.resultRegister(), exprVisitor.resultStored ?: throw Exception("no expression result")),
+                    MOV(Register.resultRegister(), Register.resultRegister()),
                     POP(Register.programCounter()),
                     LTORG()
                 )
@@ -137,7 +137,7 @@ class StatVisitor(
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
-            CMP(exprVisitor.resultStored!! as Register, Immediate(0)),
+            CMP(Register.resultRegister(), Immediate(0)),
             B(elseBranchLabel, cond = B.Condition.EQ)
         )
 
@@ -155,7 +155,7 @@ class StatVisitor(
         val evaluationCode = exprVisitor.visit(ctx.expr)
         return evaluationCode.plus(
             listOf(
-                MOV(Register.resultRegister(), exprVisitor.resultStored!!),
+                MOV(Register.resultRegister(), Register.resultRegister()),
                 B("exit", link = true)
             )
         )
@@ -230,7 +230,7 @@ class StatVisitor(
         } else {
             val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
             evalExprInstructions = exprVisitor.visit(ctx.expr)
-            firstArgInitInstruction = MOV(ldrDestReg, exprVisitor.resultStored!!)
+            firstArgInitInstruction = MOV(ldrDestReg, Register.resultRegister())
         }
 
         if (ctx.newlineAfter) {
