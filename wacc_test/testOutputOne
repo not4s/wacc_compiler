@@ -65,11 +65,15 @@ def extractGoodStuffFromRefCompile(refCompileOutput: str):
 def compareOutput() -> str:
     # emulate WACC assembly code
     subprocess.run(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s", shell=True)
-    sp = subprocess.run(f"timeout 20s qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
-
-    # get output from program
-    wacc_emulated_output = str(sp.stdout)
-    wacc_exit_code = sp.returncode
+    try:
+        sp = subprocess.run(f"timeout 10s qemu-arm -L /usr/arm-linux-gnueabi/ {test_name}", capture_output=True, text=True, shell=True)
+        # get output from program
+        wacc_emulated_output = str(sp.stdout)
+        wacc_exit_code = sp.returncode
+    except UnicodeDecodeError:
+        print(f"WARNING: The file {test_name} could not be decoded (utf-8?)")
+        wacc_emulated_output = ""
+        wacc_exit_code = -1
 
     # compare output from refCompile to output from program; go into refCompile's directory
     prevDirectory = goToWaccTestDir()
@@ -160,7 +164,7 @@ if(options.a):
         stringBuffer += "Assembly code matches\n"
 
 # if no argmuents provided by default compares output
-if(options.x or (not options.x and not options.x)):
+if options.x or (not options.x and not options.a):
     stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
     diff = compareOutput()
     if len(diff) != 0:
