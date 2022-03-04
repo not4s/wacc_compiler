@@ -113,10 +113,6 @@ if not os.path.isfile(path):
     print(f"Error: Program not found at {path}")
     sys.exit()
 
-if "IO/read" in path or "IO/IO" in path:
-    print(f"Skipping IO input test: {path}")
-    sys.exit()
-
 # check the file type
 if path.split('.')[-1] != 'wacc':
     print("Error: File given is not a wacc file")
@@ -124,6 +120,12 @@ if path.split('.')[-1] != 'wacc':
 
 test_name = path.split('/')[-1].split('.')[0]
 path_to_assembly = path[:-len(test_name)-len(".wacc")]
+
+with open(path, 'r') as f:
+    wacc_sourceCode = f.read()
+    if("read" in wacc_sourceCode):
+        print(f"Skipping IO input test: {path}")
+        sys.exit()
 
 # change directory to WACC_06/
 os.chdir("..")
