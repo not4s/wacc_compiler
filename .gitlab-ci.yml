@@ -257,7 +257,7 @@ valid/IO/print:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/IO/print/*.wacc"
 
-.valid/IO/read:
+valid/IO/read:
   stage: back-end
   interruptible: true
   script:
@@ -320,7 +320,7 @@ valid/variables:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/variables/*.wacc"
 
-.valid/while:
+valid/while:
   stage: back-end
   interruptible: true
   script:
