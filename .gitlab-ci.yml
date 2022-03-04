@@ -292,7 +292,7 @@ valid/runtimeErr/integerOverflow:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/runtimeErr/integerOverflow/*.wacc"
 
-.valid/runtimeErr/nullDereference:
+valid/runtimeErr/nullDereference:
   stage: back-end
   interruptible: true
   script:

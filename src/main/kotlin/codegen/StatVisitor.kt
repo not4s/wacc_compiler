@@ -54,9 +54,10 @@ class StatVisitor(
     }
 
     private fun visitFreeStat(ctx: FreeStat): List<WInstruction> {
+        pCheckNullPointer(data, funcPool)
         val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val evaluationCode = exprVisitor.visit(ctx.expression)
-        return evaluationCode.plus(
+        return evaluationCode.plus(B(CHECK_NULL_POINTER, link = true)).plus(
             B("free", link = true)
         )
     }
