@@ -201,7 +201,7 @@ valid/advanced:
     - cd wacc_test
     - ./testOutputDir.sh "sample_programs/valid/advanced/*.wacc"
 
-.valid/array:
+valid/array:
   stage: back-end
   interruptible: true
   script:
