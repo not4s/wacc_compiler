@@ -73,8 +73,6 @@ abstract class SymbolTable(
 
     abstract fun createChildScope(): SymbolTable
 
-
-
     val totalByteSize: Int
         get() {
             return getMap().values.sumOf { typeToByteSize(it) }

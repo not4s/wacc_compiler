@@ -191,8 +191,11 @@ class ExprVisitor(
                     BinOperator.OR -> instr.plus(ORR(reg1, reg1, reg2))
                 }
             }
-
-            else -> throw Exception("Visitor for ${ctx::class} not implemented")
+            is PairLiteral -> {
+                // Delegate to RHS visitor of literals
+                RHSVisitor(data, registerProvider, funcPool).visit(ctx)
+            }
+            else -> TODO("Context is $ctx and its type is ${ctx::class}")
         }
 
     }

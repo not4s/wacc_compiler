@@ -23,6 +23,8 @@ const val NULL_TERMINAL_STRING = "%.*s$NULL_CHAR"
 const val NULL_TERMINAL_INT = "%d$NULL_CHAR"
 const val NULL_TERMINAL_CHAR = " %c$NULL_CHAR"
 const val NULL_TERMINAL_REFERENCE = "%p$NULL_CHAR"
+const val NULL_TERMINAL_POINTER = "%p$NULL_CHAR"
+const val NULL_LITERAL = "(nil)$NULL_CHAR"
 const val LITERAL_TRUE = "true$NULL_CHAR"
 const val LITERAL_FALSE = "false$NULL_CHAR"
 

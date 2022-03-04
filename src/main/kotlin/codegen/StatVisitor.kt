@@ -48,8 +48,17 @@ class StatVisitor(
             is IfThenStat -> visitIfThenStat(ctx)
             is WhileStat -> visitWhileStat(ctx)
             is ReturnStat -> visitReturnStat(ctx)
+            is FreeStat -> visitFreeStat(ctx)
             else -> TODO("Not yet implemented")
         }
+    }
+
+    private fun visitFreeStat(ctx: FreeStat): List<WInstruction> {
+        val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
+        val evaluationCode = exprVisitor.visit(ctx.expression)
+        return evaluationCode.plus(
+            B("free", link = true)
+        )
     }
 
     private fun visitReturnStat(ctx: ReturnStat): List<WInstruction> {
@@ -202,7 +211,12 @@ class StatVisitor(
                 printFun = P_PRINT_REFERENCE
                 funcPool.add(pPrintReference(data))
             }
-            else -> TODO("Not yet implemented")
+            is WPairNull -> {
+                printFun = P_PRINT_REFERENCE
+                data.addDeclaration(NULL_TERMINAL_POINTER)
+                funcPool.add(pPrintReference(data))
+            }
+            else -> TODO("Print stat visitor not impl. Context is $ctx and type is $type")
         }
 
         // Specific literal check
@@ -254,50 +268,13 @@ class StatVisitor(
 
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs).plus(
-            ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
+        return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs)
+            .plus(ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
         )
     }
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
-        // Visit RHS. Result should be in resultStored register.
-        return RHSVisitor(data, registerProvider, funcPool, ctx.lhs).visit(ctx.rhs).plus(
-            when (ctx.lhs) {
-                is IdentifierSet -> ctx.st.asmAssign(
-                    ctx.lhs.identifier,
-                    Register.resultRegister(),
-                    data,
-                    null
-                )
-                is ArrayElement -> {
-                    // when assigning an array element it is important to remain inside the bounds
-                    pCheckArrayBounds(data, funcPool)
-
-                    ctx.st.asmAssign(
-                        ctx.lhs.identifier,
-                        ctx.lhs.indices,
-                        Register.resultRegister(),
-                        data,
-                        registerProvider,
-                        funcPool
-                    )
-                }
-                is PairElement -> {
-                    val pairElemReg = registerProvider.get()
-                    try {
-                        listOf(
-                            LDR(
-                                pairElemReg,
-                                ImmediateOffset(Register.stackPointer(), btoi(ctx.lhs.first) * PAIR_SIZE)
-                            )
-                        )
-                    } finally {
-                        registerProvider.ret()
-                    }
-
-                }
-                else -> throw Exception("An LHS is not one of the three possible ones...what?")
-            }
-        )
+        return RHSVisitor(data, registerProvider, funcPool, ctx.lhs).visit(ctx.rhs)
+            .plus(LHSVisitor(data, registerProvider, funcPool).visit(ctx.lhs))
     }
 }
