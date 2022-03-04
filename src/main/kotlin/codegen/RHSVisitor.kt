@@ -5,8 +5,10 @@ import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
 import symbolTable.typeToByteSize
-import utils.btoi
-import waccType.*
+import waccType.WBool
+import waccType.WChar
+import waccType.WInt
+import waccType.WStr
 
 // Stores visiting result in Register.resultRegister.
 class RHSVisitor(
@@ -33,16 +35,26 @@ class RHSVisitor(
     }
 
     private fun visitFunctionCall(ctx: FunctionCall): List<WInstruction> {
+        var totalOffset = 0
         val evalCodes: List<WInstruction> = ctx.params.map {
             val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
             val evalCode = exprVisitor.visit(it)
-            val storeInstr = PUSH(Register.resultRegister(), null)
+            val byteSize = typeToByteSize(it.type)
+            val storeInstr =
+                STR(
+                    Register.resultRegister(),
+                    Register.stackPointer(),
+                    offset = -(totalOffset + byteSize),
+                    isSignedByte = byteSize != WORD_SIZE,
+                )
+            totalOffset += byteSize
             evalCode.plus(storeInstr)
         }.flatten()
         return evalCodes.plus(
             listOf(
+                SUB(Register.stackPointer(), Register.stackPointer(), Immediate(totalOffset)),
                 B(funcLabel(ctx.identifier), link = true),
-                ADD(Register.stackPointer(), Register.stackPointer(), Immediate(ctx.params.size * 4))
+                ADD(Register.stackPointer(), Register.stackPointer(), Immediate(totalOffset))
             )
         )
     }
