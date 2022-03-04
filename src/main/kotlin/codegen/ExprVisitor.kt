@@ -10,34 +10,24 @@ class ExprVisitor(
     private val registerProvider: RegisterProvider,
     private val funcPool: FunctionPool
 ) : ASTVisitor<Expr> {
-
-    var resultStored: Operand2? = null
-
     override fun visit(ctx: Expr): List<WInstruction> {
         return when (ctx) {
             is Literal -> {
-                // Delegate to RHS visitor of literals
-                resultStored = Register.resultRegister()
                 RHSVisitor(data, registerProvider, funcPool).visit(ctx)
             }
 
             is IdentifierGet -> {
-                resultStored = Register.resultRegister()
                 ctx.st.asmGet(ctx.identifier, Register.resultRegister(), data)
             }
 
             is ArrayElement -> {
-                resultStored = Register.resultRegister()
                 pCheckArrayBounds(data, funcPool)
                 ctx.st.asmGet(ctx.identifier, ctx.indices, Register.resultRegister(), data, registerProvider, funcPool)
             }
 
             is UnaryOperation -> {
-                val instr =
-                    // Evaluate expr, result will be in R0
-                    visit(ctx.operand)
-
-                resultStored = Register.resultRegister()
+                // Evaluate expr, result will be in R0
+                val instr = visit(ctx.operand)
 
                 when (ctx.operation) {
 
@@ -83,8 +73,6 @@ class ExprVisitor(
                         .plus(visit(ctx.left))
                         // Pop the right result to R1.
                         .plus(POP(reg2, data))
-
-                resultStored = Register.resultRegister()
 
                 when (ctx.op) {
 
