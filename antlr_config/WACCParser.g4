@@ -5,7 +5,7 @@ options {
 }
 
 program
-  : KW_BEGIN func* stat KW_END EOF
+  : KW_BEGIN (func|struct)* stat KW_END EOF
   ;
 
 type
