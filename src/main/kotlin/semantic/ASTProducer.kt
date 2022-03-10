@@ -103,7 +103,7 @@ class ASTProducer(
      * Visiting types like <something[]>[]
      */
     override fun visitArrayTypeArrayType(ctx: WACCParser.ArrayTypeArrayTypeContext): WACCType {
-        val elemType: WACCType = safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.arrayType()) } as WACCType
+        val elemType: WACCType = safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.arrayType()) } as WACCType
         return WACCType(st, WArray(elemType.type))
     }
 
@@ -111,7 +111,7 @@ class ASTProducer(
      * Visiting types like int[], str[], char[], bool[]
      */
     override fun visitArrayTypeBaseType(ctx: WACCParser.ArrayTypeBaseTypeContext): WACCType {
-        val elemType: WACCType = safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.baseType()) } as WACCType
+        val elemType: WACCType = safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.baseType()) } as WACCType
         return WACCType(st, WArray(elemType.type))
     }
 
@@ -119,13 +119,13 @@ class ASTProducer(
      * Visiting types like pair[]
      */
     override fun visitArrayTypePairType(ctx: WACCParser.ArrayTypePairTypeContext): AST {
-        val elemType: WACCType = safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.pairType()) } as WACCType
+        val elemType: WACCType = safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.pairType()) } as WACCType
         return WACCType(st, WArray(elemType.type))
     }
 
     override fun visitArrayElem(ctx: WACCParser.ArrayElemContext): ArrayElement {
         val indices: Array<Expr> = ctx.expr().map {
-            safeVisit(Literal(st, WUnknown())) { this.visit(it) } as Expr
+            safeVisit(Literal(st, WUnknown)) { this.visit(it) } as Expr
         }.toTypedArray()
         SemanticChecker.checkThatAllIndicesAreWInts(indices, builderTemplateFromContext(ctx, st))
         return ArrayElement(st, ctx.IDENTIFIER().text, indices, ctx)
@@ -133,7 +133,7 @@ class ASTProducer(
 
     override fun visitArrayLiterAssignRhs(ctx: WACCParser.ArrayLiterAssignRhsContext): ArrayLiteral {
         val elements: Array<Expr> = ctx.expr().map {
-            (safeVisit(Literal(st, WUnknown())) { this.visit(it) } as Expr)
+            (safeVisit(Literal(st, WUnknown)) { this.visit(it) } as Expr)
         }.toTypedArray()
         SemanticChecker.checkThatAllArrayElementsHaveTheSameType(elements, builderTemplateFromContext(ctx, st))
         return ArrayLiteral(st, elements)
@@ -147,7 +147,7 @@ class ASTProducer(
         ctxExpr: WACCParser.ExprContext,
         isFirst: Boolean
     ): PairElement {
-        val expr = safeVisit(Literal(st, WUnknown())) { this.visit(ctxExpr) } as Expr
+        val expr = safeVisit(Literal(st, WUnknown)) { this.visit(ctxExpr) } as Expr
         SemanticChecker.checkTheExprIsPairAndNoNullDereference(expr, isFirst, builderTemplateFromContext(ctx, st))
         return PairElement(st, isFirst, expr, ctx)
     }
@@ -161,17 +161,17 @@ class ASTProducer(
     }
 
     override fun visitPairType(ctx: WACCParser.PairTypeContext): WACCType {
-        val left = safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.left) } as WACCType
-        val right = safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.right) } as WACCType
+        val left = safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.left) } as WACCType
+        val right = safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.right) } as WACCType
         return WACCType(st, WPair(left.type, right.type))
     }
 
     override fun visitPairElemTypeBaseType(ctx: WACCParser.PairElemTypeBaseTypeContext): WACCType {
-        return safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.baseType()) } as WACCType
+        return safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.baseType()) } as WACCType
     }
 
     override fun visitPairElemTypeArrayType(ctx: WACCParser.PairElemTypeArrayTypeContext): WACCType {
-        return safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.arrayType()) } as WACCType
+        return safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.arrayType()) } as WACCType
     }
 
     override fun visitPairElemTypeKwPair(ctx: WACCParser.PairElemTypeKwPairContext): WACCType {
@@ -220,17 +220,17 @@ class ASTProducer(
     }
 
     override fun visitExprBracket(ctx: WACCParser.ExprBracketContext): Expr {
-        return safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
+        return safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr
     }
 
     override fun visitExprArrayElem(ctx: WACCParser.ExprArrayElemContext): ArrayElement {
-        return safeVisit(Literal(st, WUnknown())) { this.visit(ctx.arrayElem()) } as ArrayElement
+        return safeVisit(Literal(st, WUnknown)) { this.visit(ctx.arrayElem()) } as ArrayElement
     }
 
     override fun visitExprBinary(ctx: WACCParser.ExprBinaryContext): BinaryOperation {
         val errorMessageBuilder = builderTemplateFromContext(ctx, st)
-        val left = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.left) } as Expr
-        val right = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.right) } as Expr
+        val left = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.left) } as Expr
+        val right = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.right) } as Expr
         val op = BinOperator.fromWACCParserContextBinOp(ctx.binOp)
         SemanticChecker.checkThatOperandTypesMatch(
             firstType = left.type,
@@ -248,7 +248,7 @@ class ASTProducer(
     }
 
     override fun visitExprUnary(ctx: WACCParser.ExprUnaryContext): UnaryOperation {
-        val operandExpr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.operand) } as Expr
+        val operandExpr = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.operand) } as Expr
         val unaryOperation = UnOperator.fromWACCParserContextUnOp(ctx.unOp)
         val errorMessageBuilder = builderTemplateFromContext(ctx, st)
         SemanticChecker.checkThatOperationTypeIsValid(operandExpr.type, errorMessageBuilder, unaryOperation)
@@ -267,7 +267,7 @@ class ASTProducer(
     }
 
     override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Expr {
-        return safeVisit(Literal(st, WUnknown())) { this.visit(ctx.literal()) } as Expr
+        return safeVisit(Literal(st, WUnknown)) { this.visit(ctx.literal()) } as Expr
     }
 
     override fun visitAssignLhsExpr(ctx: WACCParser.AssignLhsExprContext): IdentifierSet {
@@ -283,7 +283,7 @@ class ASTProducer(
     }
 
     override fun visitAssignRhsExpr(ctx: WACCParser.AssignRhsExprContext): Expr {
-        return safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
+        return safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr
     }
 
     override fun visitAssignRhsArrayLiter(ctx: WACCParser.AssignRhsArrayLiterContext): ArrayLiteral {
@@ -291,8 +291,8 @@ class ASTProducer(
     }
 
     override fun visitAssignRhsNewPair(ctx: WACCParser.AssignRhsNewPairContext): NewPairRHS {
-        val leftExpr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.left) } as Expr
-        val rightExpr = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.right) } as Expr
+        val leftExpr = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.left) } as Expr
+        val rightExpr = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.right) } as Expr
         val type = WPair(leftExpr.type, rightExpr.type)
         return NewPairRHS(st, leftExpr, rightExpr, type)
     }
@@ -301,7 +301,7 @@ class ASTProducer(
      * The following function visits the node but also updates the type of the pair from IncompleteWPair to WPair
      */
     override fun visitAssignRhsPairElem(ctx: WACCParser.AssignRhsPairElemContext): RHS {
-        val rhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.pairElem()) } as RHS
+        val rhs = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.pairElem()) } as RHS
         if (rhs.type !is WPairKW || !(rhs is PairElement && rhs.expr is IdentifierGet)) {
             return rhs
         }
@@ -318,7 +318,7 @@ class ASTProducer(
         val errorMessageBuilder = builderTemplateFromContext(ctx, st)
         val params: Array<Expr> = ctx.argList()?.expr()
             ?.map { arg ->
-                safeVisit(Literal(st, WUnknown())) { this.visit(arg) } as Expr
+                safeVisit(Literal(st, WUnknown)) { this.visit(arg) } as Expr
             }?.toTypedArray()
             ?: arrayOf()
         val identifier: String = ctx.IDENTIFIER().text
@@ -332,8 +332,8 @@ class ASTProducer(
     }
 
     override fun visitStatInit(ctx: WACCParser.StatInitContext): Declaration {
-        val decType = (safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.type()) } as Typed).type
-        val rhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.assignRhs()) } as RHS
+        val decType = (safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.type()) } as Typed).type
+        val rhs = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.assignRhs()) } as RHS
         val identifier = ctx.IDENTIFIER().text
         SemanticChecker.checkThatOperandTypesMatch(
             firstType = decType,
@@ -373,7 +373,7 @@ class ASTProducer(
     }
 
     override fun visitStatFree(ctx: WACCParser.StatFreeContext): FreeStat {
-        val expression = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
+        val expression = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr
         SemanticChecker.checkExprTypeIsWPair(
             type = expression.type,
             errorMessageBuilder = builderTemplateFromContext(ctx, st),
@@ -383,15 +383,15 @@ class ASTProducer(
     }
 
     override fun visitStatPrint(ctx: WACCParser.StatPrintContext): PrintStat {
-        return PrintStat(st, false, safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr)
+        return PrintStat(st, false, safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr)
     }
 
     override fun visitStatPrintln(ctx: WACCParser.StatPrintlnContext): PrintStat {
-        return PrintStat(st, true, safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr)
+        return PrintStat(st, true, safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr)
     }
 
     override fun visitStatExit(ctx: WACCParser.StatExitContext): ExitStat {
-        val expression = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr
+        val expression = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr
         SemanticChecker.checkExprTypeIsWInt(
             type = expression.type,
             errorMessageBuilder = builderTemplateFromContext(ctx, st),
@@ -402,7 +402,7 @@ class ASTProducer(
 
     override fun visitStatStore(ctx: WACCParser.StatStoreContext): Assignment {
         val lhs = this.visit(ctx.assignLhs()) as LHS
-        val rhs = safeVisit(Literal(st, WUnknown())) { this.visit(ctx.assignRhs()) } as RHS
+        val rhs = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.assignRhs()) } as RHS
         val errorMessageBuilder = builderTemplateFromContext(ctx, st)
         SemanticChecker.checkAssignment(lhs, rhs, st, errorMessageBuilder)
         return Assignment(st, lhs, rhs)
@@ -420,7 +420,7 @@ class ASTProducer(
 
     override fun visitStatReturn(ctx: WACCParser.StatReturnContext): ReturnStat {
         SemanticChecker.checkReturnFromGlobalScope(st, builderTemplateFromContext(ctx, st))
-        return ReturnStat(st, safeVisit(Literal(st, WUnknown())) { this.visit(ctx.expr()) } as Expr)
+        return ReturnStat(st, safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr)
     }
 
     override fun visitStatIfThenElse(ctx: WACCParser.StatIfThenElseContext): IfThenStat {
@@ -460,7 +460,7 @@ class ASTProducer(
             for (p in ctx.paramList().param()) {
                 val id = p.IDENTIFIER().text
                 funScope.redeclaredVars.add(id)
-                val ty = (safeVisit(WACCType(st, WUnknown())) { this.visit(p.type()) } as WACCType).type
+                val ty = (safeVisit(WACCType(st, WUnknown)) { this.visit(p.type()) } as WACCType).type
                 params[id] = ty
                 funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
             }
@@ -470,7 +470,7 @@ class ASTProducer(
             ctx.IDENTIFIER().text,
             params,
             SkipStat(st),
-            (safeVisit(WACCType(st, WUnknown())) { this.visit(ctx.type()) } as WACCType).type
+            (safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.type()) } as WACCType).type
         )
     }
 

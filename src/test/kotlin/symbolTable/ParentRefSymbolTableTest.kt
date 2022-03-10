@@ -108,7 +108,7 @@ class ParentRefSymbolTableTest {
 
     @Test
     fun canDeclareArrays() {
-        parentRefSymbolTable.declare("array", WArray(WUnknown()), errBuilder)
+        parentRefSymbolTable.declare("array", WArray(WUnknown), errBuilder)
     }
 
     @Test
@@ -121,7 +121,7 @@ class ParentRefSymbolTableTest {
 
     @Test
     fun canDeclareArrayOfPairs() {
-        val pairUnknownUnknown = WPair(WUnknown(), WUnknown())
+        val pairUnknownUnknown = WPair(WUnknown, WUnknown)
         val pairStringInt = WPair(WStr(), WInt())
         val pairStringPairStringInt = WPair(WStr(), pairStringInt)
         parentRefSymbolTable.declare("array_1", pairUnknownUnknown, errBuilder)
@@ -151,7 +151,7 @@ class ParentRefSymbolTableTest {
     @Test
     fun canAssignValuesInPairArrays() {
         val arrayName = "array"
-        val pairStringPairUnknownUnknown = WPair(WStr(), WPair(WUnknown(), WUnknown()))
+        val pairStringPairUnknownUnknown = WPair(WStr(), WPair(WUnknown, WUnknown))
         // invalid array indexing is a run-time error
         val indices: Array<WInt> = arrayOf(WInt())
         parentRefSymbolTable.declare(arrayName, WArray(pairStringPairUnknownUnknown), errBuilder)

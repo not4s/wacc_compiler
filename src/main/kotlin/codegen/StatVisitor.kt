@@ -43,7 +43,7 @@ class StatVisitor(
             is WhileStat -> visitWhileStat(ctx)
             is ReturnStat -> visitReturnStat(ctx)
             is FreeStat -> visitFreeStat(ctx)
-            else -> TODO("Not yet implemented")
+            else -> TODO("Unrecognized Statement")
         }
     }
 

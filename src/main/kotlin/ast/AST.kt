@@ -44,7 +44,7 @@ interface Typed : AST {
     val type: WAny
 }
 
-interface RHS : AST, Typed
+sealed interface RHS : AST, Typed
 
 sealed interface LHS : AST, Typed
 

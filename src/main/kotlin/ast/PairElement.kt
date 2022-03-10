@@ -41,7 +41,7 @@ class PairElement(
             }
             SemanticChecker.checkNullDereference(expr, errorMessageBuilder)
             if (expr.type is WPairKW) {
-                return WUnknown()
+                return WUnknown
             }
             val pair = expr.type as WPair
             return if (first) pair.leftType else pair.rightType

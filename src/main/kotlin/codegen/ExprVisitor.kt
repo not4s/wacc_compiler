@@ -25,7 +25,14 @@ class ExprVisitor(
 
             is ArrayElement -> {
                 pCheckArrayBounds(data, funcPool)
-                ctx.st.asmGet(ctx.identifier, ctx.indices, Register.resultRegister(), data, registerProvider, funcPool)
+                ctx.st.asmGet(
+                    ctx.identifier,
+                    ctx.indices,
+                    Register.resultRegister(),
+                    data,
+                    registerProvider,
+                    funcPool
+                )
             }
 
             is UnaryOperation -> {
@@ -33,7 +40,6 @@ class ExprVisitor(
                 val instr = visit(ctx.operand)
 
                 when (ctx.operation) {
-
                     UnOperator.SUB -> {
                         pThrowOverflowError(data, funcPool)
                         return instr.plus(
@@ -46,14 +52,17 @@ class ExprVisitor(
                     UnOperator.NOT -> {
                         return instr.plus(
                             listOf(
-                                EOR(Register.resultRegister(), Register.resultRegister(), Immediate(1))
+                                EOR(
+                                    Register.resultRegister(),
+                                    Register.resultRegister(),
+                                    Immediate(1)
+                                )
                             )
                         )
                     }
                     UnOperator.CHR, UnOperator.ORD -> {
                         return instr // char = int lol
                     }
-
                     UnOperator.LEN -> {
                         return instr.plus(
                             listOf(

@@ -123,7 +123,7 @@ class ParentRefSymbolTable(
     ) {
         val prev = dict[pairSym]
         if (prev is WPairKW) {
-            dict[pairSym] = if (fst) WPair(value, WUnknown()) else WPair(WUnknown(), value)
+            dict[pairSym] = if (fst) WPair(value, WUnknown) else WPair(WUnknown, value)
             return
         }
         if (prev == null) {
