@@ -4,7 +4,7 @@ import instructions.WInstruction
 
 data class B(
     val label: String,
-    var link: Boolean = false,
+    var link: Link = Link.LINK,
     val cond: Condition? = null
 ) : WInstruction {
 
@@ -15,8 +15,12 @@ data class B(
 
     override fun toString(): String {
         var sb = "B"
-        if(link) sb += "L"
+        if(link == Link.LINK) sb += "L"
         if(cond != null) sb += cond.name
-        return sb + " ${label}"
+        return "$sb $label"
     }
+}
+
+enum class Link {
+    LINK, NO_LINK
 }

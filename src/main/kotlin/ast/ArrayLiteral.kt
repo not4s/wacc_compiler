@@ -10,10 +10,10 @@ import waccType.WUnknown
 class ArrayLiteral(
     override val st: SymbolTable,
     val values: Array<Expr>
-) : Expr, RHS {
+) : RHS {
 
     override val type: WArray
-        get() = if (values.isEmpty()) WArray(WUnknown()) else WArray(values.first().type)
+        get() = if (values.isEmpty()) WArray(WUnknown) else WArray(values.first().type)
 
     override fun toString(): String {
         return "ArrayLiteral\n  (scope:$st)\n${

@@ -25,7 +25,14 @@ class ExprVisitor(
 
             is ArrayElement -> {
                 pCheckArrayBounds(data, funcPool)
-                ctx.st.asmGet(ctx.identifier, ctx.indices, Register.resultRegister(), data, registerProvider, funcPool)
+                ctx.st.asmGet(
+                    ctx.identifier,
+                    ctx.indices,
+                    Register.resultRegister(),
+                    data,
+                    registerProvider,
+                    funcPool
+                )
             }
 
             is UnaryOperation -> {
@@ -33,27 +40,29 @@ class ExprVisitor(
                 val instr = visit(ctx.operand)
 
                 when (ctx.operation) {
-
                     UnOperator.SUB -> {
                         pThrowOverflowError(data, funcPool)
                         return instr.plus(
                             listOf(
                                 RSB(Register.resultRegister(), Register.resultRegister()),
-                                B("p_throw_overflow_error", true, cond = B.Condition.VS),
+                                B("p_throw_overflow_error", cond = B.Condition.VS),
                             )
                         )
                     }
                     UnOperator.NOT -> {
                         return instr.plus(
                             listOf(
-                                EOR(Register.resultRegister(), Register.resultRegister(), Immediate(1))
+                                EOR(
+                                    Register.resultRegister(),
+                                    Register.resultRegister(),
+                                    Immediate(1)
+                                )
                             )
                         )
                     }
                     UnOperator.CHR, UnOperator.ORD -> {
                         return instr // char = int lol
                     }
-
                     UnOperator.LEN -> {
                         return instr.plus(
                             listOf(
@@ -86,7 +95,7 @@ class ExprVisitor(
                             listOf(
                                 SMULL(reg1, reg2, reg1, reg2),
                                 CMP(reg2, ShiftedRegister(reg1, 31)),
-                                B("p_throw_overflow_error", true, B.Condition.NE)
+                                B("p_throw_overflow_error", cond=B.Condition.NE)
                             )
                         )
                     }
@@ -95,8 +104,8 @@ class ExprVisitor(
                         pCheckDivideByZero(data, funcPool)
                         instr.plus(
                             listOf(
-                                B("p_check_divide_by_zero", true),
-                                B("__aeabi_idiv", true),
+                                B("p_check_divide_by_zero"),
+                                B("__aeabi_idiv")
                             )
                         )
                     }
@@ -107,8 +116,8 @@ class ExprVisitor(
                             listOf(
                                 MOV(Register("r0"), reg1),
                                 MOV(Register("r1"), reg2),
-                                B("p_check_divide_by_zero", true),
-                                B("__aeabi_idivmod", true),
+                                B("p_check_divide_by_zero"),
+                                B("__aeabi_idivmod"),
                                 MOV(reg1, Register("r1"))
                             )
                         )
@@ -121,7 +130,7 @@ class ExprVisitor(
                         instr.plus(
                             listOf(
                                 addInstr,
-                                B("p_throw_overflow_error", true, cond = B.Condition.VS),
+                                B("p_throw_overflow_error", cond = B.Condition.VS),
                             )
                         )
                     }
@@ -133,7 +142,7 @@ class ExprVisitor(
                         instr.plus(
                             listOf(
                                 subInstr,
-                                B("p_throw_overflow_error", true, cond = B.Condition.VS),
+                                B("p_throw_overflow_error", cond = B.Condition.VS),
                             )
                         )
                     }
@@ -191,11 +200,11 @@ class ExprVisitor(
                     BinOperator.OR -> instr.plus(ORR(reg1, reg1, reg2))
                 }
             }
+
             is PairLiteral -> {
                 // Delegate to RHS visitor of literals
                 RHSVisitor(data, registerProvider, funcPool).visit(ctx)
             }
-            else -> TODO("Context is $ctx and its type is ${ctx::class}")
         }
 
     }

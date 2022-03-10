@@ -6,12 +6,12 @@ interface WAny {
     }
 }
 
-interface WBase : WAny
+sealed interface WBase : WAny
 
 /**
  * Used as a type for empty array literals
  */
-class WUnknown : WAny, WBase {
+object WUnknown : WAny, WBase {
     override fun toString(): String {
         return "Unknown"
     }
@@ -47,6 +47,7 @@ class WBool(
     override fun toString(): String {
         return "Bool(${value})"
     }
+
     override fun justType(): String {
         return "Bool"
     }
@@ -58,6 +59,7 @@ class WChar(
     override fun toString(): String {
         return "Char(\'${value}\')"
     }
+
     override fun justType(): String {
         return "Char"
     }
@@ -113,8 +115,8 @@ class WPair(
     }
 
     companion object {
-        fun ofWUnknowns(): WPair{
-            return WPair(WUnknown(), WUnknown())
+        fun ofWUnknowns(): WPair {
+            return WPair(WUnknown, WUnknown)
         }
     }
 }
@@ -148,7 +150,7 @@ class WPairKW : IncompleteWPair() {
 /**
  * Used to check type validity when keyword 'pair' is used in variable declaration
  */
-class WPairNull: IncompleteWPair() {
+class WPairNull : IncompleteWPair() {
 
     override fun toString(): String {
         return "null"
@@ -162,7 +164,8 @@ class WPairNull: IncompleteWPair() {
 fun typesAreEqual(x: WAny, y: WAny): Boolean {
     if (x is WPair && y is IncompleteWPair
         || y is WPair && x is IncompleteWPair
-        || x is IncompleteWPair && y is IncompleteWPair) {
+        || x is IncompleteWPair && y is IncompleteWPair
+    ) {
         return true
     }
     return if (x !is WArray && x !is WPair) {

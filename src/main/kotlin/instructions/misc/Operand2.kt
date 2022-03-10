@@ -1,11 +1,11 @@
 package instructions.misc
 
-interface Operand2
+sealed interface Operand2
 
 /**
  * Indicator that the operand can be the field of LDR source
  */
-interface Loadable : Operand2
+sealed interface Loadable : Operand2
 
 data class LoadImmediate(val value: Int) : Loadable {
     override fun toString(): String {

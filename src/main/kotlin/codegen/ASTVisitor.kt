@@ -1,6 +1,7 @@
 package codegen
 
 import ast.AST
+import ast.Stat
 import instructions.WInstruction
 import instructions.misc.Immediate
 import instructions.misc.Register
@@ -33,5 +34,9 @@ interface ASTVisitor<T : AST> {
             )
         }
         return output
+    }
+
+    fun withScope(offset: Int, generator: List<WInstruction>): List<WInstruction> {
+        return offsetStackBy(offset).plus(generator).plus(unOffsetStackBy(offset))
     }
 }

@@ -11,7 +11,7 @@ import waccType.WPairNull
 
 const val INDENT = "  | "
 
-interface AST {
+sealed interface AST {
     /**
      *  Information in the symbol table is the mapping from variable and
      *  function identifiers to its type The symbol table attribute references the table,
@@ -44,11 +44,11 @@ interface Typed : AST {
     val type: WAny
 }
 
-interface RHS : AST, Typed
+sealed interface RHS : AST, Typed
 
-interface LHS : AST, Typed
+sealed interface LHS : AST, Typed
 
-interface Expr : AST, Typed, RHS
+sealed interface Expr : AST, Typed, RHS
 
 interface Stat : AST
 

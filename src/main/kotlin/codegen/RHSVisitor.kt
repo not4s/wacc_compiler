@@ -5,10 +5,7 @@ import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
 import symbolTable.typeToByteSize
-import waccType.WBool
-import waccType.WChar
-import waccType.WInt
-import waccType.WStr
+import waccType.*
 
 // Stores visiting result in Register.resultRegister.
 class RHSVisitor(
@@ -30,7 +27,6 @@ class RHSVisitor(
             is PairElement -> visitPairElement(ctx)
             is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
             is FunctionCall -> visitFunctionCall(ctx)
-            else -> TODO("Not yet implemented")
         }
     }
 
@@ -53,7 +49,7 @@ class RHSVisitor(
         return evalCodes.plus(
             listOf(
                 SUB(Register.stackPointer(), Register.stackPointer(), Immediate(totalOffset)),
-                B(funcLabel(ctx.identifier), link = true),
+                B(funcLabel(ctx.identifier)),
                 ADD(Register.stackPointer(), Register.stackPointer(), Immediate(totalOffset))
             )
         )
@@ -65,13 +61,20 @@ class RHSVisitor(
         val arrValueStoreReg = Register.resultRegister()
         var index = 0
         return listOf(
-            LDR(Register.resultRegister(), LoadImmediate(WORD_SIZE + arrSize * typeToByteSize(ctx.type.elemType))),
-            B(MALLOC, link = true),
+            LDR(
+                Register.resultRegister(),
+                LoadImmediate(WORD_SIZE + arrSize * typeToByteSize(ctx.type.elemType))
+            ),
+            B(MALLOC),
             MOV(mallocResReg, Register.resultRegister())
         ).plus(
             ctx.values.map {
                 ExprVisitor(data, registerProvider, funcPool).visit(it).plus(
-                    STR(arrValueStoreReg, mallocResReg, WORD_SIZE + (index++) * typeToByteSize(ctx.type.elemType))
+                    STR(
+                        arrValueStoreReg,
+                        mallocResReg,
+                        WORD_SIZE + (index++) * typeToByteSize(ctx.type.elemType)
+                    )
                 )
             }.fold(listOf()) { a, b -> a.plus(b) }
         ).plus(
@@ -102,7 +105,7 @@ class RHSVisitor(
                     LDR(Register.resultRegister(), LabelReference(reference))
                 )
             }
-            else -> TODO("Not yet implemented")
+            is WUnknown -> TODO("Literal type cannot be WUnknown")
         }
     }
 
@@ -117,9 +120,13 @@ class RHSVisitor(
                 MOV(Register("r9"), Register.resultRegister()),
                 // Malloc space
                 LDR(Register.resultRegister(), LoadImmediate(typeToByteSize(ctx.left.type))),
-                B(MALLOC, link = true),
+                B(MALLOC),
                 // STR r1 to r0
-                STR(Register("r9"), Register.resultRegister(), isSignedByte = typeToByteSize(ctx.left.type) == 1),
+                STR(
+                    Register("r9"),
+                    Register.resultRegister(),
+                    isSignedByte = typeToByteSize(ctx.left.type) == 1
+                ),
                 PUSH(Register.resultRegister(), data)
             )
         ).plus(
@@ -131,9 +138,13 @@ class RHSVisitor(
                 MOV(Register("r9"), Register.resultRegister()),
                 // Malloc space
                 LDR(Register.resultRegister(), LoadImmediate(typeToByteSize(ctx.right.type))),
-                B(MALLOC, link = true),
+                B(MALLOC),
                 // STR r1 to r0
-                STR(Register("r9"), Register.resultRegister(), isSignedByte = typeToByteSize(ctx.right.type) == 1),
+                STR(
+                    Register("r9"),
+                    Register.resultRegister(),
+                    isSignedByte = typeToByteSize(ctx.right.type) == 1
+                ),
                 PUSH(Register.resultRegister(), data)
             )
         ).plus(
@@ -142,7 +153,7 @@ class RHSVisitor(
             LDR(Register.resultRegister(), LoadImmediate(8))
         ).plus(
             // Convert to ptr
-            B(MALLOC, link = true)
+            B(MALLOC)
         ).plus(
             listOf(
                 // Pop SECOND element, store.
@@ -175,9 +186,20 @@ class RHSVisitor(
         pCheckNullPointer(data, funcPool)
         val instr = listOf<WInstruction>()
             .plus(visit(ctx.expr))
-            .plus(B(CHECK_NULL_POINTER, link = true))
-            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister(), offset)))
-            .plus(LDR(Register.resultRegister(), ImmediateOffset(Register.resultRegister()), isSignedByte = charOrBool))
+            .plus(B(CHECK_NULL_POINTER))
+            .plus(
+                LDR(
+                    Register.resultRegister(),
+                    ImmediateOffset(Register.resultRegister(), offset)
+                )
+            )
+            .plus(
+                LDR(
+                    Register.resultRegister(),
+                    ImmediateOffset(Register.resultRegister()),
+                    isSignedByte = charOrBool
+                )
+            )
         return instr
     }
 }
