@@ -46,7 +46,7 @@ interface Typed : AST {
 
 interface RHS : AST, Typed
 
-interface LHS : AST, Typed
+sealed interface LHS : AST, Typed
 
 sealed interface Expr : AST, Typed, RHS
 

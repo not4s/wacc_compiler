@@ -7,7 +7,6 @@ import ast.PairElement
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
 import instructions.misc.ImmediateOffset
-import instructions.misc.Operand2
 import instructions.misc.Register
 import instructions.operations.*
 
@@ -41,17 +40,19 @@ class LHSVisitor(
                 return listOf<WInstruction>(
                     PUSH(Register.resultRegister(), data),
                 ).plus(ExprVisitor(data, registerProvider, funcPool).visit(ctx.expr))
-                    .plus(B(CHECK_NULL_POINTER, link=true)).plus(POP(Register("r1"), data)).plus(
+                    .plus(B(CHECK_NULL_POINTER, link = true)).plus(POP(Register("r1"), data)).plus(
                         LDR(
                             Register.resultRegister(),
-                            ImmediateOffset(Register.resultRegister(), offset = if (ctx.first) 0 else 4)
+                            ImmediateOffset(
+                                Register.resultRegister(),
+                                offset = if (ctx.first) 0 else 4
+                            )
                         )
 
                     ).plus(
                         STR(Register("r1"), Register.resultRegister())
                     )
             }
-            else -> throw Exception("Unknown LHS $ctx")
         }
     }
 }
