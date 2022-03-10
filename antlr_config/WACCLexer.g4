@@ -101,4 +101,5 @@ WS: [ \t\r\n]+ -> channel(HIDDEN);
 ANY_IGNORE: . ;
 
 /* Extension Lexer patterns */
+KW_STRUCT: 'struct' ;
 

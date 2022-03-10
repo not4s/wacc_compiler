@@ -124,3 +124,15 @@ paramList
 
 func
   : type IDENTIFIER SYM_LBRACKET paramList? SYM_RBRACKET KW_IS stat KW_END;
+
+/* Extension patterns */
+
+/* Structs */
+
+paramColumn
+  : param (SYM_SEMICOLON param)*
+  ;
+
+struct
+  : KW_STRUCT IDENTIFIER KW_BEGIN paramColumn KW_END
+  ;
