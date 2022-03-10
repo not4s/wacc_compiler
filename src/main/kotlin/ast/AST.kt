@@ -48,7 +48,7 @@ interface RHS : AST, Typed
 
 interface LHS : AST, Typed
 
-interface Expr : AST, Typed, RHS
+sealed interface Expr : AST, Typed, RHS
 
 interface Stat : AST
 

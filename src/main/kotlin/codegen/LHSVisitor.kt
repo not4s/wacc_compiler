@@ -17,8 +17,6 @@ class LHSVisitor(
     private val funcPool: FunctionPool,
 ) : ASTVisitor<LHS> {
 
-    var resultStored: Operand2? = null
-
     override fun visit(ctx: LHS): List<WInstruction> {
         return when (ctx) {
             is IdentifierSet -> {
