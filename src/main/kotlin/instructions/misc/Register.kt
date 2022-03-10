@@ -1,30 +1,12 @@
 package instructions.misc
 
-data class Register(val rName: String) : Operand2, Loadable {
-
-    constructor(num: Int) : this("r$num")
+enum class Register: Operand2, Loadable {
+    // General Registers, Result is generally stored in R0
+    R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12,
+    // R13 = Stack Pointer, R14 = Link Register, R15 = Program Counter
+    SP, LR, PC;
 
     override fun toString(): String {
-        return when (rName) {
-            "r13" -> "sp"
-            "r14" -> "lr"
-            "r15" -> "pc"
-            else -> rName
-        }
-    }
-
-    companion object {
-        fun linkRegister(): Register {
-            return Register("lr")
-        }
-        fun stackPointer(): Register {
-            return Register("sp")
-        }
-        fun programCounter(): Register {
-            return Register("pc")
-        }
-        fun resultRegister(): Register {
-            return Register("r0")
-        }
+        return name.lowercase()
     }
 }
