@@ -231,7 +231,7 @@ class ParentRefSymbolTable(
         val restoringIndices = indices.map { _ ->
             listOf(
                 POP(Register.resultRegister(), data),
-                B("p_check_array_bounds", link = true),
+                B("p_check_array_bounds"),
                 ADD(Register("r4"), Register("r4"), Immediate(4)),
                 if (isSmall) {
                     ADD(Register("r4"), Register("r4"), Register.resultRegister())
@@ -327,7 +327,7 @@ class ParentRefSymbolTable(
         val restoringIndices = indices.map { _ ->
             listOf(
                 POP(Register.resultRegister(), data),
-                B("p_check_array_bounds", link = true),
+                B("p_check_array_bounds"),
                 ADD(Register("r4"), Register("r4"), Immediate(4)),
                 if (isSmall) {
                     ADD(Register("r4"), Register("r4"), Register.resultRegister())

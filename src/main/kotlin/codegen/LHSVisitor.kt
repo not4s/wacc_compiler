@@ -40,7 +40,7 @@ class LHSVisitor(
                 return listOf<WInstruction>(
                     PUSH(Register.resultRegister(), data),
                 ).plus(ExprVisitor(data, registerProvider, funcPool).visit(ctx.expr))
-                    .plus(B(CHECK_NULL_POINTER, link = true)).plus(POP(Register("r1"), data)).plus(
+                    .plus(B(CHECK_NULL_POINTER)).plus(POP(Register("r1"), data)).plus(
                         LDR(
                             Register.resultRegister(),
                             ImmediateOffset(

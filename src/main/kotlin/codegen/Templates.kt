@@ -50,7 +50,7 @@ const val CHAR_SIZE = 1
 
 val printFunEnd: List<WInstruction> = listOf(
     MOV(Register.resultRegister(), Immediate(0)),
-    B(FFLUSH, link = true),
+    B(FFLUSH),
     POP(Register.programCounter())
 )
 
@@ -66,7 +66,7 @@ fun pPrintString(data: DataDeclaration): List<WInstruction> {
         ADD(Register(2), Register.resultRegister(), Immediate(WORD_SIZE)),
         LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_STRING, data)),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
-        B(PRINTF, link = true)
+        B(PRINTF)
     ).plus(printFunEnd)
 }
 
@@ -76,7 +76,7 @@ fun pPrintLn(data: DataDeclaration): List<WInstruction> {
         PUSH(Register.linkRegister()),
         LDR(Register.resultRegister(), LabelReference(NULL_CHAR, data)),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
-        B(PUTS, link = true)
+        B(PUTS)
     ).plus(printFunEnd)
 }
 
@@ -96,7 +96,7 @@ fun pPrintBool(data: DataDeclaration): List<WInstruction> {
             conditionCode = ConditionCode.EQ
         ),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
-        B(PRINTF, link = true)
+        B(PRINTF)
     ).plus(printFunEnd)
 }
 
@@ -107,7 +107,7 @@ fun pPrintInt(data: DataDeclaration): List<WInstruction> {
         MOV(Register(1), Register.resultRegister()),
         LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_INT, data)),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
-        B(PRINTF, link = true)
+        B(PRINTF)
     ).plus(printFunEnd)
 }
 
@@ -118,7 +118,7 @@ fun pPrintReference(data: DataDeclaration): List<WInstruction> {
         MOV(Register(1), Register.resultRegister()),
         LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data)),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
-        B(PRINTF, true),
+        B(PRINTF),
     ).plus(printFunEnd)
 }
 
@@ -129,7 +129,7 @@ fun pReadInt(data: DataDeclaration): List<WInstruction> {
         MOV(Register(1), Register.resultRegister()),
         LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_INT, data)),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
-        B(SCANF, link = true),
+        B(SCANF),
         POP(Register.programCounter())
     )
 }
@@ -141,7 +141,7 @@ fun pReadChar(data: DataDeclaration): List<WInstruction> {
         MOV(Register(1), Register.resultRegister()),
         LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_CHAR, data)),
         ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
-        B(SCANF, link = true),
+        B(SCANF),
         POP(Register.programCounter())
     )
 }
@@ -149,9 +149,9 @@ fun pReadChar(data: DataDeclaration): List<WInstruction> {
 fun pThrowRuntimeError(): List<WInstruction> {
     return listOf(
         Label(THROW_RUNTIME_ERROR),
-        B(P_PRINT_STRING, link = true),
+        B(P_PRINT_STRING),
         MOV(Register.resultRegister(), Immediate(-1)),
-        B(EXIT, link = true)
+        B(EXIT)
     )
 }
 
@@ -159,7 +159,7 @@ fun pThrowOverflowError(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(THROW_OVERFLOW_ERROR),
         LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data)),
-        B(THROW_RUNTIME_ERROR, link = true)
+        B(THROW_RUNTIME_ERROR)
     )
 
 }
@@ -174,7 +174,7 @@ fun pCheckDivideByZero(data: DataDeclaration): List<WInstruction> {
             LabelReference(DIVIDE_BY_ZERO_MESSAGE, data),
             conditionCode = ConditionCode.EQ
         ),
-        B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.EQ),
+        B(THROW_RUNTIME_ERROR, cond = B.Condition.EQ),
         POP(Register.programCounter())
     )
 }
@@ -189,7 +189,7 @@ fun pCheckArrayBounds(data: DataDeclaration): List<WInstruction> {
             LabelReference(ARRAY_NEGATIVE_ERROR_MESSAGE, data),
             conditionCode = ConditionCode.LT
         ),
-        B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.LT),
+        B(THROW_RUNTIME_ERROR, cond = B.Condition.LT),
         LDR(Register("r1"), ImmediateOffset(Register("r4"))),
         CMP(Register.resultRegister(), Register("r1")),
         LDR(
@@ -197,12 +197,12 @@ fun pCheckArrayBounds(data: DataDeclaration): List<WInstruction> {
             LabelReference(ARRAY_BOUNDS_ERROR_MESSAGE, data),
             conditionCode = ConditionCode.CS
         ),
-        B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.CS),
+        B(THROW_RUNTIME_ERROR, cond = B.Condition.CS),
         POP(Register.programCounter())
     )
 }
 
-fun pCheckNullPointer(data: DataDeclaration) : List<WInstruction> {
+fun pCheckNullPointer(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(CHECK_NULL_POINTER),
         PUSH(Register.linkRegister()),
@@ -213,7 +213,7 @@ fun pCheckNullPointer(data: DataDeclaration) : List<WInstruction> {
             false,
             ConditionCode.EQ
         ),
-        B(THROW_RUNTIME_ERROR, true, B.Condition.EQ),
+        B(THROW_RUNTIME_ERROR, cond = B.Condition.EQ),
         POP(Register.programCounter())
     )
 }

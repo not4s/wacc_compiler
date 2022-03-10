@@ -45,7 +45,7 @@ class ExprVisitor(
                         return instr.plus(
                             listOf(
                                 RSB(Register.resultRegister(), Register.resultRegister()),
-                                B("p_throw_overflow_error", true, cond = B.Condition.VS),
+                                B("p_throw_overflow_error", cond = B.Condition.VS),
                             )
                         )
                     }
@@ -95,7 +95,7 @@ class ExprVisitor(
                             listOf(
                                 SMULL(reg1, reg2, reg1, reg2),
                                 CMP(reg2, ShiftedRegister(reg1, 31)),
-                                B("p_throw_overflow_error", true, B.Condition.NE)
+                                B("p_throw_overflow_error", cond=B.Condition.NE)
                             )
                         )
                     }
@@ -104,8 +104,8 @@ class ExprVisitor(
                         pCheckDivideByZero(data, funcPool)
                         instr.plus(
                             listOf(
-                                B("p_check_divide_by_zero", true),
-                                B("__aeabi_idiv", true),
+                                B("p_check_divide_by_zero"),
+                                B("__aeabi_idiv")
                             )
                         )
                     }
@@ -116,8 +116,8 @@ class ExprVisitor(
                             listOf(
                                 MOV(Register("r0"), reg1),
                                 MOV(Register("r1"), reg2),
-                                B("p_check_divide_by_zero", true),
-                                B("__aeabi_idivmod", true),
+                                B("p_check_divide_by_zero"),
+                                B("__aeabi_idivmod"),
                                 MOV(reg1, Register("r1"))
                             )
                         )
@@ -130,7 +130,7 @@ class ExprVisitor(
                         instr.plus(
                             listOf(
                                 addInstr,
-                                B("p_throw_overflow_error", true, cond = B.Condition.VS),
+                                B("p_throw_overflow_error", cond = B.Condition.VS),
                             )
                         )
                     }
@@ -142,7 +142,7 @@ class ExprVisitor(
                         instr.plus(
                             listOf(
                                 subInstr,
-                                B("p_throw_overflow_error", true, cond = B.Condition.VS),
+                                B("p_throw_overflow_error", cond = B.Condition.VS),
                             )
                         )
                     }

@@ -49,7 +49,7 @@ class RHSVisitor(
         return evalCodes.plus(
             listOf(
                 SUB(Register.stackPointer(), Register.stackPointer(), Immediate(totalOffset)),
-                B(funcLabel(ctx.identifier), link = true),
+                B(funcLabel(ctx.identifier)),
                 ADD(Register.stackPointer(), Register.stackPointer(), Immediate(totalOffset))
             )
         )
@@ -65,7 +65,7 @@ class RHSVisitor(
                 Register.resultRegister(),
                 LoadImmediate(WORD_SIZE + arrSize * typeToByteSize(ctx.type.elemType))
             ),
-            B(MALLOC, link = true),
+            B(MALLOC),
             MOV(mallocResReg, Register.resultRegister())
         ).plus(
             ctx.values.map {
@@ -120,7 +120,7 @@ class RHSVisitor(
                 MOV(Register("r9"), Register.resultRegister()),
                 // Malloc space
                 LDR(Register.resultRegister(), LoadImmediate(typeToByteSize(ctx.left.type))),
-                B(MALLOC, link = true),
+                B(MALLOC),
                 // STR r1 to r0
                 STR(
                     Register("r9"),
@@ -138,7 +138,7 @@ class RHSVisitor(
                 MOV(Register("r9"), Register.resultRegister()),
                 // Malloc space
                 LDR(Register.resultRegister(), LoadImmediate(typeToByteSize(ctx.right.type))),
-                B(MALLOC, link = true),
+                B(MALLOC),
                 // STR r1 to r0
                 STR(
                     Register("r9"),
@@ -153,7 +153,7 @@ class RHSVisitor(
             LDR(Register.resultRegister(), LoadImmediate(8))
         ).plus(
             // Convert to ptr
-            B(MALLOC, link = true)
+            B(MALLOC)
         ).plus(
             listOf(
                 // Pop SECOND element, store.
@@ -186,7 +186,7 @@ class RHSVisitor(
         pCheckNullPointer(data, funcPool)
         val instr = listOf<WInstruction>()
             .plus(visit(ctx.expr))
-            .plus(B(CHECK_NULL_POINTER, link = true))
+            .plus(B(CHECK_NULL_POINTER))
             .plus(
                 LDR(
                     Register.resultRegister(),

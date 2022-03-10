@@ -51,8 +51,8 @@ class StatVisitor(
         pCheckNullPointer(data, funcPool)
         val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val evaluationCode = exprVisitor.visit(ctx.expression)
-        return evaluationCode.plus(B(CHECK_NULL_POINTER, link = true)).plus(
-            B("free", link = true)
+        return evaluationCode.plus(B(CHECK_NULL_POINTER)).plus(
+            B("free")
         )
     }
 
@@ -119,7 +119,7 @@ class StatVisitor(
         return output.plus(PUSH(Register.resultRegister()))
             .plus(MOV(Register.resultRegister(), Register.stackPointer()))
             .plus(
-                B(readFun, link = true)
+                B(readFun)
             ).plus(POP(Register.resultRegister()))
             .plus(
                 when (ctx.lhs) {
@@ -175,7 +175,7 @@ class StatVisitor(
         return evaluationCode.plus(
             listOf(
                 MOV(Register.resultRegister(), Register.resultRegister()),
-                B("exit", link = true)
+                B("exit")
             )
         )
     }
@@ -267,11 +267,11 @@ class StatVisitor(
             listOf(
                 firstArgInitInstruction,
                 MOV(Register.resultRegister(), ldrDestReg),
-                B(printFun, link = true)
+                B(printFun)
             )
         ).apply {
             if (ctx.newlineAfter) {
-                return this.plus(B(P_PRINT_LN, link = true))
+                return this.plus(B(P_PRINT_LN))
             }
         }
     }

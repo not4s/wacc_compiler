@@ -36,14 +36,6 @@ interface ASTVisitor<T : AST> {
         return output
     }
 
-    fun withScope(
-        offset: Int,
-        stat: Stat,
-        generator: (Stat) -> List<WInstruction>
-    ): List<WInstruction> {
-        return withScope(offset, generator(stat))
-    }
-
     fun withScope(offset: Int, generator: List<WInstruction>): List<WInstruction> {
         return offsetStackBy(offset).plus(generator).plus(unOffsetStackBy(offset))
     }
