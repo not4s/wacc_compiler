@@ -69,8 +69,8 @@ class StatVisitor(
             .plus(unOffsetStackBy(returnUnOffsetByteSize ?: throw Exception("Cannot restore stack offset")))
             .plus(
                 listOf(
-                    MOV(Register.resultRegister(), Register.resultRegister()),
-                    POP(Register.programCounter()),
+                    MOV(Register.R0, Register.R0),
+                    POP(Register.PC),
                     LTORG()
                 )
             )
@@ -95,7 +95,7 @@ class StatVisitor(
             .plus(whileBody)
             .plus(Label(whileStartLabel))
             .plus(condition)
-            .plus(CMP(Register.resultRegister(), Immediate(0)))
+            .plus(CMP(Register.R0, Immediate(0)))
             .plus(jump)
     }
 
@@ -116,14 +116,14 @@ class StatVisitor(
             else -> throw Exception("Can only read chars or ints")
         }
 
-        return output.plus(PUSH(Register.resultRegister()))
-            .plus(MOV(Register.resultRegister(), Register.stackPointer()))
+        return output.plus(PUSH(Register.R0))
+            .plus(MOV(Register.R0, Register.SP))
             .plus(
                 B(readFun, link = true)
-            ).plus(POP(Register.resultRegister()))
+            ).plus(POP(Register.R0))
             .plus(
                 when (ctx.lhs) {
-                    is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister(), data, null)
+                    is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.R0, data, null)
                     else -> TODO()
                 }
             )
@@ -147,7 +147,7 @@ class StatVisitor(
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
-            CMP(Register.resultRegister(), Immediate(0)),
+            CMP(Register.R0, Immediate(0)),
             B(elseBranchLabel, cond = B.Condition.EQ)
         )
 
@@ -165,7 +165,7 @@ class StatVisitor(
         val evaluationCode = exprVisitor.visit(ctx.expr)
         return evaluationCode.plus(
             listOf(
-                MOV(Register.resultRegister(), Register.resultRegister()),
+                MOV(Register.R0, Register.R0),
                 B("exit", link = true)
             )
         )
@@ -245,7 +245,7 @@ class StatVisitor(
         } else {
             val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
             evalExprInstructions = exprVisitor.visit(ctx.expr)
-            firstArgInitInstruction = MOV(ldrDestReg, Register.resultRegister())
+            firstArgInitInstruction = MOV(ldrDestReg, Register.R0)
         }
 
         if (ctx.newlineAfter) {
@@ -257,7 +257,7 @@ class StatVisitor(
         return evalExprInstructions.plus(
             listOf(
                 firstArgInitInstruction,
-                MOV(Register.resultRegister(), ldrDestReg),
+                MOV(Register.R0, ldrDestReg),
                 B(printFun, link = true)
             )
         ).apply {
@@ -270,7 +270,7 @@ class StatVisitor(
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
         return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs)
-            .plus(ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
+            .plus(ctx.st.asmAssign(ctx.identifier, Register.R0, data, ctx.decType)
         )
     }
 

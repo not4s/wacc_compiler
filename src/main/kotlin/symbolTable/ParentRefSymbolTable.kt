@@ -164,7 +164,7 @@ class ParentRefSymbolTable(
                     return listOf(
                         STR(
                             fromRegister,
-                            Register.stackPointer(),
+                            Register.SP,
                             totalByteSize - offset,
                             isSignedByte = isSmall
                         )
@@ -188,7 +188,7 @@ class ParentRefSymbolTable(
                     return listOf(
                         STR(
                             fromRegister,
-                            Register.stackPointer(),
+                            Register.SP,
                             totalByteSize - offset,
                             isSignedByte = isSmall
                         )
@@ -221,22 +221,22 @@ class ParentRefSymbolTable(
         //    translate expression(s) in the Array and for each store somewhere somehow
         //    whilst save the indices backwards on the stack
         val translatingExpressions = indices.reversed().map {
-            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
+            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.R0, data))
         }.flatten()
         //    get the address in the heap according to the index
         val intermediateArrayLocationMagic: List<WInstruction> =
-            asmGet(arrSym, Register("r4"), data)
+            asmGet(arrSym, Register.R4, data)
 
         //    Store the original fromRegister into the address calculated above
         val restoringIndices = indices.map { _ ->
             listOf(
-                POP(Register.resultRegister(), data),
+                POP(Register.R0, data),
                 B("p_check_array_bounds", link = true),
-                ADD(Register("r4"), Register("r4"), Immediate(4)),
+                ADD(Register.R4, Register.R4, Immediate(4)),
                 if (isSmall) {
-                    ADD(Register("r4"), Register("r4"), Register.resultRegister())
+                    ADD(Register.R4, Register.R4, Register.R0)
                 } else {
-                    ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                    ADD(Register.R4, Register.R4, LSLRegister(Register.R0, 2))
                 }
             )
         }.flatten()
@@ -248,8 +248,8 @@ class ParentRefSymbolTable(
             .plus(translatingExpressions)
             .plus(intermediateArrayLocationMagic)
             .plus(restoringIndices)
-            .plus(POP(Register.resultRegister(), data))
-            .plus(STR(Register.resultRegister(), Register("r4"), isSignedByte = isSmall))
+            .plus(POP(Register.R0, data))
+            .plus(STR(Register.R0, Register.R4, isSignedByte = isSmall))
             .toList()
     }
 
@@ -280,7 +280,7 @@ class ParentRefSymbolTable(
                     LDR(
                         toRegister,
                         ImmediateOffset(
-                            Register.stackPointer(),
+                            Register.SP,
                             totalByteSize - offset
                         ),
                         isSignedByte = isSmall
@@ -317,24 +317,24 @@ class ParentRefSymbolTable(
     ): List<WInstruction> {
         val isSmall = typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
         val translatingExpressions = indices.reversed().map {
-            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
+            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.R0, data))
         }.flatten()
         //    get the address in the heap according to the index
         val intermediateArrayLocationMagic: List<WInstruction> =
-            asmGet(arrSym, Register("r4"), data)
+            asmGet(arrSym, Register.R4, data)
 
         //    Store the original fromRegister into the address calculated above
         val restoringIndices = indices.map { _ ->
             listOf(
-                POP(Register.resultRegister(), data),
+                POP(Register.R0, data),
                 B("p_check_array_bounds", link = true),
-                ADD(Register("r4"), Register("r4"), Immediate(4)),
+                ADD(Register.R4, Register.R4, Immediate(4)),
                 if (isSmall) {
-                    ADD(Register("r4"), Register("r4"), Register.resultRegister())
+                    ADD(Register.R4, Register.R4, Register.R0)
                 } else {
-                    ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                    ADD(Register.R4, Register.R4, LSLRegister(Register.R0, 2))
                 },
-                LDR(Register("r4"), Register("r4"), isSignedByte = isSmall)
+                LDR(Register.R4, Register.R4, isSignedByte = isSmall)
             )
         }.flatten()
 
@@ -344,7 +344,7 @@ class ParentRefSymbolTable(
             .plus(translatingExpressions)
             .plus(intermediateArrayLocationMagic)
             .plus(restoringIndices)
-            .plus(MOV(toRegister, Register("r4")))
+            .plus(MOV(toRegister, Register.R4))
             .toList()
     }
 

@@ -20,12 +20,12 @@ class ExprVisitor(
             }
 
             is IdentifierGet -> {
-                ctx.st.asmGet(ctx.identifier, Register.resultRegister(), data)
+                ctx.st.asmGet(ctx.identifier, Register.R0, data)
             }
 
             is ArrayElement -> {
                 pCheckArrayBounds(data, funcPool)
-                ctx.st.asmGet(ctx.identifier, ctx.indices, Register.resultRegister(), data, registerProvider, funcPool)
+                ctx.st.asmGet(ctx.identifier, ctx.indices, Register.R0, data, registerProvider, funcPool)
             }
 
             is UnaryOperation -> {
@@ -38,7 +38,7 @@ class ExprVisitor(
                         pThrowOverflowError(data, funcPool)
                         return instr.plus(
                             listOf(
-                                RSB(Register.resultRegister(), Register.resultRegister()),
+                                RSB(Register.R0, Register.R0),
                                 B("p_throw_overflow_error", true, cond = B.Condition.VS),
                             )
                         )
@@ -46,7 +46,7 @@ class ExprVisitor(
                     UnOperator.NOT -> {
                         return instr.plus(
                             listOf(
-                                EOR(Register.resultRegister(), Register.resultRegister(), Immediate(1))
+                                EOR(Register.R0, Register.R0, Immediate(1))
                             )
                         )
                     }
@@ -57,7 +57,7 @@ class ExprVisitor(
                     UnOperator.LEN -> {
                         return instr.plus(
                             listOf(
-                                LDR(Register.resultRegister(), Register.resultRegister())
+                                LDR(Register.R0, Register.R0)
                             )
                         )
                     }
@@ -66,13 +66,13 @@ class ExprVisitor(
 
             is BinaryOperation -> {
 
-                val reg1 = Register("r0")
-                val reg2 = Register("r1")
+                val reg1 = Register.R0
+                val reg2 = Register.R1
 
                 val instr =
                     // Evaluate right, result will be in R0. Push this to stack.
                     visit(ctx.right)
-                        .plus(PUSH(Register.resultRegister(), data))
+                        .plus(PUSH(Register.R0, data))
                         // Eval left. Result is stored in R0.
                         .plus(visit(ctx.left))
                         // Pop the right result to R1.
@@ -105,11 +105,11 @@ class ExprVisitor(
                         pCheckDivideByZero(data, funcPool)
                         instr.plus(
                             listOf(
-                                MOV(Register("r0"), reg1),
-                                MOV(Register("r1"), reg2),
+                                MOV(Register.R0, reg1),
+                                MOV(Register.R1, reg2),
                                 B("p_check_divide_by_zero", true),
                                 B("__aeabi_idivmod", true),
-                                MOV(reg1, Register("r1"))
+                                MOV(reg1, Register.R1)
                             )
                         )
                     }

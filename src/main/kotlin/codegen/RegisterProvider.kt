@@ -14,7 +14,7 @@ class RegisterProvider {
         if (tracker > LAST_CALLEE_SAVE_REG) {
             throw Exception("Ran out of callee-saved registers")
         }
-        return Register("r${tracker++}")
+        return Register.values()[tracker++]
     }
 
     fun ret() {

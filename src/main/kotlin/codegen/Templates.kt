@@ -47,11 +47,10 @@ const val INT_SIZE = 4
 const val STR_SIZE = 4
 const val BOOL_SIZE = 1
 const val CHAR_SIZE = 1
-
 val printFunEnd: List<WInstruction> = listOf(
-    MOV(Register.resultRegister(), Immediate(0)),
+    MOV(Register.R0, Immediate(0)),
     B(FFLUSH, link = true),
-    POP(Register.programCounter())
+    POP(Register.PC)
 )
 
 fun funcLabel(funcName: String): String {
@@ -61,11 +60,11 @@ fun funcLabel(funcName: String): String {
 fun pPrintString(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_PRINT_STRING),
-        PUSH(Register.linkRegister()),
-        LDR(Register(1), ImmediateOffset(Register.resultRegister())),
-        ADD(Register(2), Register.resultRegister(), Immediate(WORD_SIZE)),
-        LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_STRING, data)),
-        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
+        PUSH(Register.LR),
+        LDR(Register.R1, ImmediateOffset(Register.R0)),
+        ADD(Register.R2, Register.R0, Immediate(WORD_SIZE)),
+        LDR(Register.R0, LabelReference(NULL_TERMINAL_STRING, data)),
+        ADD(Register.R0, Register.R0, Immediate(WORD_SIZE)),
         B(PRINTF, link = true)
     ).plus(printFunEnd)
 }
@@ -73,9 +72,9 @@ fun pPrintString(data: DataDeclaration): List<WInstruction> {
 fun pPrintLn(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_PRINT_LN),
-        PUSH(Register.linkRegister()),
-        LDR(Register.resultRegister(), LabelReference(NULL_CHAR, data)),
-        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
+        PUSH(Register.LR),
+        LDR(Register.R0, LabelReference(NULL_CHAR, data)),
+        ADD(Register.R0, Register.R0, Immediate(WORD_SIZE)),
         B(PUTS, link = true)
     ).plus(printFunEnd)
 }
@@ -83,19 +82,19 @@ fun pPrintLn(data: DataDeclaration): List<WInstruction> {
 fun pPrintBool(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_PRINT_BOOL),
-        PUSH(Register.linkRegister()),
-        CMP(Register.resultRegister(), Immediate(0)),
+        PUSH(Register.LR),
+        CMP(Register.R0, Immediate(0)),
         LDR(
-            Register.resultRegister(),
+            Register.R0,
             LabelReference(LITERAL_TRUE, data),
             conditionCode = ConditionCode.NE
         ),
         LDR(
-            Register.resultRegister(),
+            Register.R0,
             LabelReference(LITERAL_FALSE, data),
             conditionCode = ConditionCode.EQ
         ),
-        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
+        ADD(Register.R0, Register.R0, Immediate(WORD_SIZE)),
         B(PRINTF, link = true)
     ).plus(printFunEnd)
 }
@@ -103,10 +102,10 @@ fun pPrintBool(data: DataDeclaration): List<WInstruction> {
 fun pPrintInt(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_PRINT_INT),
-        PUSH(Register.linkRegister()),
-        MOV(Register(1), Register.resultRegister()),
-        LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_INT, data)),
-        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
+        PUSH(Register.LR),
+        MOV(Register.R1, Register.R0),
+        LDR(Register.R0, LabelReference(NULL_TERMINAL_INT, data)),
+        ADD(Register.R0, Register.R0, Immediate(WORD_SIZE)),
         B(PRINTF, link = true)
     ).plus(printFunEnd)
 }
@@ -114,10 +113,10 @@ fun pPrintInt(data: DataDeclaration): List<WInstruction> {
 fun pPrintReference(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_PRINT_REFERENCE),
-        PUSH(Register.linkRegister()),
-        MOV(Register(1), Register.resultRegister()),
-        LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_REFERENCE, data)),
-        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
+        PUSH(Register.LR),
+        MOV(Register.R1, Register.R0),
+        LDR(Register.R0, LabelReference(NULL_TERMINAL_REFERENCE, data)),
+        ADD(Register.R0, Register.R0, Immediate(WORD_SIZE)),
         B(PRINTF, true),
     ).plus(printFunEnd)
 }
@@ -125,24 +124,24 @@ fun pPrintReference(data: DataDeclaration): List<WInstruction> {
 fun pReadInt(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_READ_INT),
-        PUSH(Register.linkRegister()),
-        MOV(Register(1), Register.resultRegister()),
-        LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_INT, data)),
-        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
+        PUSH(Register.LR),
+        MOV(Register.R1, Register.R0),
+        LDR(Register.R0, LabelReference(NULL_TERMINAL_INT, data)),
+        ADD(Register.R0, Register.R0, Immediate(WORD_SIZE)),
         B(SCANF, link = true),
-        POP(Register.programCounter())
+        POP(Register.PC)
     )
 }
 
 fun pReadChar(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(P_READ_CHAR),
-        PUSH(Register.linkRegister()),
-        MOV(Register(1), Register.resultRegister()),
-        LDR(Register.resultRegister(), LabelReference(NULL_TERMINAL_CHAR, data)),
-        ADD(Register.resultRegister(), Register.resultRegister(), Immediate(WORD_SIZE)),
+        PUSH(Register.LR),
+        MOV(Register.R1, Register.R0),
+        LDR(Register.R0, LabelReference(NULL_TERMINAL_CHAR, data)),
+        ADD(Register.R0, Register.R0, Immediate(WORD_SIZE)),
         B(SCANF, link = true),
-        POP(Register.programCounter())
+        POP(Register.PC)
     )
 }
 
@@ -150,7 +149,7 @@ fun pThrowRuntimeError(): List<WInstruction> {
     return listOf(
         Label(THROW_RUNTIME_ERROR),
         B(P_PRINT_STRING, link = true),
-        MOV(Register.resultRegister(), Immediate(-1)),
+        MOV(Register.R0, Immediate(-1)),
         B(EXIT, link = true)
     )
 }
@@ -158,7 +157,7 @@ fun pThrowRuntimeError(): List<WInstruction> {
 fun pThrowOverflowError(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(THROW_OVERFLOW_ERROR),
-        LDR(Register.resultRegister(), LabelReference(OVERFLOW_ERROR_MESSAGE, data)),
+        LDR(Register.R0, LabelReference(OVERFLOW_ERROR_MESSAGE, data)),
         B(THROW_RUNTIME_ERROR, link = true)
     )
 
@@ -167,54 +166,54 @@ fun pThrowOverflowError(data: DataDeclaration): List<WInstruction> {
 fun pCheckDivideByZero(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(CHECK_DIVIDE_BY_ZERO),
-        PUSH(Register.linkRegister()),
-        CMP(Register("r1"), Immediate(0)),
+        PUSH(Register.LR),
+        CMP(Register.R1, Immediate(0)),
         LDR(
-            Register.resultRegister(),
+            Register.R0,
             LabelReference(DIVIDE_BY_ZERO_MESSAGE, data),
             conditionCode = ConditionCode.EQ
         ),
         B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.EQ),
-        POP(Register.programCounter())
+        POP(Register.PC)
     )
 }
 
 fun pCheckArrayBounds(data: DataDeclaration): List<WInstruction> {
     return listOf(
         Label(CHECK_ARRAY_BOUNDS),
-        PUSH(Register.linkRegister()),
-        CMP(Register.resultRegister(), Immediate(0)),
+        PUSH(Register.LR),
+        CMP(Register.R0, Immediate(0)),
         LDR(
-            Register.resultRegister(),
+            Register.R0,
             LabelReference(ARRAY_NEGATIVE_ERROR_MESSAGE, data),
             conditionCode = ConditionCode.LT
         ),
         B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.LT),
-        LDR(Register("r1"), ImmediateOffset(Register("r4"))),
-        CMP(Register.resultRegister(), Register("r1")),
+        LDR(Register.R1, ImmediateOffset(Register.R4)),
+        CMP(Register.R0, Register.R1),
         LDR(
-            Register.resultRegister(),
+            Register.R0,
             LabelReference(ARRAY_BOUNDS_ERROR_MESSAGE, data),
             conditionCode = ConditionCode.CS
         ),
         B(THROW_RUNTIME_ERROR, link = true, cond = B.Condition.CS),
-        POP(Register.programCounter())
+        POP(Register.PC)
     )
 }
 
 fun pCheckNullPointer(data: DataDeclaration) : List<WInstruction> {
     return listOf(
         Label(CHECK_NULL_POINTER),
-        PUSH(Register.linkRegister()),
-        CMP(Register("r0"), Immediate(0)),
+        PUSH(Register.LR),
+        CMP(Register.R0, Immediate(0)),
         LDR(
-            Register.resultRegister(),
+            Register.R0,
             LabelReference(NULL_POINTER_MESSAGE, data),
             false,
             ConditionCode.EQ
         ),
         B(THROW_RUNTIME_ERROR, true, B.Condition.EQ),
-        POP(Register.programCounter())
+        POP(Register.PC)
     )
 }
 
