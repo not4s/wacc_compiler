@@ -1,6 +1,8 @@
 package codegen
 
-import ast.*
+import ast.IdentifierSet
+import ast.Literal
+import ast.Stat
 import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
@@ -24,20 +26,12 @@ class StatVisitor(
             is Assignment -> visitAssignStat(ctx)
             is JoinStat -> {
                 if (ctx.first.st !== ctx.st) {
-                    offsetStackBy(ctx.first.st.totalByteSize).plus(
-                        visit(ctx.first)
-                    ).plus(
-                        unOffsetStackBy(ctx.first.st.totalByteSize)
-                    )
+                    withScope(ctx.first.st.totalByteSize, visit(ctx.first))
                 } else {
                     visit(ctx.first)
                 }.plus(
                     if (ctx.second.st !== ctx.st) {
-                        offsetStackBy(ctx.second.st.totalByteSize).plus(
-                            visit(ctx.second)
-                        ).plus(
-                            unOffsetStackBy(ctx.second.st.totalByteSize)
-                        )
+                        withScope(ctx.second.st.totalByteSize, visit(ctx.second))
                     } else {
                         visit(ctx.second)
                     }
@@ -66,7 +60,11 @@ class StatVisitor(
         val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val evaluationCode = exprVisitor.visit(ctx.expression)
         return evaluationCode
-            .plus(unOffsetStackBy(returnUnOffsetByteSize ?: throw Exception("Cannot restore stack offset")))
+            .plus(
+                unOffsetStackBy(
+                    returnUnOffsetByteSize ?: throw Exception("Cannot restore stack offset")
+                )
+            )
             .plus(
                 listOf(
                     MOV(Register.resultRegister(), Register.resultRegister()),
@@ -80,23 +78,25 @@ class StatVisitor(
         val whileStartLabel: String = funcPool.getAbstractLabel()
         val whileBodyLabel: String = funcPool.getAbstractLabel()
 
+        val whileBody: List<WInstruction> = withScope(
+            ctx.doBlock.st.totalByteSize,
+            StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.doBlock)
+        )
 
-        val whileBody: List<WInstruction> =
-            offsetStackBy(ctx.doBlock.st.totalByteSize)
-                .plus(StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.doBlock))
-                .plus(unOffsetStackBy(ctx.doBlock.st.totalByteSize))
         val jump = B(whileBodyLabel, cond = B.Condition.NE)
 
         val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
         val condition = exprVisitor.visit(ctx.condition)
 
         return listOf(B(whileStartLabel))
+            .asSequence()
             .plus(Label(whileBodyLabel))
             .plus(whileBody)
             .plus(Label(whileStartLabel))
             .plus(condition)
             .plus(CMP(Register.resultRegister(), Immediate(0)))
             .plus(jump)
+            .toList()
     }
 
     private fun visitReadStat(ctx: ReadStat): List<WInstruction> {
@@ -123,7 +123,12 @@ class StatVisitor(
             ).plus(POP(Register.resultRegister()))
             .plus(
                 when (ctx.lhs) {
-                    is IdentifierSet -> ctx.st.asmAssign(ctx.lhs.identifier, Register.resultRegister(), data, null)
+                    is IdentifierSet -> ctx.st.asmAssign(
+                        ctx.lhs.identifier,
+                        Register.resultRegister(),
+                        data,
+                        null
+                    )
                     else -> TODO()
                 }
             )
@@ -138,12 +143,14 @@ class StatVisitor(
         val elseBranchLabel: String = funcPool.getAbstractLabel()
         val afterIfLabel: String = funcPool.getAbstractLabel()
 
-        val thenCode: List<WInstruction> = offsetStackBy(ctx.thenStat.st.totalByteSize)
-            .plus(StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.thenStat))
-            .plus(unOffsetStackBy(ctx.thenStat.st.totalByteSize))
-        val elseCode: List<WInstruction> = offsetStackBy(ctx.elseStat.st.totalByteSize)
-            .plus(StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.elseStat))
-            .plus(unOffsetStackBy(ctx.elseStat.st.totalByteSize))
+        val thenCode: List<WInstruction> = withScope(
+            ctx.thenStat.st.totalByteSize,
+            StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.thenStat)
+        )
+        val elseCode: List<WInstruction> = withScope(
+            ctx.elseStat.st.totalByteSize,
+            StatVisitor(data, funcPool, returnUnOffsetByteSize).visit(ctx.elseStat)
+        )
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
@@ -152,12 +159,14 @@ class StatVisitor(
         )
 
         return condition
+            .asSequence()
             .plus(jump)
             .plus(thenCode)
             .plus(B(afterIfLabel))
             .plus(Label(elseBranchLabel))
             .plus(elseCode)
             .plus(Label(afterIfLabel))
+            .toList()
     }
 
     private fun visitExitStat(ctx: ExitStat): List<WInstruction> {
@@ -270,8 +279,9 @@ class StatVisitor(
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
         return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs)
-            .plus(ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
-        )
+            .plus(
+                ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
+            )
     }
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {
