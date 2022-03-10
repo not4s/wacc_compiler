@@ -100,4 +100,5 @@ WS: [ \t\r\n]+ -> channel(HIDDEN);
 /* Match anything */
 ANY_IGNORE: . ;
 
+/* Extension Lexer patterns */
 
