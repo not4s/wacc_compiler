@@ -1,19 +1,20 @@
-# cannot redefine another struct with the same identifier as an already previously defined struct
+# structs that haven't been defined before are a source of semantic errors
 
 # Output:
-# #semantic_error#
 
-# Exit:
-# 200
+# Output:
+
+# Exit: 200
 
 # Program:
 
 begin
-  struct A begin
-    int A;
+
+  struct Student begin 
+    string first_name ; 
+    string second_name ; 
+    struct Tutor t ;
   end
-  struct A begin
-    bool B;
-  end
+  
   skip
 end

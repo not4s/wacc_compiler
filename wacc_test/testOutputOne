@@ -68,19 +68,16 @@ def extractGoodStuffFromWaccExtensionFile():
     if EXTENSION_OUTPUT_SPLIT not in wacc_sourceCode:
         print(f"all extension files must contain the line '{EXTENSION_OUTPUT_SPLIT}(.*){EXTENSION_OUTPUT_SPLIT}' to indicate desired output from assembly")
         sys.exit(-1)
-    if EXIT_CODE_REGEX not in wacc_sourceCode:
-        exit_code = 0
-    else:
-        exit_code = re.search(rf'{EXIT_CODE_REGEX} (-|\+)?[0-9]+', wacc_sourceCode).group(1)
+    exit_code = getExitCodeFromWaccFile()
     output = re.search(rf'{EXTENSION_OUTPUT_SPLIT}\n(.*)\n{EXTENSION_OUTPUT_SPLIT}', wacc_sourceCode).group(1) 
     return output, exit_code
 
 def getExitCodeFromWaccFile() -> int:
     if EXIT_CODE_REGEX not in wacc_sourceCode:
-        exit_code = 0
+        return 0
     else:
-        exit_code = re.search(rf'{EXIT_CODE_REGEX} (-|\+)?[0-9]+', wacc_sourceCode).group(1)
-    return 
+        return int(re.search(rf'{EXIT_CODE_REGEX} ((-|\+)?[0-9]+)', wacc_sourceCode).group(1))
+
 
 def emulateAssembly() -> str:
     # emulate WACC assembly code
@@ -174,18 +171,19 @@ with open(path, 'r') as f:
 # change directory to WACC_06/
 os.chdir("..")
 
-errCode = os.system(f"timeout 20s ./compile wacc_test/{path} -d")
+errCode: int = os.system(f"timeout 20s ./compile wacc_test/{path} -d") >> 8
 # if the error code is because of an invalid program compilation
-if (errCode >> 8 in [100, 200]):
-    if(errCode >> 8 == getExitCodeFromWaccFile()):
+if (errCode in [100, 200]):
+    if errCode == getExitCodeFromWaccFile():
         os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
+        sys.exit(0)
     else:
         os.system(f"echo \"{red}FAIL {path}{clear} program failed but not for the reason expected\"")
-    sys.exit(0)
+        sys.exit(errCode)
 # if the error code is not a pass
-elif (errCode >> 8 != 0):
+elif (errCode != 0):
     os.system(f"echo \"{red}FAIL {path}{clear} Erroneous exception in running Main.kt\"")
-    sys.exit(errCode >> 8)
+    sys.exit(errCode)
 
 # change directory to directory with .s file
 getToTestDir(path_to_assembly)
