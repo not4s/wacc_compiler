@@ -1,12 +1,22 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import *
-from settings import get_default_font
+from style import get_default_font, code_frame_style
 
 
 class TextLineNumbers(tk.Canvas):
+
+    H_PADDING = 2
+
     def __init__(self, *args, **kwargs):
         tk.Canvas.__init__(self, *args, **kwargs)
         self.textwidget = None
+        self.no_digits = 2
+        self.adjust_width()
+
+    def adjust_width(self):
+        width = 2 * self.H_PADDING + self.no_digits * get_default_font()['size']
+        self.config(width=width)
 
     def attach(self, text_widget):
         self.textwidget = text_widget
@@ -14,14 +24,21 @@ class TextLineNumbers(tk.Canvas):
     def redraw(self, *args):
         '''redraw line numbers'''
         self.delete("all")
-
         index = self.textwidget.index("@0,0")
-        while True :
+        while True:
             dline = self.textwidget.dlineinfo(index)
-            if dline is None: break
+            if dline is None:
+                break
             y = dline[1]
             linenum = str(index).split(".")[0]
-            self.create_text(2, y, anchor="nw", text=linenum, font=get_default_font())
+
+            # Adjusting the width of the linenumbers pane
+            if self.no_digits != len(linenum):
+                self.no_digits = len(linenum)
+                self.adjust_width()
+
+            self.create_text(self.H_PADDING, y, anchor="nw", justify='left',
+                             text=linenum, font=get_default_font())
             index = self.textwidget.index("%s+1line" % index)
 
 
@@ -54,21 +71,28 @@ class CodeText(tk.Text):
         return result
 
 
-class CodeFrame(tk.Frame):
+class CodeFrame(ttk.Frame):
+
+    def configure_syntax_highlight(self):
+        self.text.configure(**code_frame_style)
+        pass
+
     def __init__(self, *args, **kwargs):
-        tk.Frame.__init__(self, *args, **kwargs)
+        kwargs['style'] = "CodeFrame.TFrame"
+        ttk.Frame.__init__(self, *args, **kwargs)
         self.text = CodeText(self, width=400, height=400, wrap=NONE)
 
-        self.text.tag_configure("bigfont", font=("Helvetica", "24", "bold"))
         self.scrollbar_v = Scrollbar(self, orient=VERTICAL, command=self.text.yview)
         self.scrollbar_h = Scrollbar(self, orient=HORIZONTAL, command=self.text.xview)
         self.scrollbar_h.pack(side="bottom", fill="x")
         self.text.configure(yscrollcommand=self.scrollbar_v.set)
         self.text.configure(xscrollcommand=self.scrollbar_h.set)
 
+        self.configure_syntax_highlight()
+
         self.text['font'] = get_default_font()
 
-        self.linenumbers = TextLineNumbers(self, width=30)
+        self.linenumbers = TextLineNumbers(self)
         self.linenumbers.attach(self.text)
 
         self.scrollbar_v.pack(side="right", fill="y")
@@ -77,8 +101,6 @@ class CodeFrame(tk.Frame):
 
         self.text.bind("<<Change>>", self._on_change)
         self.text.bind("<Configure>", self._on_change)
-
-        # self.linenumbers['font'] = default_font
 
     def _on_change(self, event):
         self.linenumbers.redraw()
