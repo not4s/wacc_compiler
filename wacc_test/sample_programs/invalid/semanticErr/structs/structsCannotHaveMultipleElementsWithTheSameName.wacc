@@ -10,9 +10,12 @@
 
 begin
   struct NotMyStruct begin
-    int i;
+    int a;
+    string b;
     int[] someIntermediaryValue;
-    string i; # uhoh, why do we have another i???!
+    string a; # uhoh, why do we have another a???!
+    bool[] anotherIntermediaryValue;
+    char b; # uhoh, why do we have another b???!
   end
   skip
 end

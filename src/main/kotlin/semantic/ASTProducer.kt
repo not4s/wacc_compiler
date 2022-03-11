@@ -603,14 +603,25 @@ class ASTProducer(
      * Visit the struct entirely with its elements as well
      * */
     override fun visitStruct(ctx: WACCParser.StructContext): WACCStruct {
+        // extracting parameters from context
+        val paramMap = mutableMapOf<String, WAny>()
+        var numRepeated = 0
+        for (param in ctx.structElems().param()) {
+            val identity = param.IDENTIFIER().text
+            if (identity in paramMap.keys) {
+                builderTemplateFromContext(ctx, st).structContainsDuplicateElements(identity)
+                    .buildAndPrint()
+                numRepeated++
+            } else {
+                paramMap[identity] = isValidParamType(ctx, param)
+            }
+        }
+        if (numRepeated > 0) {
+            semanticErrorCount.addAndGet(numRepeated - 1) // -1 since we add again after exit out of visitStruct
+            throw SemanticException("repeated elements in $ctx")
+        }
         return WACCStruct(
-            st,
-            ctx.IDENTIFIER()?.text ?: throw Exception("Struct has no identifier"),
-            ctx.structElems().param()
-                .associate {
-
-                    Pair(it.IDENTIFIER().text, isValidParamType(ctx, it))
-                }
+            st, ctx.IDENTIFIER()?.text ?: throw Exception("Struct has no identifier"), paramMap
         )
     }
 
