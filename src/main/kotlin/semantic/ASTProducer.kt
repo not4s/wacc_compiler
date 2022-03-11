@@ -62,7 +62,6 @@ class ASTProducer(
         if (totalSemanticErrors > 0) {
             throw SemanticException("Semantic errors detected: $totalSemanticErrors, compilation aborted.")
         }
-        println("semantic errors printed")
         return ProgramAST(st, funcASTs, structASTs, programBody)
     }
 
