@@ -14,11 +14,11 @@ interface ASTVisitor<T : AST> {
     // Needed since can only do #1024 offset maximum
     fun offsetStackBy(offset: Int): List<WInstruction> {
         var output = listOf(
-            SUB(Register.stackPointer(), Register.stackPointer(), Immediate(offset % 1024))
+            SUB(Register.SP, Register.SP, Immediate(offset % 1024))
         )
         for (i in 0 until offset / 1024) {
             output = output.plus(
-                SUB(Register.stackPointer(), Register.stackPointer(), Immediate(1024))
+                SUB(Register.SP, Register.SP, Immediate(1024))
             )
         }
         return output
@@ -26,11 +26,11 @@ interface ASTVisitor<T : AST> {
 
     fun unOffsetStackBy(offset: Int): List<WInstruction> {
         var output = listOf(
-            ADD(Register.stackPointer(), Register.stackPointer(), Immediate(offset % 1024))
+            ADD(Register.SP, Register.SP, Immediate(offset % 1024))
         )
         for (i in 0 until offset / 1024) {
             output = output.plus(
-                ADD(Register.stackPointer(), Register.stackPointer(), Immediate(1024))
+                ADD(Register.SP, Register.SP, Immediate(1024))
             )
         }
         return output

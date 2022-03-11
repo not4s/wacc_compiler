@@ -48,7 +48,7 @@ class ProgramVisitor(
         return listOf(Label(funcName))
             .asSequence()
             .plus(paramsAssign)
-            .plus(PUSH(Register.linkRegister()))
+            .plus(PUSH(Register.LR))
             .plus(offsetStackBy(body.st.totalByteSize)) // Offset initial SP
             .plus(StatVisitor(data, funcPool, body.st.totalByteSize).visit(body)).plus(
                 if (funcName == "main")
