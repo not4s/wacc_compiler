@@ -1,0 +1,14 @@
+# the most basic struct consisting of one element
+
+# Output:
+
+# Output:
+
+# Program:
+
+begin
+  struct MyStruct begin
+    int elem;
+  end
+  skip
+end

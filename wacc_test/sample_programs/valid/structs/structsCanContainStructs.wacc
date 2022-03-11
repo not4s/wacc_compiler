@@ -1,0 +1,23 @@
+# structs can contain other structs as long as they have been defined in the current scope
+
+# Output:
+
+# Output:
+
+# Program:
+
+begin
+  struct Tutor begin
+    string first_name ;
+    string second_name ;
+    string email ;
+  end
+
+  struct Student begin 
+    string first_name ; 
+    string second_name ; 
+    struct Tutor t ;
+  end
+  
+  skip
+end

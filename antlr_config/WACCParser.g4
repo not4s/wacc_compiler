@@ -5,20 +5,33 @@ options {
 }
 
 program
-  : KW_BEGIN func* stat KW_END EOF
+  : KW_BEGIN (func|struct)* stat KW_END EOF
+  ;
+
+func
+  : type IDENTIFIER SYM_LBRACKET paramList? SYM_RBRACKET KW_IS stat KW_END;
+
+struct
+  : KW_STRUCT IDENTIFIER KW_BEGIN structElems KW_END
   ;
 
 type
   : baseType  #typeBaseType
   | arrayType #typeArrayType
   | pairType #typePairType
+  | structType #typeStructType
   ;
+
 
 /* Need to expand to avoid mutual left-recursion */
 arrayType
   : baseType SYM_SQ_LBRACKET SYM_SQ_RBRACKET #arrayTypeBaseType
   | arrayType SYM_SQ_LBRACKET SYM_SQ_RBRACKET #arrayTypeArrayType
   | pairType SYM_SQ_LBRACKET SYM_SQ_RBRACKET #arrayTypePairType
+  ;
+
+structType
+  : KW_STRUCT IDENTIFIER
   ;
 
 arrayElem
@@ -122,5 +135,6 @@ paramList
   : param (SYM_COMMA param)*
   ;
 
-func
-  : type IDENTIFIER SYM_LBRACKET paramList? SYM_RBRACKET KW_IS stat KW_END;
+structElems
+  : (param SYM_SEMICOLON)+
+  ;
