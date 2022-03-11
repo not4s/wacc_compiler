@@ -14,6 +14,7 @@ KW_INT: 'int';
 KW_BOOL: 'bool';
 KW_CHAR: 'char';
 KW_STRING: 'string';
+KW_STRUCT: 'struct';
 
 /* Pair stuff */
 KW_FREE: 'free';
@@ -45,7 +46,6 @@ KW_DONE: 'done';
 /* Functions */
 KW_IS: 'is';
 KW_CALL: 'call';
-
 
 /* Operators */
 OP_ORD: 'ord';
@@ -100,5 +100,4 @@ WS: [ \t\r\n]+ -> channel(HIDDEN);
 /* Match anything */
 ANY_IGNORE: . ;
 
-/* Extension Lexer patterns */
 

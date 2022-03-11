@@ -4,10 +4,13 @@ import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import ast.*
 import ast.statement.*
+import org.antlr.v4.runtime.ParserRuleContext
 import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
 import syntax.SyntaxChecker
-import utils.*
+import utils.PositionedError
+import utils.SemanticErrorMessageBuilder
+import utils.SemanticException
 import waccType.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -40,6 +43,30 @@ class ASTProducer(
     }
 
     override fun visitProgram(ctx: WACCParser.ProgramContext): ProgramAST {
+        // Add all structs to the symbol table
+        val structASTs = visitAllStructs(ctx)
+        // Add all functions to the symbol table and visit the function body
+        val funcASTs = visitAllFunctions(ctx)
+        // Create a child scope, functions are now stored in parent table.
+        // This scope is still 'global'
+        val childScope = st.createChildScope()
+        childScope.isGlobal = true
+        val programBody =
+            safeVisit(SkipStat(st)) {
+                ASTProducer(
+                    childScope,
+                    semanticErrorCount
+                ).visit(ctx.stat())
+            } as Stat
+        val totalSemanticErrors = semanticErrorCount.get()
+        if (totalSemanticErrors > 0) {
+            throw SemanticException("Semantic errors detected: $totalSemanticErrors, compilation aborted.")
+        }
+        println("semantic errors printed")
+        return ProgramAST(st, funcASTs, structASTs, programBody)
+    }
+
+    private fun visitAllFunctions(ctx: WACCParser.ProgramContext): List<WACCFunction> {
         // This adds functions to symbol table
         val waccFunctions: MutableList<Pair<WACCParser.FuncContext, WACCFunction>> = mutableListOf()
         for (f in ctx.func()) {
@@ -74,17 +101,50 @@ class ASTProducer(
             )
             funcASTs.add(funcAST)
         }
-        // Create a child scope, functions are now stored in parent table.
-        // This scope is still 'global'
-        val childScope = st.createChildScope()
-        childScope.isGlobal = true
-        val programBody =
-            safeVisit(SkipStat(st)) { ASTProducer(childScope, semanticErrorCount).visit(ctx.stat()) } as Stat
-        val totalSemanticErrors = semanticErrorCount.get()
-        if (totalSemanticErrors > 0) {
-            throw SemanticException("Semantic errors detected: $totalSemanticErrors, compilation aborted.")
+        return funcASTs
+    }
+
+    private fun visitAllStructs(ctx: WACCParser.ProgramContext): List<WACCStruct> {
+        for (s in ctx.struct()) {
+            val errBuilder = SemanticErrorMessageBuilder()
+                .provideStart(PositionedError(s))
+                .setLineTextFromSrcFile(st.srcFilePath)
+            val id = s.IDENTIFIER().text
+            // check if this struct has been defined previously
+            if (id in st.getMap()) {
+                errBuilder.structRedefineError(id)
+                    .buildAndPrint()
+                semanticErrorCount.incrementAndGet()
+            }
+            // note down the existence of all structs
+            val struct = scrapeStruct(s)
+            try {
+                st.declare(
+                    symbol = id,
+                    value = struct,
+                    errorMessageBuilder = builderTemplateFromContext(ctx, st)
+                )
+            } catch (e: SemanticException) {
+                semanticErrorCount.incrementAndGet()
+            }
         }
-        return ProgramAST(st, funcASTs, programBody)
+        val waccStructs: MutableList<WACCStruct> = mutableListOf()
+        // now that all the struct names have been acknowledged, visit all structs and verify
+        // that the elements are valid
+        for (s in ctx.struct()) {
+            try {
+                val struct = visitStruct(s)
+                st.reassign(
+                    symbol = s.IDENTIFIER().text,
+                    value = struct,
+                    errorMessageBuilder = builderTemplateFromContext(ctx, st)
+                )
+                waccStructs.add(struct)
+            } catch (e: SemanticException) {
+                semanticErrorCount.incrementAndGet()
+            }
+        }
+        return waccStructs
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {
@@ -92,18 +152,23 @@ class ASTProducer(
     }
 
     override fun visitTypeArrayType(ctx: WACCParser.TypeArrayTypeContext): WACCType {
-        return this.visit(ctx.arrayType())  as WACCType
+        return this.visit(ctx.arrayType()) as WACCType
     }
 
     override fun visitTypePairType(ctx: WACCParser.TypePairTypeContext): WACCType {
-        return  this.visit(ctx.pairType())  as WACCType
+        return this.visit(ctx.pairType()) as WACCType
+    }
+
+    override fun visitTypeStructType(ctx: WACCParser.TypeStructTypeContext): WACCType {
+        return this.visit(ctx.structType()) as WACCType
     }
 
     /**
      * Visiting types like <something[]>[]
      */
     override fun visitArrayTypeArrayType(ctx: WACCParser.ArrayTypeArrayTypeContext): WACCType {
-        val elemType: WACCType = safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.arrayType()) } as WACCType
+        val elemType: WACCType =
+            safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.arrayType()) } as WACCType
         return WACCType(st, WArray(elemType.type))
     }
 
@@ -111,7 +176,8 @@ class ASTProducer(
      * Visiting types like int[], str[], char[], bool[]
      */
     override fun visitArrayTypeBaseType(ctx: WACCParser.ArrayTypeBaseTypeContext): WACCType {
-        val elemType: WACCType = safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.baseType()) } as WACCType
+        val elemType: WACCType =
+            safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.baseType()) } as WACCType
         return WACCType(st, WArray(elemType.type))
     }
 
@@ -119,7 +185,8 @@ class ASTProducer(
      * Visiting types like pair[]
      */
     override fun visitArrayTypePairType(ctx: WACCParser.ArrayTypePairTypeContext): AST {
-        val elemType: WACCType = safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.pairType()) } as WACCType
+        val elemType: WACCType =
+            safeVisit(WACCType(st, WUnknown)) { this.visit(ctx.pairType()) } as WACCType
         return WACCType(st, WArray(elemType.type))
     }
 
@@ -135,7 +202,10 @@ class ASTProducer(
         val elements: Array<Expr> = ctx.expr().map {
             (safeVisit(Literal(st, WUnknown)) { this.visit(it) } as Expr)
         }.toTypedArray()
-        SemanticChecker.checkThatAllArrayElementsHaveTheSameType(elements, builderTemplateFromContext(ctx, st))
+        SemanticChecker.checkThatAllArrayElementsHaveTheSameType(
+            elements,
+            builderTemplateFromContext(ctx, st)
+        )
         return ArrayLiteral(st, elements)
     }
 
@@ -148,7 +218,11 @@ class ASTProducer(
         isFirst: Boolean
     ): PairElement {
         val expr = safeVisit(Literal(st, WUnknown)) { this.visit(ctxExpr) } as Expr
-        SemanticChecker.checkTheExprIsPairAndNoNullDereference(expr, isFirst, builderTemplateFromContext(ctx, st))
+        SemanticChecker.checkTheExprIsPairAndNoNullDereference(
+            expr,
+            isFirst,
+            builderTemplateFromContext(ctx, st)
+        )
         return PairElement(st, isFirst, expr, ctx)
     }
 
@@ -194,6 +268,10 @@ class ASTProducer(
         return WACCType(st, WStr())
     }
 
+    override fun visitStructType(ctx: WACCParser.StructTypeContext?): AST {
+        return WACCType(st, WStruct(ctx!!.IDENTIFIER().text))
+    }
+
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext): Literal {
         SyntaxChecker.assertIntFitsTheRange(ctx, st)
         val value: Int = Integer.parseInt(ctx.text)
@@ -235,7 +313,7 @@ class ASTProducer(
         SemanticChecker.checkThatOperandTypesMatch(
             firstType = left.type,
             secondType = right.type,
-            errorMessageBuilder= errorMessageBuilder,
+            errorMessageBuilder = errorMessageBuilder,
             extraMessage = "Binary operation cannot be executed correctly",
             failMessage = "Attempted to call binary operation $op on unequal types: ${left.type}, ${right.type}"
         )
@@ -251,7 +329,11 @@ class ASTProducer(
         val operandExpr = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.operand) } as Expr
         val unaryOperation = UnOperator.fromWACCParserContextUnOp(ctx.unOp)
         val errorMessageBuilder = builderTemplateFromContext(ctx, st)
-        SemanticChecker.checkThatOperationTypeIsValid(operandExpr.type, errorMessageBuilder, unaryOperation)
+        SemanticChecker.checkThatOperationTypeIsValid(
+            operandExpr.type,
+            errorMessageBuilder,
+            unaryOperation
+        )
         return UnaryOperation(st, operandExpr, unaryOperation)
     }
 
@@ -287,7 +369,12 @@ class ASTProducer(
     }
 
     override fun visitAssignRhsArrayLiter(ctx: WACCParser.AssignRhsArrayLiterContext): ArrayLiteral {
-        return safeVisit(ArrayLiteral(st, arrayOf())) { this.visit(ctx.arrayLiter()) } as ArrayLiteral
+        return safeVisit(
+            ArrayLiteral(
+                st,
+                arrayOf()
+            )
+        ) { this.visit(ctx.arrayLiter()) } as ArrayLiteral
     }
 
     override fun visitAssignRhsNewPair(ctx: WACCParser.AssignRhsNewPairContext): NewPairRHS {
@@ -383,11 +470,17 @@ class ASTProducer(
     }
 
     override fun visitStatPrint(ctx: WACCParser.StatPrintContext): PrintStat {
-        return PrintStat(st, false, safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr)
+        return PrintStat(
+            st,
+            false,
+            safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr)
     }
 
     override fun visitStatPrintln(ctx: WACCParser.StatPrintlnContext): PrintStat {
-        return PrintStat(st, true, safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr)
+        return PrintStat(
+            st,
+            true,
+            safeVisit(Literal(st, WUnknown)) { this.visit(ctx.expr()) } as Expr)
     }
 
     override fun visitStatExit(ctx: WACCParser.StatExitContext): ExitStat {
@@ -460,9 +553,13 @@ class ASTProducer(
             for (p in ctx.paramList().param()) {
                 val id = p.IDENTIFIER().text
                 funScope.redeclaredVars.add(id)
-                val ty = (safeVisit(WACCType(st, WUnknown)) { this.visit(p.type()) } as WACCType).type
-                params[id] = ty
-                funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
+                try {
+                    val ty = isValidParamType(ctx, p)
+                    params[id] = ty
+                    funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
+                } catch (e: SemanticException) {
+                    semanticErrorCount.incrementAndGet()
+                }
             }
         }
         return WACCFunction(
@@ -482,17 +579,66 @@ class ASTProducer(
             safeVisit(SkipStat(st)) {
                 ASTProducer(function.st, semanticErrorCount).visit(ctx.stat())
             } as Stat
-        SemanticChecker.checkReturnType(functionBody, function.type, builderTemplateFromContext(ctx, st))
+        SemanticChecker.checkReturnType(
+            functionBody,
+            function.type,
+            builderTemplateFromContext(ctx, st)
+        )
         SyntaxChecker.checkFunctionHavingReturn(functionBody, function.identifier)
 
-        return WACCFunction(function.st, function.identifier, function.params, functionBody, function.type)
+        return WACCFunction(
+            function.st,
+            function.identifier,
+            function.params,
+            functionBody,
+            function.type
+        )
+    }
+
+    override fun visitFunc(ctx: WACCParser.FuncContext?): AST {
+        return super.visitFunc(ctx)
     }
 
     /**
-     * The following function is not used, because the function is visited by parts.
-     * First, its type and parameters are visited and then its body using two functions.
-     */
-    override fun visitFunc(ctx: WACCParser.FuncContext): WACCFunction {
-        throw Exception("Don't call me!")
+     * Visit the struct entirely with its elements as well
+     * */
+    override fun visitStruct(ctx: WACCParser.StructContext): WACCStruct {
+        // extracting parameters from context
+        val paramMap = mutableMapOf<String, WAny>()
+        var numRepeated = 0
+        for (param in ctx.structElems().param()) {
+            val identity = param.IDENTIFIER().text
+            if (identity in paramMap.keys) {
+                builderTemplateFromContext(ctx, st).structContainsDuplicateElements(identity)
+                    .buildAndPrint()
+                numRepeated++
+            } else {
+                paramMap[identity] = isValidParamType(ctx, param)
+            }
+        }
+        if (numRepeated > 0) {
+            semanticErrorCount.addAndGet(numRepeated - 1) // -1 since we add again after exit out of visitStruct
+            throw SemanticException("repeated elements in $ctx")
+        }
+        return WACCStruct(
+            st, ctx.IDENTIFIER()?.text ?: throw Exception("Struct has no identifier"), paramMap
+        )
     }
+
+    private fun isValidParamType(ctx: ParserRuleContext, it: WACCParser.ParamContext): WAny {
+        val paramType =
+            (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
+        // if the struct is not in the symbol table - semantic error
+        if ((paramType is WStruct) && (paramType.identifier !in st.getMap())) {
+            builderTemplateFromContext(ctx, st).structUndefinedError(paramType.identifier)
+                .buildAndPrint()
+            throw SemanticException("$ctx is undefined")
+        }
+        return paramType
+    }
+
+    private fun scrapeStruct(ctx: WACCParser.StructContext): WStruct {
+        return WStruct(ctx.IDENTIFIER().text)
+    }
+
 }

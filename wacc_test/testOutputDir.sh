@@ -5,9 +5,9 @@ shopt -s globstar
 failed=0
 processed=0
 
-for f in $1
+for f in $2
 do
-    ./testOutputOne -x "$f"
+    ./testOutputOne "$1" "$f"
 
     if [[ $? != 0 ]]
     then
