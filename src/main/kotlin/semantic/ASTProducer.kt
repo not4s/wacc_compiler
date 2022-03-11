@@ -42,10 +42,10 @@ class ASTProducer(
     }
 
     override fun visitProgram(ctx: WACCParser.ProgramContext): ProgramAST {
-        // Add all functions to the symbol table and visit the function body
-        val funcASTs = visitAllFunctions(ctx)
         // Add all structs to the symbol table
         val structASTs = visitAllStructs(ctx)
+        // Add all functions to the symbol table and visit the function body
+        val funcASTs = visitAllFunctions(ctx)
         // Create a child scope, functions are now stored in parent table.
         // This scope is still 'global'
         val childScope = st.createChildScope()
@@ -103,18 +103,19 @@ class ASTProducer(
     }
 
     private fun visitAllStructs(ctx: WACCParser.ProgramContext): List<WACCStruct> {
-        val waccStructs: MutableList<WACCStruct> = mutableListOf()
-
         for (s in ctx.struct()) {
             val errBuilder = SemanticErrorMessageBuilder()
                 .provideStart(PositionedError(s))
                 .setLineTextFromSrcFile(st.srcFilePath)
             val id = s.IDENTIFIER().text
+            // check if this struct has been defined previously
             if (id in st.getMap()) {
-                errBuilder.structRedefineError(id).buildAndPrint()
+                errBuilder.structRedefineError(id)
+                    .buildAndPrint()
                 semanticErrorCount.incrementAndGet()
             }
-            val struct = visitStruct(s)
+            // note down the existence of all structs
+            val struct = scrapeStruct(s)
             try {
                 st.declare(
                     symbol = id,
@@ -124,7 +125,22 @@ class ASTProducer(
             } catch (e: SemanticException) {
                 semanticErrorCount.incrementAndGet()
             }
-            waccStructs.add(struct)
+        }
+        val waccStructs: MutableList<WACCStruct> = mutableListOf()
+        // now that all the struct names have been acknowledged, visit all structs and verify
+        // that the elements are valid
+        for (s in ctx.struct()) {
+            try {
+                val struct = visitStruct(s)
+                st.reassign(
+                    symbol = s.IDENTIFIER().text,
+                    value = struct,
+                    errorMessageBuilder = builderTemplateFromContext(ctx, st)
+                )
+                waccStructs.add(struct)
+            } catch (e: SemanticException) {
+                semanticErrorCount.incrementAndGet()
+            }
         }
         return waccStructs
     }
@@ -574,27 +590,31 @@ class ASTProducer(
         )
     }
 
-    /**
-     * The following function is not used, because the function is visited by parts.
-     * First, its type and parameters are visited and then its body using two functions.
-     */
-    override fun visitFunc(ctx: WACCParser.FuncContext): WACCFunction {
-        throw Exception("Don't call me!")
+    override fun visitFunc(ctx: WACCParser.FuncContext?): AST {
+        return super.visitFunc(ctx)
     }
 
     /**
-     * Visit the struct
-     */
+     * Visit the struct entirely with its elements as well
+     * */
     override fun visitStruct(ctx: WACCParser.StructContext): WACCStruct {
-        println(st)
         return WACCStruct(
             st,
             ctx.IDENTIFIER()?.text ?: throw Exception("Struct has no identifier"),
             ctx.structElems().param().associate {
-                Pair(
-                    it.IDENTIFIER().text,
-                    (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type)
+                val t =
+                    (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
+                if ((t is WStruct) && (t.identifier !in st.getMap())) {
+                    builderTemplateFromContext(ctx, st).structUndefinedError(it.IDENTIFIER().text)
+                        .buildAndPrint()
+                    throw SemanticException("$ctx is undefined")
+                }
+                Pair(it.IDENTIFIER().text, t)
             }
         )
+    }
+
+    private fun scrapeStruct(ctx: WACCParser.StructContext): WStruct {
+        return WStruct(ctx.IDENTIFIER().text)
     }
 }

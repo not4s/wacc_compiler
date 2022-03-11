@@ -161,4 +161,16 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
             "The pair element has an invalid type"
         )
     }
+
+    fun structUndefinedError(structName: String): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "Undefined struct \"$structName\" located"
+        )
+    }
+
+    fun structUndefinedError(): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "Undefined struct located"
+        )
+    }
 }

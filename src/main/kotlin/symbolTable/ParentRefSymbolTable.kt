@@ -91,6 +91,7 @@ class ParentRefSymbolTable(
             parentTable.reassign(symbol, value, errorMessageBuilder)
             return
         }
+
         SemanticChecker.checkThatAssignmentTypesMatch(
             prev, value, errorMessageBuilder,
             failMessage = "Attempted to reassign type of declared $prev to $value"
