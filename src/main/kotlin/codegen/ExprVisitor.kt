@@ -78,13 +78,16 @@ class ExprVisitor(
                 val reg1 = Register.R0
                 val reg2 = Register.R1
 
+                // Evaluate expressions with constants at compile-time
                 constant_evaluation@
                 while(ctx.left is Literal && ctx.right is Literal) {
 
+                    // break if it is not the case of int op int or bool op bool
                     if(!(ctx.left.type is WInt && ctx.right.type is WInt
                             || ctx.left.type is WBool && ctx.right.type is WBool))
                         break@constant_evaluation
 
+                    // int op int
                     if(ctx.left.type is WInt && ctx.right.type is WInt) {
                         
                         val left_val = ctx.left.type.value!!
@@ -101,6 +104,7 @@ class ExprVisitor(
                         return listOf(MOV(Register.R0, Immediate(evaluated_constant)))
                     }
                     
+                    // bool op bool
                     if(ctx.left.type is WBool && ctx.right.type is WBool) {
 
                         val left_val = ctx.left.type.value!!
