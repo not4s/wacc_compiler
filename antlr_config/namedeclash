@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+'''
+Symbol naming conflict resolver for WACC, Kotlin and Python
+
+Some symbols which are OK for Kotlin conflict with Python.
+The following file generates the clones of original WACCLexer and WACCParser
+but with slight naming changes such as:
+
+    type --> wtype
+'''
+
+import re
+import os
+import sys
+import shutil
+
+TARGET_DIR = "g4py"
+antlr_files = ["WACCLexer.g4", "WACCParser.g4"]
+
+replacings = {
+    "type": "wtype"
+}
+
+
+def clean():
+    try:
+        shutil.rmtree(TARGET_DIR)
+    except FileNotFoundError:
+        print(f"Directory '{TARGET_DIR}' is already removed. OK!")
+
+
+# Handling arguments
+if len(sys.argv) > 1:
+    if sys.argv[1] == '--clean':
+        clean()
+        sys.exit()
+    else:
+        print("Run with `--clean` flag or no flags")
+        sys.exit(1)
+
+# Creating naming conflict safe clones of lexer and parser
+os.mkdir(TARGET_DIR)
+for filename in antlr_files:
+
+    # Getting original g4 file content
+    content = ""
+    with open(filename, 'r') as orig_file:
+        content = orig_file.read()
+    if (content == ""):
+        continue
+
+    # Replacing the occurrences of conflicting symbols
+    for (old, new) in replacings.items():
+        content = re.sub(fr"\b{old}\b", new, content)
+
+    # Writing to the g4 file for Python
+    new_path = os.path.join(TARGET_DIR, filename)
+    with open(new_path, 'w') as prod_file:
+        prod_file.write(content)
