@@ -10,7 +10,7 @@ begin
   int foo(struct MyStruct _Va1iD_v4r_n4m3) is
     return 0 
   end
-  struct NotMyStruct begin
+  struct MyStruct begin
     int i;
   end
   int bar(struct MyStruct anyIdentifier123) is
