@@ -6,6 +6,8 @@ REFCOMPILER_OUTPUT = "-x"
 REFCOMPILER_ASSEMBLY = "-a"
 COMPILED_CODE_DIR = "wacc_test/compiled_code"
 REFCOMPILER_SPLIT = "==========================================================="
+EXTENSION_OUTPUT_SPLIT = "# Output:"
+EXIT_CODE_REGEX = "# Exit:"
 
 red="\033[0;31m"
 green="\033[0;32m"
@@ -61,8 +63,26 @@ def extractGoodStuffFromRefCompile(refCompileOutput: str):
     exit_code = re.search(r'The exit code is ([0-9]+).', refCompileOutput).group(1)
     return refCompileOutput.split(REFCOMPILER_SPLIT)[1], exit_code
 
-# check that the output from the program is the same
-def compareOutput() -> str:
+def extractGoodStuffFromWaccExtensionFile():
+    # compare output extracted from test file to output from program; go into refCompile's directory
+    if EXTENSION_OUTPUT_SPLIT not in wacc_sourceCode:
+        print(f"all extension files must contain the line '{EXTENSION_OUTPUT_SPLIT}(.*){EXTENSION_OUTPUT_SPLIT}' to indicate desired output from assembly")
+        sys.exit(-1)
+    if EXIT_CODE_REGEX not in wacc_sourceCode:
+        exit_code = 0
+    else:
+        exit_code = re.search(rf'{EXIT_CODE_REGEX} (-|\+)?[0-9]+', wacc_sourceCode).group(1)
+    output = re.search(rf'{EXTENSION_OUTPUT_SPLIT}\n(.*)\n{EXTENSION_OUTPUT_SPLIT}', wacc_sourceCode).group(1) 
+    return output, exit_code
+
+def getExitCodeFromWaccFile() -> int:
+    if EXIT_CODE_REGEX not in wacc_sourceCode:
+        exit_code = 0
+    else:
+        exit_code = re.search(rf'{EXIT_CODE_REGEX} (-|\+)?[0-9]+', wacc_sourceCode).group(1)
+    return 
+
+def emulateAssembly() -> str:
     # emulate WACC assembly code
     subprocess.run(f"arm-linux-gnueabi-gcc -o {test_name} -mcpu=arm1176jzf-s -mtune=arm1176jzf-s {test_name}.s", shell=True)
     try:
@@ -74,6 +94,12 @@ def compareOutput() -> str:
         print(f"WARNING: The file {test_name} could not be decoded (utf-8?)")
         wacc_emulated_output = ""
         wacc_exit_code = -1
+    return wacc_emulated_output + f"\nExit code returned: {wacc_exit_code}"
+
+# check that the output from the program is the same
+def compareOutput() -> str:
+    # emulate WACC assembly code
+    wacc_emulated_output = emulateAssembly()
 
     # compare output from refCompile to output from program; go into refCompile's directory
     prevDirectory = goToWaccTestDir()
@@ -83,7 +109,6 @@ def compareOutput() -> str:
 
     # Append exit code returned to the end
     refCompiler_emulated_output += f"\nExit code returned: {ref_exit_code}"
-    wacc_emulated_output += f"\nExit code returned: {wacc_exit_code}"
 
     return compareStrings(removeAddressOccurances(refCompiler_emulated_output), removeAddressOccurances(wacc_emulated_output))
 
@@ -99,12 +124,27 @@ def compareAssembly() -> str:
 
     return compareStrings(refCompiler_assembly_output, wacc_assembly)
 
+def compareExtensionOutput() -> str:
+    # emulate WACC assembly code
+    wacc_output = emulateAssembly()
+
+    predicted_output, predicted_exit_code = extractGoodStuffFromWaccExtensionFile()
+
+    # Append exit code returned to the end
+    predicted_output += f"\nExit code returned: {predicted_exit_code}"
+
+    return compareStrings(removeAddressOccurances(predicted_output), removeAddressOccurances(wacc_output))
+
 parser=argparse.ArgumentParser(description='Script testing correctness of the compiler output')
 
 parser.add_argument('src_file', help='file destination of the wacc file')
 parser.add_argument('-x', action="store_true", help='compares the output of the file')
 parser.add_argument('-a', action="store_true", help='compares the assembly output of the file')
 parser.add_argument('-p', default="default_input", type=str, nargs=1, help='optional input into file (by default set to \"default_input\")')
+parser.add_argument('-e', action="store_true", help='a flag indicating that the following file was produced as a result of an extension. ' \
+                                                    'Therefore it might be that the refCompiler does not support the same features. The output ' \
+                                                    'must be extracted from the testfile which contains the output for all extension files in ' \
+                                                    f'the form ^{EXTENSION_OUTPUT_SPLIT}\\n(.*){EXTENSION_OUTPUT_SPLIT}')
 
 options = parser.parse_args()
 args = vars(options)
@@ -137,7 +177,10 @@ os.chdir("..")
 errCode = os.system(f"timeout 20s ./compile wacc_test/{path} -d")
 # if the error code is because of an invalid program compilation
 if (errCode >> 8 in [100, 200]):
-    os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
+    if(errCode >> 8 == getExitCodeFromWaccFile()):
+        os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
+    else:
+        os.system(f"echo \"{red}FAIL {path}{clear} program failed but not for the reason expected\"")
     sys.exit(0)
 # if the error code is not a pass
 elif (errCode >> 8 != 0):
@@ -154,24 +197,37 @@ stringBuffer = ""
 fail: bool = False
 
 # cwd = directory of .s file
-if(options.a):
-    stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in assembly\n{REFCOMPILER_SPLIT}\n"
-    diff = compareAssembly()
-    if len(diff) != 0:
-        fail = True
-        stringBuffer += f"{diff}\n"
-    else:
-        stringBuffer += "Assembly code matches\n"
 
-# if no argmuents provided by default compares output
-if options.x or (not options.x and not options.a):
-    stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
-    diff = compareOutput()
+if(not options.e):
+    if(options.a):
+        stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in assembly\n{REFCOMPILER_SPLIT}\n"
+        diff = compareAssembly()
+        if len(diff) != 0:
+            fail = True
+            stringBuffer += f"{diff}\n"
+        else:
+            stringBuffer += "Assembly code matches\n"
+
+    # if no argmuents provided by default compares output
+    if options.x or (not options.x and not options.a):
+        stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
+        diff = compareOutput()
+        if len(diff) != 0:
+            fail = True
+            stringBuffer += diff
+        else:
+            stringBuffer += "Output matches\n"
+else:
+    # the file presented is an extension project. The refcompiler must not be used.
+    # there is no trivial way of comparing the assembly output so assume that only the output is
+    # to be compared
+    diff = compareExtensionOutput()
     if len(diff) != 0:
         fail = True
         stringBuffer += diff
     else:
         stringBuffer += "Output matches\n"
+    stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
 
 with open(test_name + '.output', 'w') as f:
     f.write(stringBuffer)
