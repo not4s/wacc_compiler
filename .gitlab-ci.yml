@@ -186,11 +186,12 @@ symbol-table-test:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/syntaxErr/while/*.wacc"
 
-.front-end-tests:
-  stage: front-end
+invalid/semanticErr/structs:
+  stage: extension
+  interruptible: true
   script:
     - cd wacc_test
-    - ./testAll.sh
+    - ./testOutputDir.sh -e "sample_programs/invalid/semanticErr/structs/*.wacc"
 
 ########## BACK END TESTS ##########
 
@@ -328,6 +329,8 @@ symbol-table-test:
     - ./testOutputDir.sh -x "sample_programs/valid/while/*.wacc"
 
 ########## EXTENSION TESTS ##########
+
+
 
 valid/structs:
   stage: extension
