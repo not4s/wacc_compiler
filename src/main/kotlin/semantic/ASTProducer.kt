@@ -4,6 +4,7 @@ import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import ast.*
 import ast.statement.*
+import org.antlr.v4.runtime.ParserRuleContext
 import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
 import syntax.SyntaxChecker
@@ -61,6 +62,7 @@ class ASTProducer(
         if (totalSemanticErrors > 0) {
             throw SemanticException("Semantic errors detected: $totalSemanticErrors, compilation aborted.")
         }
+        println("semantic errors printed")
         return ProgramAST(st, funcASTs, structASTs, programBody)
     }
 
@@ -551,10 +553,13 @@ class ASTProducer(
             for (p in ctx.paramList().param()) {
                 val id = p.IDENTIFIER().text
                 funScope.redeclaredVars.add(id)
-                val ty =
-                    (safeVisit(WACCType(st, WUnknown)) { this.visit(p.type()) } as WACCType).type
-                params[id] = ty
-                funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
+                try {
+                    val ty = isValidParamType(ctx, p)
+                    params[id] = ty
+                    funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
+                } catch (e: SemanticException) {
+                    semanticErrorCount.incrementAndGet()
+                }
             }
         }
         return WACCFunction(
@@ -601,20 +606,28 @@ class ASTProducer(
         return WACCStruct(
             st,
             ctx.IDENTIFIER()?.text ?: throw Exception("Struct has no identifier"),
-            ctx.structElems().param().associate {
-                val t =
-                    (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
-                if ((t is WStruct) && (t.identifier !in st.getMap())) {
-                    builderTemplateFromContext(ctx, st).structUndefinedError(it.IDENTIFIER().text)
-                        .buildAndPrint()
-                    throw SemanticException("$ctx is undefined")
+            ctx.structElems().param()
+                .associate {
+
+                    Pair(it.IDENTIFIER().text, isValidParamType(ctx, it))
                 }
-                Pair(it.IDENTIFIER().text, t)
-            }
         )
+    }
+
+    private fun isValidParamType(ctx: ParserRuleContext, it: WACCParser.ParamContext): WAny {
+        val paramType =
+            (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
+        // if the struct is not in the symbol table - semantic error
+        if ((paramType is WStruct) && (paramType.identifier !in st.getMap())) {
+            builderTemplateFromContext(ctx, st).structUndefinedError(paramType.identifier)
+                .buildAndPrint()
+            throw SemanticException("$ctx is undefined")
+        }
+        return paramType
     }
 
     private fun scrapeStruct(ctx: WACCParser.StructContext): WStruct {
         return WStruct(ctx.IDENTIFIER().text)
     }
+
 }
