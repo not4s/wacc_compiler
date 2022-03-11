@@ -45,7 +45,7 @@ class ASTProducer(
         // Add all functions to the symbol table and visit the function body
         val funcASTs = visitAllFunctions(ctx)
         // Add all structs to the symbol table
-        val structASTs = listOf<WACCStruct>() //visitAllStructs(ctx)
+        val structASTs = visitAllStructs(ctx)
         // Create a child scope, functions are now stored in parent table.
         // This scope is still 'global'
         val childScope = st.createChildScope()
@@ -64,7 +64,7 @@ class ASTProducer(
         return ProgramAST(st, funcASTs, structASTs, programBody)
     }
 
-    fun visitAllFunctions(ctx: WACCParser.ProgramContext) : List<WACCFunction> {
+    private fun visitAllFunctions(ctx: WACCParser.ProgramContext): List<WACCFunction> {
         // This adds functions to symbol table
         val waccFunctions: MutableList<Pair<WACCParser.FuncContext, WACCFunction>> = mutableListOf()
         for (f in ctx.func()) {
@@ -102,8 +102,31 @@ class ASTProducer(
         return funcASTs
     }
 
-    fun visitAllStructs(ctx: WACCParser.ProgramContext) : List<WACCStruct> {
-        TODO("Not implemented")
+    private fun visitAllStructs(ctx: WACCParser.ProgramContext): List<WACCStruct> {
+        val waccStructs: MutableList<WACCStruct> = mutableListOf()
+
+        for (s in ctx.struct()) {
+            val errBuilder = SemanticErrorMessageBuilder()
+                .provideStart(PositionedError(s))
+                .setLineTextFromSrcFile(st.srcFilePath)
+            val id = s.IDENTIFIER().text
+            if (id in st.getMap()) {
+                errBuilder.structRedefineError(id).buildAndPrint()
+                semanticErrorCount.incrementAndGet()
+            }
+            val struct = visitStruct(s)
+            try {
+                st.declare(
+                    symbol = id,
+                    value = struct,
+                    errorMessageBuilder = builderTemplateFromContext(ctx, st)
+                )
+            } catch (e: SemanticException) {
+                semanticErrorCount.incrementAndGet()
+            }
+            waccStructs.add(struct)
+        }
+        return waccStructs
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {
@@ -116,6 +139,10 @@ class ASTProducer(
 
     override fun visitTypePairType(ctx: WACCParser.TypePairTypeContext): WACCType {
         return this.visit(ctx.pairType()) as WACCType
+    }
+
+    override fun visitTypeStructType(ctx: WACCParser.TypeStructTypeContext): WACCType {
+        return this.visit(ctx.structType()) as WACCType
     }
 
     /**
@@ -221,6 +248,10 @@ class ASTProducer(
 
     override fun visitBaseTypeString(ctx: WACCParser.BaseTypeStringContext): WACCType {
         return WACCType(st, WStr())
+    }
+
+    override fun visitStructType(ctx: WACCParser.StructTypeContext?): AST {
+        return WACCType(st, WStruct(ctx!!.IDENTIFIER().text))
     }
 
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext): Literal {
@@ -551,10 +582,19 @@ class ASTProducer(
         throw Exception("Don't call me!")
     }
 
-//    /**
-//     * Visit the struct
-//     */
-//    override fun visitStruct(ctx: WACCParser.StructContext?): AST {
-//        return super.visitStruct(ctx)
-//    }
+    /**
+     * Visit the struct
+     */
+    override fun visitStruct(ctx: WACCParser.StructContext): WACCStruct {
+        println(st)
+        return WACCStruct(
+            st,
+            ctx.IDENTIFIER()?.text ?: throw Exception("Struct has no identifier"),
+            ctx.structElems().param().associate {
+                Pair(
+                    it.IDENTIFIER().text,
+                    (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type)
+            }
+        )
+    }
 }

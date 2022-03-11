@@ -121,6 +121,12 @@ class WPair(
     }
 }
 
+class WStruct(val identifier : String) : WAny {
+    override fun toString(): String {
+        return "struct $identifier"
+    }
+}
+
 /**
  * Used to check type validity when keyword 'pair' is used in variable declaration
  */

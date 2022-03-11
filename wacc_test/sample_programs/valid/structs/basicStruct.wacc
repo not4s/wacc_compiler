@@ -7,7 +7,7 @@
 
 begin
   struct MyStruct begin
-    int elem
+    int elem;
   end
   skip
 end

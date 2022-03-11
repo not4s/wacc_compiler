@@ -91,6 +91,14 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return appendSpecificErrorMessage("Cannot redefine function")
     }
 
+    fun structRedefineError(structName: String) : SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage("Cannot redefine struct $structName")
+    }
+
+    fun structRedefineError(): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage("Cannot redefine struct")
+    }
+
     fun functionArgumentCountMismatch(expectedNum: Int, actualNum: Int): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage("The number of provided arguments ($actualNum) is incorrect, expected : $expectedNum")
     }

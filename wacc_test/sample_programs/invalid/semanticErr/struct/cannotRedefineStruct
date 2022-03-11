@@ -1,0 +1,19 @@
+# cannot redefine another struct with the same identifier as an already previously defined struct
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct A begin
+    int A;
+  end
+  struct A begin
+    bool B;
+  end
+  skip
+end

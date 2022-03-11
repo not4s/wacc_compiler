@@ -1,0 +1,16 @@
+# inline structs are fine i guess but I don't know why you'd like to inflict that type of pain onto yourself
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  struct Student begin 
+    string first_name ; 
+    string second_name ; 
+    struct Tutor t ;
+  end
+  
+  skip
+end
