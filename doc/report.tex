@@ -87,7 +87,7 @@ discuss what went well and what you would do differently if you were to do the l
 \begin{figure}
   \includegraphics[width=\linewidth]{healthyGitGraph.png}
   \caption{A snapshot of a healthy Git graph structure demonstrating great concurrent development between 4 group memebers}
-  \label{fig:gitGraph1}
+  \label{fig:gitGraph}
 \end{figure}
 
 Developing great code while working with many group members required keeping good Git hygiene and adhering to recognized Git disciplines.
@@ -96,14 +96,14 @@ The main branch of the repository was kept clean and 'ready to deploy' by only c
 
 To separate different milestones off the master branch three disjoint and independent branches were created to house the main changes of each developmental stage; the front-end branch, back-end branch and the extension branch. For each milestone, developers create sub-branches off these supplementary branches. 
 
-Merging changes when a branch is days old is extremely difficult and with a high probability of merge conflicts it is difficult to guarantee a safe merge. Instead, Continuous Integration practices were used to provide agile and simple code development by merging frequently and never letting a sub-branch live more than a couple days without merging to the parent branch. Figure \ref{fig:gitGraph1} demonstrates a snapshot of a the project's git graphing structure.
+Merging changes when a branch is days old is extremely difficult and with a high probability of merge conflicts it is difficult to guarantee a safe merge. Instead, Continuous Integration practices were used to provide agile and simple code development by merging frequently and never letting a sub-branch live more than a couple days without merging to the parent branch. Figure \ref{fig:gitGraph} demonstrates a snapshot of a the project's git graphing structure.
 
 Another important application of great git hygiene and great communication lies in meaningful commit messages and discussion channels. To understand what was going on at a glance and who authored the commit, the messages employed the following format:
 
 \verb|[verb describing changes/(authors)+]: short description of context and changes]|
 \verb|(any other relevant meta information describing changes)*|
 
-This style of commit messages can be seen in Figure \ref{fig:gitGraph1}. 
+This style of commit messages can be seen in Figure \ref{fig:gitGraph}. 
 
 \subsubsection*{Project Communication and Group Synergy}
 
@@ -115,13 +115,32 @@ Each meeting was prepended with a SCRUM meeting. Each day we would discuss what 
 
 \subsubsection*{Testing and Development}
 
+\begin{figure}
+  \includegraphics[width=\linewidth]{testScript.png}
+  \caption{The helper menu generated with the -h falg explaining all possible options of the testing script}
+  \label{fig:testScript}
+\end{figure}
 
+Testing remains a mandatory practice during any type of code development and it has never been more prevalent than in this assignment. Where possible, we created unit tests to test implementations of the hidden components of our software, such as the symbol table.
+
+Testing was split into three parts:
+\begin{itemize}
+    \item Front-end tests made sure that compilation semantically and syntactically invalid programs were halted and correct error messages were presented.
+    \item Back-end tests made sure that valid programs produced the correct output by comparing an emulated output of the generated code to the refCompile script. By writing the script in python, we made use of provided libraries for checking the difference between outputs and assembly code if such a need was required.
+    \item Extension tests could not use the refCompile script as a foothold because we implemented new features into the language that were not recognised by it. Therefore testing was conducted by comparing the output with a predicted output already in the wacc test.
+\end{itemize}
+
+For each of these tests, it was possible to test a directory or all available wacc files in the \shell{sample_programs/} directory. Examples of the scripts can be seen in Figure \ref{fig:testScript}.
+
+Where necessary, new wacc tests were added to the \shell{sample_programs/} directory and conformed to the style and format provided by the department. Such examples can be seen in \shell{sample_programs/valid/structs/}, \shell{sample_programs/invalid/semanticErr/array/} and more.
 
 \subsubsection*{Strengths and Shortcomings}
 
 There was a tendency for group members to work on a feature without communicating it to the rest of the team. As a result, a group member would work on the same problem, only to realize the solution already existed. This led to minor confusion and frustration at times.
 
 Punctuality was also a minor shortcoming, which ended up disrupting the SCRUM meeting cycle because it wouldn't be time efficient to have a separate meeting every time a member arrived. This however wasn't majorly impactful as great progress due to amazing group synergy was achieved without all members being present.
+
+If we were to have more time, we would have made a more thorough testing script. Our primitive script made it difficult to test I/O programs. Therefore these tests were skipped, which contained some bugs themselves which we were too late to fix.
 
 \subsection*{Design Choices and Implementation Details}
 
@@ -140,7 +159,7 @@ to aid this discussion.
 \begin{quote}
      An evaluation of your extensions to your WACC compiler. You
 should describe all of the language extensions, optimisations or other aspects that you have added
-to your compiler, especially highlighting how these features can be accessed or viewed. You should
+to your compiler, especially highlighting \textbf{how these features can be accessed or viewed.} You should
 also briefly discuss what future extensions you would add to your compiler if you had more time.
 \end{quote}
 
@@ -148,8 +167,9 @@ also briefly discuss what future extensions you would add to your compiler if yo
 
 \shell{C}-like structs were introduced to WACC to allow for more rich data collections. Much like \shell{C}, these would be used to diversify the programs that could be written and open up a new door into data collections. Previously, this would have relied on carefully setting up arrays and/or pairs in order to store collections of data. 
 
-To begin with, 
-HOW THESE FEATURES CAN BE ACCESSED OR VIEWED
+To begin with, the \shell{WACCLexer.g4} and \shell{WACCParser.g4} were updated to represent the correct behaviour of the structs. These involve struct declarations, struct uses and struct manipulation. Because all struct declarations should happen at the begining of the program (as are functions), structs are parsed first. In \shell{ASTProducer.kt}, when the visitors are traversing the parse tree, we check for semantic errors such as incorrect usages of structs or undefined struct references.
+
+After the front-end is complete the back end generates appropriate assembly code. This code was generated with the help of careful observations from  \hyperlink{ https://godbolt.org/ }{godbolt} website and the ARM Technical Reference Manual.
 
 \subsubsection*{Optimisations}
 

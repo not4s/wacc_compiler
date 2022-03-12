@@ -268,7 +268,14 @@ class ASTProducer(
     }
 
     override fun visitStructType(ctx: WACCParser.StructTypeContext?): AST {
-        return WACCType(st, WStruct(ctx!!.IDENTIFIER().text))
+        val type = WStruct(ctx!!.IDENTIFIER().text)
+        // if the struct is not in the symbol table - semantic error
+        if (type.identifier !in st.getMap()) {
+            builderTemplateFromContext(ctx, st).structUndefinedError(type.identifier)
+                .buildAndPrint()
+            throw SemanticException("$ctx is undefined")
+        }
+        return WACCType(st, type)
     }
 
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext): Literal {
@@ -531,6 +538,10 @@ class ASTProducer(
         return IfThenStat(st, condition, thenStat, elseStat)
     }
 
+    override fun visitStatStruct(ctx: WACCParser.StatStructContext?): AST {
+        return super.visitStatStruct(ctx)
+    }
+
     override fun visitParam(ctx: WACCParser.ParamContext): AST {
         throw Exception("Don't call me!")
     }
@@ -553,7 +564,7 @@ class ASTProducer(
                 val id = p.IDENTIFIER().text
                 funScope.redeclaredVars.add(id)
                 try {
-                    val ty = isValidParamType(ctx, p)
+                    val ty = (safeVisit(WACCType(st, WUnknown)) { this.visit(p.type()) } as WACCType).type
                     params[id] = ty
                     funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
                 } catch (e: SemanticException) {
@@ -607,12 +618,14 @@ class ASTProducer(
         var numRepeated = 0
         for (param in ctx.structElems().param()) {
             val identity = param.IDENTIFIER().text
+            // cannot have multiple parameters with the same identifier
             if (identity in paramMap.keys) {
                 builderTemplateFromContext(ctx, st).structContainsDuplicateElements(identity)
                     .buildAndPrint()
                 numRepeated++
             } else {
-                paramMap[identity] = isValidParamType(ctx, param)
+                // check whether the type is valid
+                paramMap[identity] = (safeVisit(WACCType(st, WUnknown)) { this.visit(param.type()) } as WACCType).type
             }
         }
         if (numRepeated > 0) {
@@ -622,18 +635,6 @@ class ASTProducer(
         return WACCStruct(
             st, ctx.IDENTIFIER()?.text ?: throw Exception("Struct has no identifier"), paramMap
         )
-    }
-
-    private fun isValidParamType(ctx: ParserRuleContext, it: WACCParser.ParamContext): WAny {
-        val paramType =
-            (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
-        // if the struct is not in the symbol table - semantic error
-        if ((paramType is WStruct) && (paramType.identifier !in st.getMap())) {
-            builderTemplateFromContext(ctx, st).structUndefinedError(paramType.identifier)
-                .buildAndPrint()
-            throw SemanticException("$ctx is undefined")
-        }
-        return paramType
     }
 
     private fun scrapeStruct(ctx: WACCParser.StructContext): WStruct {
