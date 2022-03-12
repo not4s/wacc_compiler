@@ -1,7 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
+
+import sys
+
 from style import get_default_font, code_frame_style, code_theme
+
+
+ONE_SECOND = 1000
 
 
 class TextLineNumbers(tk.Canvas):
@@ -43,13 +49,18 @@ class TextLineNumbers(tk.Canvas):
 
 
 class CodeText(tk.Text):
+
     def __init__(self, *args, **kwargs):
         tk.Text.__init__(self, *args, **kwargs)
 
         # create a proxy for the underlying widget
-        self._orig = self._w + "_orig"
+        self._orig = self._w + "_oupdate_highlightrig"
         self.tk.call("rename", self._w, self._orig)
         self.tk.createcommand(self._w, self._proxy)
+
+        self.event_counter = 0
+        self.bind("<<TextModified>>", self._on_change)
+
 
     def _proxy(self, command, *args):
 
@@ -106,6 +117,22 @@ class CodeText(tk.Text):
         self.tag_config("int", foreground=code_theme['int_literal'])
         self.tag_config("error", foreground=code_theme['error'])
         self.tag_config("function", foreground=code_theme['function'])
+
+    def update_highlight(self):
+        print("Text Updated!")
+
+    def handle_events(self, triggerer_count):
+        if triggerer_count != self.event_counter:
+            return
+        self.update_highlight()
+
+    def _on_change(self, event):
+        self.event_counter += 1
+        print(self.event_counter)
+        self.after(ONE_SECOND, self.handle_events, self.event_counter)
+
+        if (self.event_counter >= sys.maxsize):
+            self.event_counter = 0
 
 
 class CodeFrame(ttk.Frame):
