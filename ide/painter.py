@@ -8,10 +8,28 @@ class PainterVisitor(WACCParserVisitor):
     ''' Visits the nodes which are relevant for painting, i.e. terminals '''
 
     def __init__(self):
-        self.commands = []
+        self.painting_commands = []
+
+    def paint_token(self, token, tag):
+        ''' Associating tag with token start and end coordinates '''
+
+        line = token.getSymbol().line
+        start = token.getSymbol().start
+        stop = token.getSymbol().stop
+        begin_column = token.getSymbol().column
+        end_column = begin_column + stop - start + 1
+
+        start_coord = f"{line}.{begin_column}"
+        end_coord = f"{line}.{end_column}"
+        self.painting_commands.append((tag, start_coord, end_coord))
+
+    def paint_keyword(self, token):
+        self.paint_token(token, "keyword")
 
     # Visit a parse tree produced by WACCParser#program.
     def visitProgram(self, ctx:WACCParser.ProgramContext):
+        self.paint_keyword(ctx.KW_BEGIN())
+        self.paint_keyword(ctx.KW_END())
         return self.visitChildren(ctx)
 
 
@@ -254,9 +272,8 @@ class PainterVisitor(WACCParserVisitor):
     def visitStatJoin(self, ctx:WACCParser.StatJoinContext):
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statSkip.
     def visitStatSkip(self, ctx:WACCParser.StatSkipContext):
+        self.paint_keyword(ctx.KW_SKIP())
         return self.visitChildren(ctx)
 
 
@@ -293,24 +310,22 @@ class Painter:
 
     def paint(self):
         '''
-
         "Compiling" the code and getting the sequence of commands to color the code
         command is a triple which contains tag name, start, end
         for example:
             ('keyword', '5.0', '6.0')
 
-        painting_commands :: [(tag :: str, start :: str, end :: str)]
+        painting_commands :: [(tag :: str, start :: str, end :: str)] '''
 
-        '''
         lexer = WACCLexer(InputStream(self.text.get("1.0", "end")))
         tokens = CommonTokenStream(lexer)
+
+
         parser = WACCParser(tokens)
         tree = parser.program()
 
         visitor = PainterVisitor()
         visitor.visit(tree)
 
-        painting_commands = visitor.commands
-        print(painting_commands)
-
-        map(lambda cmd: self.text.tag_add(*cmd), painting_commands)
+        for command in visitor.painting_commands:
+            self.text.tag_add(*command)

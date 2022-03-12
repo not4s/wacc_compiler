@@ -105,18 +105,17 @@ class CodeText(tk.Text):
     def configure_syntax_highlight(self):
         self.configure(**code_frame_style)
 
-        self.tag_config("keyword", foreground=code_theme['keyword'])
-        self.tag_config("main text", foreground=code_theme['main_font_col'])
-        self.tag_config("comment", foreground=code_theme['comment'])
-        self.tag_config("string", foreground=code_theme['string_literal'])
-        self.tag_config("int", foreground=code_theme['int_literal'])
-        self.tag_config("error", foreground=code_theme['error'])
-        self.tag_config("function", foreground=code_theme['function'])
+        self.tag_configure("keyword", foreground=code_theme['keyword'])
+        self.tag_configure("main text", foreground=code_theme['main_font_col'])
+        self.tag_configure("comment", foreground=code_theme['comment'])
+        self.tag_configure("string", foreground=code_theme['string_literal'])
+        self.tag_configure("int", foreground=code_theme['int_literal'])
+        self.tag_configure("error", foreground=code_theme['error'])
+        self.tag_configure("function", foreground=code_theme['function'])
 
     def update_highlight(self):
-        print("Updating Text...")
         self.painter.paint()
-        print("Text Updated!")
+
 
     def handle_events(self, triggerer_count):
         if triggerer_count != self.event_counter:
