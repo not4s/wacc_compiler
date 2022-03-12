@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
-from style import get_default_font, code_frame_style
+from style import get_default_font, code_frame_style, code_theme
 
 
 class TextLineNumbers(tk.Canvas):
@@ -88,12 +88,27 @@ class CodeText(tk.Text):
         # return what the actual widget returned
         return result
 
+    def configure_syntax_highlight(self):
+        self.configure(**code_frame_style)
+
+        text.tag_add("keyword")
+        text.tag_add("main text")
+        text.tag_add("comment")
+        text.tag_add("string")
+        text.tag_add("int")
+        text.tag_add("error")
+        text.tag_add("function")
+
+        text.tag_config("keyword", foreground=code_theme['keyword'])
+        text.tag_config("main text", foreground=code_theme['main_font_col'])
+        text.tag_config("comment", foreground=code_theme['comment'])
+        text.tag_config("string", foreground=code_theme['string_literal'])
+        text.tag_config("int", foreground=code_theme['int_literal'])
+        text.tag_config("error", foreground=code_theme['error'])
+        text.tag_config("function", foreground=code_theme['function'])
+
 
 class CodeFrame(ttk.Frame):
-
-    def configure_syntax_highlight(self):
-        self.text.configure(**code_frame_style)
-        pass
 
     def __init__(self, *args, **kwargs):
         kwargs['style'] = "CodeFrame.TFrame"
@@ -106,7 +121,7 @@ class CodeFrame(ttk.Frame):
         self.text.configure(yscrollcommand=self.scrollbar_v.set)
         self.text.configure(xscrollcommand=self.scrollbar_h.set)
 
-        self.configure_syntax_highlight()
+        self.text.configure_syntax_highlight()
 
         self.text['font'] = get_default_font()
 

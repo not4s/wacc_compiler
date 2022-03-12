@@ -19,14 +19,14 @@ def configure_styles(root):
 MAIN_FONT_COLOR = '#dfe2f1'
 BACKGROUND_COLOR = '#202746'
 
-theme = {
+code_theme = {
     'background': BACKGROUND_COLOR,
     'highlighted_line': '#293256',
     'comment': '#5e6687',
     'keyword': '#39aca6',
     'main_font_col': MAIN_FONT_COLOR,
-    'fun_name': '#c76b29',
-    'str_literal': '#22a2c9',
+    'function': '#c76b29',
+    'string_literal': '#22a2c9',
     'int_literal': '#c94922',
     'error': '#9c637a',
 }
