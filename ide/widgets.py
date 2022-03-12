@@ -91,21 +91,21 @@ class CodeText(tk.Text):
     def configure_syntax_highlight(self):
         self.configure(**code_frame_style)
 
-        text.tag_add("keyword")
-        text.tag_add("main text")
-        text.tag_add("comment")
-        text.tag_add("string")
-        text.tag_add("int")
-        text.tag_add("error")
-        text.tag_add("function")
+        # self.tag_add("keyword")
+        # self.tag_add("main text")
+        # self.tag_add("comment")
+        # self.tag_add("string")
+        # self.tag_add("int")
+        # self.tag_add("error")
+        # self.tag_add("function")
 
-        text.tag_config("keyword", foreground=code_theme['keyword'])
-        text.tag_config("main text", foreground=code_theme['main_font_col'])
-        text.tag_config("comment", foreground=code_theme['comment'])
-        text.tag_config("string", foreground=code_theme['string_literal'])
-        text.tag_config("int", foreground=code_theme['int_literal'])
-        text.tag_config("error", foreground=code_theme['error'])
-        text.tag_config("function", foreground=code_theme['function'])
+        self.tag_config("keyword", foreground=code_theme['keyword'])
+        self.tag_config("main text", foreground=code_theme['main_font_col'])
+        self.tag_config("comment", foreground=code_theme['comment'])
+        self.tag_config("string", foreground=code_theme['string_literal'])
+        self.tag_config("int", foreground=code_theme['int_literal'])
+        self.tag_config("error", foreground=code_theme['error'])
+        self.tag_config("function", foreground=code_theme['function'])
 
 
 class CodeFrame(ttk.Frame):
@@ -122,7 +122,6 @@ class CodeFrame(ttk.Frame):
         self.text.configure(xscrollcommand=self.scrollbar_h.set)
 
         self.text.configure_syntax_highlight()
-
         self.text['font'] = get_default_font()
 
         self.linenumbers = TextLineNumbers(self)
