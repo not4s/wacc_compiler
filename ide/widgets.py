@@ -5,6 +5,7 @@ from tkinter import *
 import sys
 
 from style import get_default_font, code_frame_style, code_theme
+from painter import Painter
 
 
 ONE_SECOND = 1000
@@ -53,6 +54,8 @@ class CodeText(tk.Text):
     def __init__(self, *args, **kwargs):
         tk.Text.__init__(self, *args, **kwargs)
 
+        self.painter = Painter(self)
+
         # create a proxy for the underlying widget
         self._orig = self._w + "_oupdate_highlightrig"
         self.tk.call("rename", self._w, self._orig)
@@ -71,7 +74,7 @@ class CodeText(tk.Text):
             args[0:2] == ("xview", "moveto") or
             args[0:2] == ("xview", "scroll") or
             args[0:2] == ("yview", "moveto") or
-            args[0:2] == ("yview", "scroll")
+            args[0:2] == ("yviewHighlighter", "scroll")
         ):
             self.event_generate("<<Change>>", when="tail")
 
@@ -102,14 +105,6 @@ class CodeText(tk.Text):
     def configure_syntax_highlight(self):
         self.configure(**code_frame_style)
 
-        # self.tag_add("keyword")
-        # self.tag_add("main text")
-        # self.tag_add("comment")
-        # self.tag_add("string")
-        # self.tag_add("int")
-        # self.tag_add("error")
-        # self.tag_add("function")
-
         self.tag_config("keyword", foreground=code_theme['keyword'])
         self.tag_config("main text", foreground=code_theme['main_font_col'])
         self.tag_config("comment", foreground=code_theme['comment'])
@@ -119,6 +114,8 @@ class CodeText(tk.Text):
         self.tag_config("function", foreground=code_theme['function'])
 
     def update_highlight(self):
+        print("Updating Text...")
+        self.painter.paint()
         print("Text Updated!")
 
     def handle_events(self, triggerer_count):
