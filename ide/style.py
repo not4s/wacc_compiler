@@ -38,4 +38,5 @@ code_frame_style = {
     'font': (DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE),
     'bg': BACKGROUND_COLOR,
     'foreground': MAIN_FONT_COLOR,
+    'insertbackground': MAIN_FONT_COLOR,
 }

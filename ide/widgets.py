@@ -51,10 +51,7 @@ class CodeText(tk.Text):
         self.tk.call("rename", self._w, self._orig)
         self.tk.createcommand(self._w, self._proxy)
 
-    def _proxy(self, *args):
-        # let the actual widget perform the requested action
-        cmd = (self._orig,) + args
-        result = self.tk.call(cmd)
+    def _proxy(self, command, *args):
 
         # generate an event if something was added or deleted,
         # or the cursor position changed
@@ -66,6 +63,27 @@ class CodeText(tk.Text):
             args[0:2] == ("yview", "scroll")
         ):
             self.event_generate("<<Change>>", when="tail")
+
+        # avoid error when copying
+        if (command == 'get' and
+            (args[0] == 'sel.first' and args[1] == 'sel.last') and
+            not self.tag_ranges('sel')
+        ):
+            return
+
+        # avoid error when deleting
+        if (command == 'delete' and
+            (args[0] == 'sel.first' and args[1] == 'sel.last') and
+            not self.tag_ranges('sel')
+        ):
+            return
+
+        # let the actual widget perform the requested action
+        cmd = (self._orig, command) + args
+        result = self.tk.call(cmd)
+
+        if command in ('insert', 'delete', 'replace'):
+            self.event_generate('<<TextModified>>')
 
         # return what the actual widget returned
         return result
