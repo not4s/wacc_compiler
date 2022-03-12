@@ -108,12 +108,6 @@ class ASTProducer(
                 .provideStart(PositionedError(s))
                 .setLineTextFromSrcFile(st.srcFilePath)
             val id = s.IDENTIFIER().text
-            // check if this struct has been defined previously
-            if (id in st.getMap()) {
-                errBuilder.structRedefineError(id)
-                    .buildAndPrint()
-                semanticErrorCount.incrementAndGet()
-            }
             // note down the existence of all structs
             val struct = scrapeStruct(s)
             try {
@@ -530,9 +524,13 @@ class ASTProducer(
         return IfThenStat(st, condition, thenStat, elseStat)
     }
 
-    override fun visitStatStruct(ctx: WACCParser.StatStructContext?): AST {
+    override fun visitStatStructDeclar(ctx: WACCParser.StatStructDeclarContext?): AST {
         val type = (safeVisit(WACCType(st, WUnknown)) { this.visit(ctx!!.structType()) } as WACCType).type
         return StructDeclarationStat(st, type, ctx!!.IDENTIFIER().text)
+    }
+
+    override fun visitStatStructAssign(ctx: WACCParser.StatStructAssignContext?): AST {
+        return WACCType(st, WUnknown) // TODO
     }
 
     override fun visitParam(ctx: WACCParser.ParamContext): AST {

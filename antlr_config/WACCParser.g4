@@ -125,7 +125,8 @@ stat
   | type IDENTIFIER SYM_EQUALS assignRhs                                   #statInit
   | assignLhs SYM_EQUALS assignRhs                                         #statStore
   | left=stat SYM_SEMICOLON right=stat                                     #statJoin
-  | structType IDENTIFIER                                                  #statStruct
+  | structType IDENTIFIER                                                  #statStructDeclar
+  | structType IDENTIFIER SYM_PERIOD IDENTIFIER SYM_EQUALS expr            #statStructAssign
   ;
 
 param

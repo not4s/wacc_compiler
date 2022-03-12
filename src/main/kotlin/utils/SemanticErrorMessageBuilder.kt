@@ -98,10 +98,6 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return appendSpecificErrorMessage("Cannot redefine struct $structName")
     }
 
-    fun structRedefineError(): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage("Cannot redefine struct")
-    }
-
     fun functionArgumentCountMismatch(
         expectedNum: Int,
         actualNum: Int
@@ -171,18 +167,6 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
     fun pairElementInvalidType(): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
             "The pair element has an invalid type"
-        )
-    }
-
-    fun structUndefinedError(structName: String): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage(
-            "Undefined struct \"$structName\" located"
-        )
-    }
-
-    fun structUndefinedError(): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage(
-            "Undefined struct located"
         )
     }
 

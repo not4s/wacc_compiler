@@ -78,6 +78,7 @@ SYM_SQ_RBRACKET: ']';
 SYM_COMMA: ',';
 SYM_DOUBLEQUOTE: '"' ;
 SYM_SINGLEQUOTE: '\'';
+SYM_PERIOD: '.';
 
 /* Identifier */
 IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;

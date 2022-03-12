@@ -44,7 +44,7 @@ class StatVisitor(
             is ReturnStat -> visitReturnStat(ctx)
             is FreeStat -> visitFreeStat(ctx)
             is StructDeclarationStat -> visitDeclarationStat(ctx)
-            else -> TODO("Unrecognized Statement")
+            else -> TODO("Unrecognized Statement ${ctx :: class}")
         }
     }
 
