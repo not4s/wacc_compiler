@@ -43,8 +43,13 @@ class StatVisitor(
             is WhileStat -> visitWhileStat(ctx)
             is ReturnStat -> visitReturnStat(ctx)
             is FreeStat -> visitFreeStat(ctx)
+            is StructDeclarationStat -> visitDeclarationStat(ctx)
             else -> TODO("Unrecognized Statement")
         }
+    }
+
+    private fun visitDeclarationStat(ctx: StructDeclarationStat): List<WInstruction> {
+        return listOf()
     }
 
     private fun visitFreeStat(ctx: FreeStat): List<WInstruction> {
@@ -279,8 +284,9 @@ class StatVisitor(
     private fun visitDeclarationStat(ctx: Declaration): List<WInstruction> {
         // Visit RHS. Result should be in resultStored register.
         return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs)
-            .plus(ctx.st.asmAssign(ctx.identifier, Register.R0, data, ctx.decType)
-        )
+            .plus(
+                ctx.st.asmAssign(ctx.identifier, Register.R0, data, ctx.decType)
+            )
     }
 
     private fun visitAssignStat(ctx: Assignment): List<WInstruction> {

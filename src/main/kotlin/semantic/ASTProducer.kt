@@ -4,7 +4,6 @@ import antlr.WACCParser
 import antlr.WACCParserBaseVisitor
 import ast.*
 import ast.statement.*
-import org.antlr.v4.runtime.ParserRuleContext
 import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
 import syntax.SyntaxChecker
@@ -268,14 +267,7 @@ class ASTProducer(
     }
 
     override fun visitStructType(ctx: WACCParser.StructTypeContext?): AST {
-        val type = WStruct(ctx!!.IDENTIFIER().text)
-        // if the struct is not in the symbol table - semantic error
-        if (type.identifier !in st.getMap()) {
-            builderTemplateFromContext(ctx, st).structUndefinedError(type.identifier)
-                .buildAndPrint()
-            throw SemanticException("$ctx is undefined")
-        }
-        return WACCType(st, type)
+        return WACCType(st, st.get(ctx!!.IDENTIFIER().text, builderTemplateFromContext(ctx, st)))
     }
 
     override fun visitLiteralInteger(ctx: WACCParser.LiteralIntegerContext): Literal {
@@ -539,7 +531,8 @@ class ASTProducer(
     }
 
     override fun visitStatStruct(ctx: WACCParser.StatStructContext?): AST {
-        return super.visitStatStruct(ctx)
+        val type = (safeVisit(WACCType(st, WUnknown)) { this.visit(ctx!!.structType()) } as WACCType).type
+        return StructDeclarationStat(st, type, ctx!!.IDENTIFIER().text)
     }
 
     override fun visitParam(ctx: WACCParser.ParamContext): AST {
@@ -564,7 +557,12 @@ class ASTProducer(
                 val id = p.IDENTIFIER().text
                 funScope.redeclaredVars.add(id)
                 try {
-                    val ty = (safeVisit(WACCType(st, WUnknown)) { this.visit(p.type()) } as WACCType).type
+                    val ty = (safeVisit(
+                        WACCType(
+                            st,
+                            WUnknown
+                        )
+                    ) { this.visit(p.type()) } as WACCType).type
                     params[id] = ty
                     funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
                 } catch (e: SemanticException) {
@@ -625,7 +623,12 @@ class ASTProducer(
                 numRepeated++
             } else {
                 // check whether the type is valid
-                paramMap[identity] = (safeVisit(WACCType(st, WUnknown)) { this.visit(param.type()) } as WACCType).type
+                paramMap[identity] = (safeVisit(
+                    WACCType(
+                        st,
+                        WUnknown
+                    )
+                ) { this.visit(param.type()) } as WACCType).type
             }
         }
         if (numRepeated > 0) {
