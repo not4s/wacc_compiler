@@ -107,7 +107,7 @@ abstract class SymbolTable(
 
     abstract fun get(
         structIdent: String,
-        structElem: String,
+        structElems: List<String>,
         errorMessageBuilder: SemanticErrorMessageBuilder
     ): WAny
 }

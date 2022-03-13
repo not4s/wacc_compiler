@@ -76,6 +76,7 @@ expr
   | arrayElem                                                  #exprArrayElem
   | literal                                                    #exprLiteral
   | structElem                                                 #exprStructElem
+  | structType                                                 #exprStructType
 
   | unOp=OP_NOT operand=expr                                   #exprUnary
   | unOp=OP_ORD operand=expr                                   #exprUnary
@@ -110,7 +111,7 @@ assignRhs
   ;
 
 structElem
-  : IDENTIFIER SYM_PERIOD IDENTIFIER
+  : IDENTIFIER (SYM_PERIOD IDENTIFIER)+
   ;
 
 argList
@@ -131,7 +132,7 @@ stat
   | type IDENTIFIER SYM_EQUALS assignRhs                                   #statInit
   | assignLhs SYM_EQUALS assignRhs                                         #statStore
   | left=stat SYM_SEMICOLON right=stat                                     #statJoin
-  | structType IDENTIFIER                                                  #statStructDeclar
+  | structType IDENTIFIER                                                  #statStructDeclare
   ;
 
 param

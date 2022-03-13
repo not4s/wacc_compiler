@@ -14,7 +14,8 @@ begin
     int someData ;
   end
   struct A myStruct ;
-  myStruct.anotherStruct = struct B ;
+  struct B subStruct ;
+  myStruct.anotherStruct = subStruct ; # struct B ;
   myStruct.anotherStruct.someData = 5 ;
   println myStruct.anotherStruct.someData
 end

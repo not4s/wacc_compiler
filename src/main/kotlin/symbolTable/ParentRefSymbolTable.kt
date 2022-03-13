@@ -69,7 +69,7 @@ class ParentRefSymbolTable(
 
     override fun get(
         structIdent: String,
-        structElem: String,
+        structElems: List<String>,
         errorMessageBuilder: SemanticErrorMessageBuilder
     ): WAny {
         // is the struct identifier in the scope?
@@ -78,12 +78,28 @@ class ParentRefSymbolTable(
             throw Exception("Expected type WACCStruct but got ${structType::class} instead")
         }
         // is the elem a part of the struct?
-        if (structType.params.containsKey(structElem)) {
-            return structType.params[structElem]!!
-        } else {
-            errorMessageBuilder.elementDoesntExistInStruct(structIdent, structElem).buildAndPrint()
-            throw SemanticException("Element doesn't exist in struct")
+        var terminalType = structType
+        for (i in structElems.indices) {
+            if ((terminalType as WACCStruct).params.containsKey(structElems[i])) {
+                if (i == structElems.size - 1) {
+                    // if this is the last element, then it is the terminal node, no need to get
+                    return terminalType.params[structElems[i]]!!
+                } else {
+                    // if this isn't the last element, then it HAS to be a struct, and therefore
+                    // we must get the original WACC struct definition in the symbol table
+                    terminalType = get(
+                        (terminalType.params[structElems[i]]!! as WStruct).identifier,
+                        errorMessageBuilder
+                    )
+                }
+            } else {
+                errorMessageBuilder.elementDoesntExistInStruct(
+                    structIdent,
+                    structElems.subList(0, i).reduce { a, b -> "$a.$b" }).buildAndPrint()
+                throw SemanticException("Element doesn't exist in struct")
+            }
         }
+        throw Exception("unreachable")
     }
 
     override fun getMap(): Map<String, WAny> {

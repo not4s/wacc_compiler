@@ -495,10 +495,9 @@ class ASTProducer(
 
     override fun visitStructElem(ctx: WACCParser.StructElemContext?): AST {
         val identifier = ctx!!.IDENTIFIER(0).text
-        val elem = ctx.IDENTIFIER(1).text
-        // check if the identifier is in the symbol table
-        val type = st.get(identifier, elem, builderTemplateFromContext(ctx, st))
-        return WACCStructElem(identifier, elem, st, type)
+        val elements = ctx.IDENTIFIER().subList(1, ctx.IDENTIFIER().size).map { it.text }
+        val type = st.get(identifier, elements, builderTemplateFromContext(ctx, st))
+        return WACCStructElem(identifier, elements, st, type)
     }
 
     override fun visitStatJoin(ctx: WACCParser.StatJoinContext): JoinStat {
@@ -532,7 +531,7 @@ class ASTProducer(
         return IfThenStat(st, condition, thenStat, elseStat)
     }
 
-    override fun visitStatStructDeclar(ctx: WACCParser.StatStructDeclarContext?): AST {
+    override fun visitStatStructDeclare(ctx: WACCParser.StatStructDeclareContext?): AST {
         val type =
             (safeVisit(WACCType(st, WUnknown)) { this.visit(ctx!!.structType()) } as WACCType).type
         st.declare(ctx!!.IDENTIFIER().text, type, builderTemplateFromContext(ctx, st))

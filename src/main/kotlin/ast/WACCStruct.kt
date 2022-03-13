@@ -31,11 +31,11 @@ class WACCStruct(
 
 class WACCStructElem(
     identifier: String,
-    private val elem: String,
+    private val elems: List<String>,
     override val st: SymbolTable,
     override val type: WAny
 ) : LHS, WStruct(identifier), Expr {
     override fun toString(): String {
-        return "($type) $identifier.$elem"
+        return "($type) $identifier.${elems.reduce { a, b -> "$a.$b" }}"
     }
 }
