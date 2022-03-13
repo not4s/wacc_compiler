@@ -10,6 +10,7 @@ import instructions.misc.*
 import instructions.operations.*
 import semantic.SemanticChecker
 import utils.SemanticErrorMessageBuilder
+import utils.SemanticException
 import waccType.*
 
 class ParentRefSymbolTable(
@@ -81,7 +82,7 @@ class ParentRefSymbolTable(
             return structType.params[structElem]!!
         } else {
             errorMessageBuilder.elementDoesntExistInStruct(structIdent, structElem).buildAndPrint()
-            throw Exception("Semantic checker didn't throw SemanticException on null value of the symbol")
+            throw SemanticException("Element doesn't exist in struct")
         }
     }
 
