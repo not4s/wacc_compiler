@@ -67,9 +67,13 @@ class CodeText(tk.Text):
 
     def _proxy(self, command, *args):
 
+        # let the actual widget perform the requested action
+        cmd = (self._orig, command) + args
+        result = self.tk.call(cmd)
+
         # generate an event if something was added or deleted,
         # or the cursor position changed
-        if (args[0] in ("insert", "replace", "delete") or
+        if (args[0] in ("insert", "replace", "delete", "scroll") or
             args[0:3] == ("mark", "set", "insert") or
             args[0:2] == ("xview", "moveto") or
             args[0:2] == ("xview", "scroll") or
@@ -84,6 +88,7 @@ class CodeText(tk.Text):
             not self.tag_ranges('sel')
         ):
             return
+            # return result
 
         # avoid error when deleting
         if (command == 'delete' and
@@ -91,13 +96,11 @@ class CodeText(tk.Text):
             not self.tag_ranges('sel')
         ):
             return
-
-        # let the actual widget perform the requested action
-        cmd = (self._orig, command) + args
-        result = self.tk.call(cmd)
+            # return result
 
         if command in ('insert', 'delete', 'replace'):
             self.event_generate('<<TextModified>>')
+            self.event_generate('<<Change>>')
 
         # return what the actual widget returned
         return result
@@ -126,7 +129,6 @@ class CodeText(tk.Text):
 
     def _on_change(self, event):
         self.event_counter += 1
-        print(self.event_counter)
         self.after(ONE_SECOND, self.handle_events, self.event_counter)
 
         if (self.event_counter >= sys.maxsize):

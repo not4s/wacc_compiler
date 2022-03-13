@@ -13,6 +13,8 @@ class PainterVisitor(WACCParserVisitor):
     def paint_token(self, token, tag):
         ''' Associating tag with token start and end coordinates '''
 
+        if (token is None):
+            return
         try:
             actual_token = token.getSymbol()
         except AttributeError:
