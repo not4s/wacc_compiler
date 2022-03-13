@@ -33,7 +33,7 @@ fun main(args: Array<String>) {
     val ast: ProgramAST
     try {
         ast = ASTProducer(ParentRefSymbolTable(file.absolutePath)).visit(tree) as ProgramAST
-        println(ast)
+//        println(ast)
     } catch (e: SemanticException) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)

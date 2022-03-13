@@ -344,6 +344,10 @@ class ASTProducer(
         return visitStructElem(ctx!!.structElem())
     }
 
+    override fun visitAssignRhsStructType(ctx: WACCParser.AssignRhsStructTypeContext?): AST {
+        return (visitStructType(ctx!!.structType()) as WACCType).type as WACCStruct
+    }
+
     override fun visitAssignLhsExpr(ctx: WACCParser.AssignLhsExprContext): IdentifierSet {
         return IdentifierSet(st, ctx.IDENTIFIER().text, ctx)
     }

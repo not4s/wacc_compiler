@@ -8,7 +8,7 @@ class WACCStruct(
     override val st: SymbolTable,
     override val identifier: String,
     val params: Map<String, WAny>
-) : AST, WStruct(identifier) {
+) : AST, WStruct(identifier), RHS {
     override fun toString(): String {
         return "struct $identifier{${
             params.map { (id, t) -> "$t $id" }.reduceOrNull { a, b -> "$a, $b" } ?: throw Exception(
@@ -27,6 +27,9 @@ class WACCStruct(
     override fun hashCode(): Int {
         return identifier.hashCode()
     }
+
+    override val type: WAny
+        get() = WStruct(identifier)
 }
 
 class WACCStructElem(

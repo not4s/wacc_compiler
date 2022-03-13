@@ -76,7 +76,6 @@ expr
   | arrayElem                                                  #exprArrayElem
   | literal                                                    #exprLiteral
   | structElem                                                 #exprStructElem
-  | structType                                                 #exprStructType
 
   | unOp=OP_NOT operand=expr                                   #exprUnary
   | unOp=OP_ORD operand=expr                                   #exprUnary
@@ -108,6 +107,7 @@ assignRhs
   | KW_NEWPAIR SYM_LBRACKET left=expr SYM_COMMA right=expr SYM_RBRACKET    #assignRhsNewPair
   | pairElem                                                               #assignRhsPairElem
   | KW_CALL IDENTIFIER SYM_LBRACKET argList? SYM_RBRACKET                  #assignRhsCall
+  | structType                                                             #assignRhsStructType
   ;
 
 structElem
