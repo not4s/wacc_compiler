@@ -2,6 +2,7 @@ from antlr4 import *
 from antlr.WACCLexer import WACCLexer
 from antlr.WACCParser import WACCParser
 from antlr.WACCParserVisitor import WACCParserVisitor
+from io import StringIO
 
 
 class PainterVisitor(WACCParserVisitor):
@@ -177,6 +178,14 @@ class PainterVisitor(WACCParserVisitor):
         self.paint_keyword(ctx.KW_DONE())
         return self.visitChildren(ctx)
 
+    def visitStatInit(self, ctx:WACCParser.StatInitContext):
+        self.paint_operator(ctx.SYM_EQUALS())
+        return self.visitChildren(ctx)
+
+    def visitStatStore(self, ctx:WACCParser.StatStoreContext):
+        self.paint_operator(ctx.SYM_EQUALS())
+        return self.visitChildren(ctx)
+
     def visitStatRead(self, ctx:WACCParser.StatReadContext):
         self.paint_keyword(ctx.KW_READ())
         return self.visitChildren(ctx)
@@ -239,6 +248,16 @@ class Painter:
     def __init__(self, code_text):
         self.text = code_text
 
+    def paint_comments(self, text):
+        line_counter = 0
+        for line in StringIO(text):
+            line_counter += 1
+            if '#' not in line:
+                continue
+            comment_start = line.find('#')
+            self.text.tag_add("comment", f'{line_counter}.{comment_start}', f'{line_counter}.end')
+
+
     def paint(self):
         '''
         "Compiling" the code and getting the sequence of commands to color the code
@@ -248,9 +267,11 @@ class Painter:
 
         painting_commands :: [(tag :: str, start :: str, end :: str)] '''
 
-        lexer = WACCLexer(InputStream(self.text.get("1.0", "end")))
-        tokens = CommonTokenStream(lexer)
+        text_content = self.text.get("1.0", "end")
+        self.paint_comments(text_content)
 
+        lexer = WACCLexer(InputStream(text_content))
+        tokens = CommonTokenStream(lexer)
 
         parser = WACCParser(tokens)
         tree = parser.program()

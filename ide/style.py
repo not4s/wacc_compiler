@@ -22,7 +22,7 @@ BACKGROUND_COLOR = '#202746'
 code_theme = {
     'background': BACKGROUND_COLOR,
     'highlighted_line': '#293256',
-    'comment': '#5e6687',
+    'comment': '#ff91fa',
     'keyword': '#DD4A68',
     'operator': '#ee9900',
     'declaration': '#fbff1f',
