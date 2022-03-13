@@ -75,6 +75,7 @@ expr
   : SYM_LBRACKET innerExpr=expr SYM_RBRACKET                   #exprBracket
   | arrayElem                                                  #exprArrayElem
   | literal                                                    #exprLiteral
+  | structElem                                                 #exprStructElem
 
   | unOp=OP_NOT operand=expr                                   #exprUnary
   | unOp=OP_ORD operand=expr                                   #exprUnary
@@ -94,17 +95,22 @@ expr
   ;
 
 assignLhs
-  : IDENTIFIER #assignLhsExpr
-  | arrayElem #assignLhsArrayElem
-  | pairElem #assignLhsPairElem
+  : IDENTIFIER  #assignLhsExpr
+  | arrayElem   #assignLhsArrayElem
+  | pairElem    #assignLhsPairElem
+  | structElem  #assignLhsStructElem
   ;
 
 assignRhs
-  : expr       #assignRhsExpr
+  : expr                                                                   #assignRhsExpr
   | arrayLiter                                                             #assignRhsArrayLiter
   | KW_NEWPAIR SYM_LBRACKET left=expr SYM_COMMA right=expr SYM_RBRACKET    #assignRhsNewPair
   | pairElem                                                               #assignRhsPairElem
   | KW_CALL IDENTIFIER SYM_LBRACKET argList? SYM_RBRACKET                  #assignRhsCall
+  ;
+
+structElem
+  : IDENTIFIER SYM_PERIOD IDENTIFIER
   ;
 
 argList
@@ -126,7 +132,6 @@ stat
   | assignLhs SYM_EQUALS assignRhs                                         #statStore
   | left=stat SYM_SEMICOLON right=stat                                     #statJoin
   | structType IDENTIFIER                                                  #statStructDeclar
-  | structType IDENTIFIER SYM_PERIOD IDENTIFIER SYM_EQUALS expr            #statStructAssign
   ;
 
 param

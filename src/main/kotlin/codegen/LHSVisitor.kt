@@ -1,9 +1,6 @@
 package codegen
 
-import ast.ArrayElement
-import ast.IdentifierSet
-import ast.LHS
-import ast.PairElement
+import ast.*
 import instructions.WInstruction
 import instructions.misc.DataDeclaration
 import instructions.misc.ImmediateOffset
@@ -54,6 +51,7 @@ class LHSVisitor(
                         STR(Register.R1, Register.R0)
                     )
             }
+            is WACCStructElem -> TODO("WACCStructElem has not been implemented yet")
         }
     }
 }

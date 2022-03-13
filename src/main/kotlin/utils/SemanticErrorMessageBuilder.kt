@@ -175,4 +175,10 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
             "Repeated identifier `$repeatedIdentifier` found"
         )
     }
+
+    fun elementDoesntExistInStruct(structID: String, nonExistantStructElem : String): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "Tried to access non-existent element ${structID}.${nonExistantStructElem}"
+        )
+    }
 }

@@ -99,6 +99,6 @@ COMMENT_IGNORE: '#' ~'\n'* '\n' -> skip;
 WS: [ \t\r\n]+ -> channel(HIDDEN);
 
 /* Match anything */
-ANY_IGNORE: . ;
+/* ANY_IGNORE: . ; */
 
 

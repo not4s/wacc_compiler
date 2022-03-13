@@ -23,4 +23,19 @@ class WACCStruct(
         }
         return (other as WStruct).identifier == this.identifier
     }
+
+    override fun hashCode(): Int {
+        return identifier.hashCode()
+    }
+}
+
+class WACCStructElem(
+    identifier: String,
+    private val elem: String,
+    override val st: SymbolTable,
+    override val type: WAny
+) : LHS, WStruct(identifier), Expr {
+    override fun toString(): String {
+        return "($type) $identifier.$elem"
+    }
 }

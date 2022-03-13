@@ -201,6 +201,7 @@ class ExprVisitor(
                 // Delegate to RHS visitor of literals
                 RHSVisitor(data, registerProvider, funcPool).visit(ctx)
             }
+            is WACCStructElem -> TODO("WACCStructElem not implemented yet")
         }
 
     }

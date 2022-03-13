@@ -121,7 +121,7 @@ class StatVisitor(
             else -> throw Exception("Can only read chars or ints")
         }
 
-        return output.plus(PUSH(Register.R0))
+        return output.asSequence().plus(PUSH(Register.R0))
             .plus(MOV(Register.R0, Register.SP))
             .plus(
                 B(readFun)
@@ -136,7 +136,7 @@ class StatVisitor(
                     )
                     else -> TODO()
                 }
-            )
+            ).toList()
 
     }
 

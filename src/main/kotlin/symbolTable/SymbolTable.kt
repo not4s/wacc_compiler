@@ -87,12 +87,6 @@ abstract class SymbolTable(
     ): List<WInstruction>
 
     abstract fun asmAssign(
-        pairSym: String,
-        fst: Boolean, fromRegister: Register,
-        data: DataDeclaration,
-    ): List<WInstruction>
-
-    abstract fun asmAssign(
         arrSym: String,
         indices: Array<Expr>,
         fromRegister: Register,
@@ -110,6 +104,12 @@ abstract class SymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction>
+
+    abstract fun get(
+        structIdent: String,
+        structElem: String,
+        errorMessageBuilder: SemanticErrorMessageBuilder
+    ): WAny
 }
 
 fun typeToByteSize(value: WAny): Int {
