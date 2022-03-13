@@ -13,10 +13,15 @@ class PainterVisitor(WACCParserVisitor):
     def paint_token(self, token, tag):
         ''' Associating tag with token start and end coordinates '''
 
-        line = token.getSymbol().line
-        start = token.getSymbol().start
-        stop = token.getSymbol().stop
-        begin_column = token.getSymbol().column
+        try:
+            actual_token = token.getSymbol()
+        except AttributeError:
+            actual_token = token
+
+        line = actual_token.line
+        start = actual_token.start
+        stop = actual_token.stop
+        begin_column = actual_token.column
         end_column = begin_column + stop - start + 1
 
         start_coord = f"{line}.{begin_column}"
@@ -26,279 +31,203 @@ class PainterVisitor(WACCParserVisitor):
     def paint_keyword(self, token):
         self.paint_token(token, "keyword")
 
-    # Visit a parse tree produced by WACCParser#program.
+    def paint_main_text(self, token):
+        self.paint_token(token, "main text")
+
+    def paint_string(self, token):
+        self.paint_token(token, "string")
+
+    def paint_int(self, token):
+        self.paint_token(token, "int")
+
+    def paint_type(self, token):
+        self.paint_token(token, "type")
+
+    def paint_operator(self, token):
+        self.paint_token(token, "operator")
+
+    def paint_declaration(self, token):
+        self.paint_token(token, "declaration")
+
+    def paint_function(self, token):
+        self.paint_token(token, "function")
+
+    def paint_base_type(self, type_ctx):
+        if isinstance(type_ctx, WACCParser.BaseTypeIntContext):
+            self.paint_type(type_ctx.KW_INT())
+        elif isinstance(type_ctx, WACCParser.BaseTypeBoolContext):
+            self.paint_type(type_ctx.KW_BOOL())
+        elif isinstance(type_ctx, WACCParser.BaseTypeCharContext):
+            self.paint_type(type_ctx.KW_CHAR())
+        elif isinstance(type_ctx, WACCParser.BaseTypeStringContext):
+            self.paint_type(type_ctx.KW_STRING())
+        else:
+            raise TypeError(f"Incorrect type context {type(type_ctx)}")
+
+    def paint_array_type(self, type_ctx):
+        if isinstance(type_ctx, WACCParser.ArrayTypeBaseTypeContext):
+            self.paint_base_type(type_ctx.baseType())
+        elif isinstance(type_ctx, WACCParser.ArrayTypeArrayTypeContext):
+            self.paint_array_type(type_ctx.arrayType())
+        elif isinstance(type_ctx, WACCParser.ArrayTypePairTypeContext):
+            self.paint_pair_type(type_ctx.pairType())
+        else:
+            raise TypeError(f"Incorrect type context {type(type_ctx)}")
+
+    def paint_pair_type(self, type_ctx):
+        self.paint_type(type_ctx.KW_PAIR())
+        for elem in [type_ctx.left, type_ctx.right]:
+            if isinstance(elem, WACCParser.PairElemTypeBaseTypeContext):
+                self.paint_base_type(elem.baseType())
+            elif isinstance(elem, WACCParser.PairElemTypeArrayTypeContext):
+                self.paint_array_type(elem.arrayType())
+            elif isinstance(elem, WACCParser.PairElemTypeKwPairContext):
+                self.paint_type(elem.KW_PAIR())
+            else:
+                raise TypeError(f"Incorrect type context {type(elem)}")
+
     def visitProgram(self, ctx:WACCParser.ProgramContext):
         self.paint_keyword(ctx.KW_BEGIN())
         self.paint_keyword(ctx.KW_END())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#typeBaseType.
     def visitTypeBaseType(self, ctx:WACCParser.TypeBaseTypeContext):
+        self.paint_base_type(ctx.baseType())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#typeArrayType.
     def visitTypeArrayType(self, ctx:WACCParser.TypeArrayTypeContext):
+        self.paint_array_type(ctx.arrayType())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#typePairType.
     def visitTypePairType(self, ctx:WACCParser.TypePairTypeContext):
+        self.paint_pair_type(ctx.pairType())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#arrayTypeArrayType.
-    def visitArrayTypeArrayType(self, ctx:WACCParser.ArrayTypeArrayTypeContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#arrayTypeBaseType.
-    def visitArrayTypeBaseType(self, ctx:WACCParser.ArrayTypeBaseTypeContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#arrayTypePairType.
-    def visitArrayTypePairType(self, ctx:WACCParser.ArrayTypePairTypeContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#arrayElem.
-    def visitArrayElem(self, ctx:WACCParser.ArrayElemContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#arrayLiterAssignRhs.
     def visitArrayLiterAssignRhs(self, ctx:WACCParser.ArrayLiterAssignRhsContext):
+        for comma in ctx.SYM_COMMA():
+            self.paint_keyword(comma)
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#pairElemFst.
     def visitPairElemFst(self, ctx:WACCParser.PairElemFstContext):
+        self.paint_operator(ctx.KW_FST())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#pairElemSnd.
     def visitPairElemSnd(self, ctx:WACCParser.PairElemSndContext):
+        self.paint_operator(ctx.KW_SND())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#pairType.
     def visitPairType(self, ctx:WACCParser.PairTypeContext):
+        self.paint_type(ctx.KW_PAIR())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#pairElemTypeBaseType.
     def visitPairElemTypeBaseType(self, ctx:WACCParser.PairElemTypeBaseTypeContext):
+        self.paint_base_type(ctx.baseType())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#pairElemTypeArrayType.
     def visitPairElemTypeArrayType(self, ctx:WACCParser.PairElemTypeArrayTypeContext):
+        self.paint_array_type(ctx.arrayType())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#pairElemTypeKwPair.
     def visitPairElemTypeKwPair(self, ctx:WACCParser.PairElemTypeKwPairContext):
+        self.paint_type(ctx.KW_PAIR())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#baseTypeInt.
-    def visitBaseTypeInt(self, ctx:WACCParser.BaseTypeIntContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#baseTypeBool.
-    def visitBaseTypeBool(self, ctx:WACCParser.BaseTypeBoolContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#baseTypeChar.
-    def visitBaseTypeChar(self, ctx:WACCParser.BaseTypeCharContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#baseTypeString.
-    def visitBaseTypeString(self, ctx:WACCParser.BaseTypeStringContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#literalInteger.
     def visitLiteralInteger(self, ctx:WACCParser.LiteralIntegerContext):
+        self.paint_int(ctx.INTEGER())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#literalBoolean.
     def visitLiteralBoolean(self, ctx:WACCParser.LiteralBooleanContext):
+        self.paint_int(ctx.value)
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#literalChar.
     def visitLiteralChar(self, ctx:WACCParser.LiteralCharContext):
+        self.paint_string(ctx.CHAR())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#literalString.
     def visitLiteralString(self, ctx:WACCParser.LiteralStringContext):
+        self.paint_string(ctx.STRING())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#literalPair.
     def visitLiteralPair(self, ctx:WACCParser.LiteralPairContext):
+        self.paint_keyword(ctx.KW_NULL())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#exprBracket.
-    def visitExprBracket(self, ctx:WACCParser.ExprBracketContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#exprBinary.
     def visitExprBinary(self, ctx:WACCParser.ExprBinaryContext):
+        self.paint_operator(ctx.binOp)
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#exprArrayElem.
-    def visitExprArrayElem(self, ctx:WACCParser.ExprArrayElemContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#exprIdentifier.
-    def visitExprIdentifier(self, ctx:WACCParser.ExprIdentifierContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#exprUnary.
     def visitExprUnary(self, ctx:WACCParser.ExprUnaryContext):
+        self.paint_operator(ctx.unOp)
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#exprLiteral.
-    def visitExprLiteral(self, ctx:WACCParser.ExprLiteralContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#assignLhsExpr.
-    def visitAssignLhsExpr(self, ctx:WACCParser.AssignLhsExprContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#assignLhsArrayElem.
-    def visitAssignLhsArrayElem(self, ctx:WACCParser.AssignLhsArrayElemContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#assignLhsPairElem.
-    def visitAssignLhsPairElem(self, ctx:WACCParser.AssignLhsPairElemContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#assignRhsExpr.
-    def visitAssignRhsExpr(self, ctx:WACCParser.AssignRhsExprContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#assignRhsArrayLiter.
-    def visitAssignRhsArrayLiter(self, ctx:WACCParser.AssignRhsArrayLiterContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#assignRhsNewPair.
     def visitAssignRhsNewPair(self, ctx:WACCParser.AssignRhsNewPairContext):
+        self.paint_keyword(ctx.KW_NEWPAIR())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#assignRhsPairElem.
-    def visitAssignRhsPairElem(self, ctx:WACCParser.AssignRhsPairElemContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#assignRhsCall.
     def visitAssignRhsCall(self, ctx:WACCParser.AssignRhsCallContext):
+        self.paint_keyword(ctx.KW_CALL())
+        self.paint_function(ctx.IDENTIFIER())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#argList.
-    def visitArgList(self, ctx:WACCParser.ArgListContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#statInit.
-    def visitStatInit(self, ctx:WACCParser.StatInitContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#statWhileDo.
     def visitStatWhileDo(self, ctx:WACCParser.StatWhileDoContext):
+        self.paint_keyword(ctx.KW_WHILE())
+        self.paint_keyword(ctx.KW_DO())
+        self.paint_keyword(ctx.KW_DONE())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statRead.
     def visitStatRead(self, ctx:WACCParser.StatReadContext):
+        self.paint_keyword(ctx.KW_READ())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statBeginEnd.
     def visitStatBeginEnd(self, ctx:WACCParser.StatBeginEndContext):
+        self.paint_keyword(ctx.KW_BEGIN())
+        self.paint_keyword(ctx.KW_END())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statFree.
     def visitStatFree(self, ctx:WACCParser.StatFreeContext):
+        self.paint_keyword(ctx.KW_FREE())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statPrint.
     def visitStatPrint(self, ctx:WACCParser.StatPrintContext):
+        self.paint_keyword(ctx.KW_PRINT())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statPrintln.
     def visitStatPrintln(self, ctx:WACCParser.StatPrintlnContext):
+        self.paint_keyword(ctx.KW_PRINTLN())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statExit.
     def visitStatExit(self, ctx:WACCParser.StatExitContext):
+        self.paint_keyword(ctx.KW_EXIT())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statStore.
-    def visitStatStore(self, ctx:WACCParser.StatStoreContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#statJoin.
     def visitStatJoin(self, ctx:WACCParser.StatJoinContext):
+        self.paint_function(ctx.SYM_SEMICOLON())
         return self.visitChildren(ctx)
 
     def visitStatSkip(self, ctx:WACCParser.StatSkipContext):
         self.paint_keyword(ctx.KW_SKIP())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statReturn.
     def visitStatReturn(self, ctx:WACCParser.StatReturnContext):
+        self.paint_keyword(ctx.KW_RETURN())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#statIfThenElse.
     def visitStatIfThenElse(self, ctx:WACCParser.StatIfThenElseContext):
+        self.paint_keyword(ctx.KW_IF())
+        self.paint_keyword(ctx.KW_THEN())
+        self.paint_keyword(ctx.KW_ELSE())
+        self.paint_keyword(ctx.KW_FI())
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#param.
-    def visitParam(self, ctx:WACCParser.ParamContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by WACCParser#paramList.
     def visitParamList(self, ctx:WACCParser.ParamListContext):
+        for comma in ctx.SYM_COMMA():
+            self.paint_function(comma)
         return self.visitChildren(ctx)
 
-
-    # Visit a parse tree produced by WACCParser#func.
     def visitFunc(self, ctx:WACCParser.FuncContext):
+        self.paint_keyword(ctx.KW_IS())
+        self.paint_keyword(ctx.KW_END())
+        self.paint_declaration(ctx.IDENTIFIER())
         return self.visitChildren(ctx)
 
 

@@ -107,6 +107,9 @@ class CodeText(tk.Text):
 
         self.tag_configure("keyword", foreground=code_theme['keyword'])
         self.tag_configure("main text", foreground=code_theme['main_font_col'])
+        self.tag_configure("declaration", foreground=code_theme['declaration'])
+        self.tag_configure("operator", foreground=code_theme['operator'])
+        self.tag_configure("type", foreground=code_theme['type'])
         self.tag_configure("comment", foreground=code_theme['comment'])
         self.tag_configure("string", foreground=code_theme['string_literal'])
         self.tag_configure("int", foreground=code_theme['int_literal'])
@@ -115,7 +118,6 @@ class CodeText(tk.Text):
 
     def update_highlight(self):
         self.painter.paint()
-
 
     def handle_events(self, triggerer_count):
         if triggerer_count != self.event_counter:
