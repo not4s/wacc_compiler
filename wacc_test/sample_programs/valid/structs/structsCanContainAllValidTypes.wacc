@@ -21,6 +21,8 @@ begin
   # pairs
     pair(int, char) p1;
     pair(string, string) p2;
+  # other structs
+    struct miniStruct ms ;
   end
   struct miniStruct begin
     bool b;
