@@ -1,0 +1,22 @@
+# given a struct you may create a variable of that type
+# futher, you may assign a value of the correct type to any of its elements
+
+# Output:
+
+# Output:
+
+# Program:
+
+begin
+  struct Name begin
+    string first_name ;
+    string second_name ;
+    int age ;
+  end
+  struct Name developer ;
+  developer.first_name = "Anton" ;
+  developer.second_name = "Zhitomirsky" ;
+  developer.age = 19 ;
+  # wait one year
+  developer.age = developer.age + 1
+end

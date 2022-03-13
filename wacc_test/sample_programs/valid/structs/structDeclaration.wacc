@@ -1,0 +1,14 @@
+# given a struct you may create a variable of that type
+
+# Output:
+
+# Output:
+
+# Program:
+
+begin
+  struct MyStruct begin
+    int elem;
+  end
+  struct MyStruct _my_abstract_var_name_
+end

@@ -1,6 +1,7 @@
 package symbolTable
 
 import ast.Expr
+import ast.WACCStruct
 import codegen.ExprVisitor
 import codegen.FunctionPool
 import codegen.RegisterProvider
@@ -9,6 +10,7 @@ import instructions.misc.*
 import instructions.operations.*
 import semantic.SemanticChecker
 import utils.SemanticErrorMessageBuilder
+import utils.SemanticException
 import waccType.*
 
 class ParentRefSymbolTable(
@@ -63,6 +65,41 @@ class ParentRefSymbolTable(
                 ?: throw Exception("Semantic checker failed to detect null parent table")
         }
         return arrayTypeChecking(prev, indices, errorMessageBuilder)
+    }
+
+    override fun get(
+        structIdent: String,
+        structElems: List<String>,
+        errorMessageBuilder: SemanticErrorMessageBuilder
+    ): WAny {
+        // is the struct identifier in the scope?
+        val structType = get(structIdent, errorMessageBuilder)
+        if (structType !is WACCStruct) {
+            throw Exception("Expected type WACCStruct but got ${structType::class} instead")
+        }
+        // is the elem a part of the struct?
+        var terminalType = structType
+        for (i in structElems.indices) {
+            if ((terminalType as WACCStruct).params.containsKey(structElems[i])) {
+                if (i == structElems.size - 1) {
+                    // if this is the last element, then it is the terminal node, no need to get
+                    return terminalType.params[structElems[i]]!!
+                } else {
+                    // if this isn't the last element, then it HAS to be a struct, and therefore
+                    // we must get the original WACC struct definition in the symbol table
+                    terminalType = get(
+                        (terminalType.params[structElems[i]]!! as WStruct).identifier,
+                        errorMessageBuilder
+                    )
+                }
+            } else {
+                errorMessageBuilder.elementDoesntExistInStruct(
+                    structIdent,
+                    structElems.subList(0, i+1).reduce { a, b -> "$a.$b" }).buildAndPrint()
+                throw SemanticException("Element doesn't exist in struct")
+            }
+        }
+        throw Exception("unreachable")
     }
 
     override fun getMap(): Map<String, WAny> {
@@ -215,7 +252,8 @@ class ParentRefSymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        val isSmall = typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
+        val isSmall =
+            typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
         //    save the fromRegister somewhere somehow in-case it gets overwritten by any of
         //    the indices' evaluation operations
         val saveFromRegister = PUSH(fromRegister, data)
@@ -254,16 +292,11 @@ class ParentRefSymbolTable(
             .toList()
     }
 
-    override fun asmAssign(
-        pairSym: String,
-        fst: Boolean,
-        fromRegister: Register,
-        data: DataDeclaration,
+    override fun asmGet(
+        symbol: String,
+        toRegister: Register,
+        data: DataDeclaration
     ): List<WInstruction> {
-        TODO("Not yet implemented")
-    }
-
-    override fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
         var offset = -data.spOffset + forceOffset
         var isSmall = false
@@ -316,7 +349,8 @@ class ParentRefSymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        val isSmall = typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
+        val isSmall =
+            typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
         val translatingExpressions = indices.reversed().map {
             ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.R0, data))
         }.flatten()
