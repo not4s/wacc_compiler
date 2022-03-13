@@ -95,7 +95,7 @@ class ParentRefSymbolTable(
             } else {
                 errorMessageBuilder.elementDoesntExistInStruct(
                     structIdent,
-                    structElems.subList(0, i).reduce { a, b -> "$a.$b" }).buildAndPrint()
+                    structElems.subList(0, i+1).reduce { a, b -> "$a.$b" }).buildAndPrint()
                 throw SemanticException("Element doesn't exist in struct")
             }
         }
