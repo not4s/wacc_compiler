@@ -323,8 +323,6 @@ valid/while:
 
 ########## EXTENSION TESTS ##########
 
-<<<<<<< Updated upstream
-=======
 .invalid/semanticErr/structs:
   stage: extension
   interruptible: true
