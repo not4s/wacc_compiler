@@ -1,6 +1,7 @@
 package symbolTable
 
 import ast.Expr
+import ast.WACCStruct
 import codegen.FunctionPool
 import codegen.RegisterProvider
 import instructions.WInstruction
@@ -120,6 +121,7 @@ fun typeToByteSize(value: WAny): Int {
         is WBool, is WChar -> 1
         is WInt, is WStr, is WArray -> 4
         is WPair, is IncompleteWPair -> 4
+        is WStruct -> 4
         else -> 0
     }
 }

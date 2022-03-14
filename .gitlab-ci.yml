@@ -339,6 +339,7 @@ valid/structs:
     - cd wacc_test
     - ./testOutputOne -e sample_programs/valid/structs/basicStruct.wacc
     - ./testOutputOne -e sample_programs/valid/structs/inlineStructIsFineIGuess.wacc
+    - ./testOutputOne -e sample_programs/valid/structs/structDeclaration.wacc
 #    - ./testOutputDir.sh -e "sample_programs/valid/structs/*.wacc"
 
 invalid/semanticErr/structs:
