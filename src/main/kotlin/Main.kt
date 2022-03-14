@@ -1,6 +1,9 @@
 import antlr.WACCLexer
 import antlr.WACCParser
 import ast.ProgramAST
+import codegen.ProgramVisitor
+import codegen.WInstrToString.Companion.translateInstructions
+import instructions.misc.DataDeclaration
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import semantic.ASTProducer
@@ -33,13 +36,14 @@ fun main(args: Array<String>) {
     val ast: ProgramAST
     try {
         ast = ASTProducer(ParentRefSymbolTable(file.absolutePath)).visit(tree) as ProgramAST
-//        println(ast)
     } catch (e: SemanticException) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
-
-//    val instructions = ProgramVisitor(DataDeclaration()).visit(ast)
-//    val code = translateInstructions(instructions)
-//    println(code)
+    // skip code generation for extension files before they are implemented
+    if(!file.absolutePath.contains("struct")) {
+        val instructions = ProgramVisitor(DataDeclaration()).visit(ast)
+        val code = translateInstructions(instructions)
+        println(code)
+    }
 }
