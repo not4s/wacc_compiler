@@ -3,8 +3,10 @@ from tkinter import *
 from tkinter.filedialog import asksaveasfile, askopenfile
 from tkinter.messagebox import showerror
 from tkinter import messagebox
+from tkinter import ttk
 
 from widgets import *
+from style import configure_styles
 
 
 FILE_NAME = tkinter.NONE
@@ -49,8 +51,10 @@ def about():
 
 
 root = tkinter.Tk()
-root.title("WACCCode")
 
+configure_styles(root)
+
+root.title("WACCCode")
 root.minsize(width=800, height=800)
 root.maxsize(width=800, height=800)
 
