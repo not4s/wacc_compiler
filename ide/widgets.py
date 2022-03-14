@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
+from tkinter import font as tk_font
 
 import sys
 
@@ -103,8 +104,12 @@ class CodeText(tk.Text):
         # return what the actual widget returned
         return result
 
-    def configure_syntax_highlight(self):
+    def configure_style(self):
         self.configure(**code_frame_style)
+
+        # Setting tab size to 2 spaces
+        tab = tk_font.Font(font=self['font']).measure('  ')
+        self.config(tabs=tab)
 
         # Current line highlight
         self.tag_configure("current_line", background=code_theme['current_line'])
@@ -141,11 +146,12 @@ class CodeText(tk.Text):
         self.tag_add("current_line", "insert linestart", "insert lineend+1c")
 
     def _copy_current_line(self, event):
+        self.clipboard_clear()
+        self.clipboard_append(self.get("insert linestart", "insert lineend+1c"))
         print("\n\nCOPIED LINE\n\n")
 
     def _cut_current_line(self, event):
-        self.clipboard_clear()
-        self.clipboard_append(self.get("insert linestart", "insert lineend+1c"))
+        self._copy_current_line(event)
         self.delete("insert linestart", "insert lineend+1c")
 
         self.event_generate("<<CursorLineUpdate>>")
@@ -164,7 +170,7 @@ class CodeFrame(ttk.Frame):
         self.text.configure(yscrollcommand=self.scrollbar_v.set)
         self.text.configure(xscrollcommand=self.scrollbar_h.set)
 
-        self.text.configure_syntax_highlight()
+        self.text.configure_style()
         self.text['font'] = get_default_font()
 
         self.linenumbers = TextLineNumbers(self)
