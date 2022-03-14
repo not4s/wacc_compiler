@@ -3,6 +3,7 @@ import antlr.WACCParser
 import ast.ProgramAST
 import codegen.ProgramVisitor
 import codegen.WInstrToString.Companion.translateInstructions
+import codegen.InstructionEvaluation.Companion.evaluateInstructions
 import instructions.misc.DataDeclaration
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
@@ -42,8 +43,9 @@ fun main(args: Array<String>) {
     }
 
     val instructions = ProgramVisitor(DataDeclaration()).visit(ast)
+    val optimised_instructions = evaluateInstructions(instructions)
 
-    val code = translateInstructions(instructions)
+    val code = translateInstructions(optimised_instructions)
 
     println(code)
 }
