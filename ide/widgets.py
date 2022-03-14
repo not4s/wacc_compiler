@@ -63,15 +63,12 @@ class CodeText(tk.Text):
 
         self.event_counter = 0
         self.bind("<<TextModified>>", self._on_change)
-
+        self.bind("<<CopyCommand>>", self._copy_current_line)
+        self.bind("<<CutCommand>>", self._cut_current_line)
 
     def _proxy(self, command, *args):
 
-        # let the actual widget perform the requested action
-        cmd = (self._orig, command) + args
-        result = self.tk.call(cmd)
-
-        # print(args, command)
+        print(args, command)
 
         # generate an event if something was added or deleted,
         # or the cursor position changed
@@ -84,21 +81,21 @@ class CodeText(tk.Text):
         ):
             self.event_generate("<<Change>>", when="tail")
 
-        # avoid error when copying
-        if (command == 'get' and
-            (args[0] == 'sel.first' and args[1] == 'sel.last') and
-            not self.tag_ranges('sel')
-        ):
-            return
-            # return result
+        if args[0:2] == ('set', 'insert'):
+            self._highlight_current_line()
 
-        # avoid error when deleting
-        if (command == 'delete' and
-            (args[0] == 'sel.first' and args[1] == 'sel.last') and
-            not self.tag_ranges('sel')
-        ):
-            return
-            # return result
+        # Handling copy and cut commands (^C and ^X)
+        if args[0] == 'sel.first' and args[1] == 'sel.last':
+            if not self.tag_ranges('sel'):
+                if command == 'get':
+                    self.event_generate('<<CopyCommand>>')
+                elif command == 'delete':
+                    self.event_generate('<<CutCommand>>')
+                return
+
+        # let the actual widget perform the requested action
+        cmd = (self._orig, command) + args
+        result = self.tk.call(cmd)
 
         if command in ('insert', 'delete', 'replace'):
             self.event_generate('<<TextModified>>')
@@ -109,6 +106,9 @@ class CodeText(tk.Text):
 
     def configure_syntax_highlight(self):
         self.configure(**code_frame_style)
+
+        # Current line highlight
+        self.tag_configure("current_line", background=code_theme['current_line'])
 
         self.tag_configure("keyword", foreground=code_theme['keyword'])
         self.tag_configure("main text", foreground=code_theme['main_font_col'])
@@ -135,6 +135,16 @@ class CodeText(tk.Text):
 
         if (self.event_counter >= sys.maxsize):
             self.event_counter = 0
+
+    def _highlight_current_line(self):
+        self.tag_remove("current_line", 1.0, "end")
+        self.tag_add("current_line", "insert linestart", "insert lineend+1c")
+
+    def _copy_current_line(self, event):
+        print("\n\nCOPIED LINE\n\n")
+
+    def _cut_current_line(self, event):
+        print("\n\nCUT LINE\n\n")
 
 
 class CodeFrame(ttk.Frame):
