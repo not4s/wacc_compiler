@@ -36,7 +36,8 @@ def compareStrings(correct: str, received: str) -> str:
 # assumes that the user won't be printing an numbers in the same format as the
 # address, i.e. 0x[0-9]+ = .*
 def removeAddressOccurances(consoleOutput: str) -> str:
-    return re.sub( "0x[a-f0-9]+", '', consoleOutput)
+    output = re.sub("0x[a-f0-9]+", '', consoleOutput)
+    return re.sub("#addrs#", '', output)
 
 # goes to the wacc_test directory and returns the previous working directory
 # assumes that wacc_test is a parent on the cwd
@@ -68,8 +69,14 @@ def extractGoodStuffFromWaccExtensionFile():
     if EXTENSION_OUTPUT_SPLIT not in wacc_sourceCode:
         print(f"all extension files must contain the line '{EXTENSION_OUTPUT_SPLIT}(.*){EXTENSION_OUTPUT_SPLIT}' to indicate desired output from assembly")
         sys.exit(-1)
+    
     exit_code = getExitCodeFromWaccFile()
-    output = re.search(rf'{EXTENSION_OUTPUT_SPLIT}\n(.*)\n{EXTENSION_OUTPUT_SPLIT}', wacc_sourceCode).group(1) 
+    output = re.search(rf'{EXTENSION_OUTPUT_SPLIT}((.*\n)*){EXTENSION_OUTPUT_SPLIT}', wacc_sourceCode).group(1) 
+    # trim comments from predicted output
+    # assume that the form of output is always ('# (content)\n')*
+    output = re.sub( "# ", '', output)
+    output = removeAddressOccurances(output)
+
     return output, exit_code
 
 def getExitCodeFromWaccFile() -> int:
@@ -122,11 +129,11 @@ def compareAssembly() -> str:
     return compareStrings(refCompiler_assembly_output, wacc_assembly)
 
 def compareExtensionOutput() -> str:
+    predicted_output, predicted_exit_code = extractGoodStuffFromWaccExtensionFile()
+    
     # emulate WACC assembly code
     wacc_output = emulateAssembly()
-
-    predicted_output, predicted_exit_code = extractGoodStuffFromWaccExtensionFile()
-
+    
     # Append exit code returned to the end
     predicted_output += f"\nExit code returned: {predicted_exit_code}"
 
@@ -219,9 +226,7 @@ else:
     # the file presented is an extension project. The refcompiler must not be used.
     # there is no trivial way of comparing the assembly output so assume that only the output is
     # to be compared
-    with open(test_name + '.s', 'r') as f:
-        contents = f.read()
-    if(len(contents) > 0):
+    if(len(wacc_sourceCode) > 0):
         diff = compareExtensionOutput()
         if len(diff) != 0:
             fail = True
