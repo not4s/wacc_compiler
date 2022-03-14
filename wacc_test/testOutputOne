@@ -69,9 +69,9 @@ def extractGoodStuffFromWaccExtensionFile():
     if EXTENSION_OUTPUT_SPLIT not in wacc_sourceCode:
         print(f"all extension files must contain the line '{EXTENSION_OUTPUT_SPLIT}(.*){EXTENSION_OUTPUT_SPLIT}' to indicate desired output from assembly")
         sys.exit(-1)
-    
+
     exit_code = getExitCodeFromWaccFile()
-    output = re.search(rf'{EXTENSION_OUTPUT_SPLIT}((.*\n)*){EXTENSION_OUTPUT_SPLIT}', wacc_sourceCode).group(1) 
+    output = re.search(rf'{EXTENSION_OUTPUT_SPLIT}((.*\n)*){EXTENSION_OUTPUT_SPLIT}', wacc_sourceCode).group(1)
     # trim comments from predicted output
     # assume that the form of output is always ('# (content)\n')*
     output = re.sub( "# ", '', output)
@@ -98,7 +98,7 @@ def emulateAssembly() -> str:
         print(f"WARNING: The file {test_name} could not be decoded (utf-8?)")
         wacc_emulated_output = ""
         wacc_exit_code = -1
-    return wacc_emulated_output + f"\nExit code returned: {wacc_exit_code}"
+    return wacc_emulated_output + f"\nExit code returned: {wacc_exit_code}\n"
 
 # check that the output from the program is the same
 def compareOutput() -> str:
@@ -112,7 +112,7 @@ def compareOutput() -> str:
     navigateToDirectory(prevDirectory)
 
     # Append exit code returned to the end
-    refCompiler_emulated_output += f"\nExit code returned: {ref_exit_code}"
+    refCompiler_emulated_output += f"\nExit code returned: {ref_exit_code}\n"
 
     return compareStrings(removeAddressOccurances(refCompiler_emulated_output), removeAddressOccurances(wacc_emulated_output))
 
@@ -130,10 +130,10 @@ def compareAssembly() -> str:
 
 def compareExtensionOutput() -> str:
     predicted_output, predicted_exit_code = extractGoodStuffFromWaccExtensionFile()
-    
+
     # emulate WACC assembly code
     wacc_output = emulateAssembly()
-    
+
     # Append exit code returned to the end
     predicted_output += f"\nExit code returned: {predicted_exit_code}"
 

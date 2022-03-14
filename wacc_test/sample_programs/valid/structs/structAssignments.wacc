@@ -1,8 +1,10 @@
 # given a struct you may create a variable of that type
-# futher, you may assign a value of the correct type to any of its elements
+# further, you may assign a value of the correct type to any of its elements
 
 # Output:
-
+# Developers name is: Anton Zhitomirsky
+# Developers age is 19
+# Developers age is 20
 # Output:
 
 # Program:
@@ -17,6 +19,14 @@ begin
   developer.first_name = "Anton" ;
   developer.second_name = "Zhitomirsky" ;
   developer.age = 19 ;
+  print "Developers name is " ;
+  print developer.first_name ;
+  print " " ;
+  println developer.second_name ;
+  print "Developers age is " ;
+  println developer.age ;
   # wait one year
-  developer.age = 20 # TODO: change to [developer.age + 1]
+  developer.age = 20 ; # TODO: change to [developer.age + 1]
+  print "Developers age is " ;
+  println developer.age
 end

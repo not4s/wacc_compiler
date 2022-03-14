@@ -1,7 +1,6 @@
 package symbolTable
 
 import ast.Expr
-import ast.WACCStruct
 import codegen.FunctionPool
 import codegen.RegisterProvider
 import instructions.WInstruction
@@ -10,6 +9,7 @@ import instructions.misc.Register
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
+import javax.imageio.spi.RegisterableService
 
 abstract class SymbolTable(
     var isGlobal: Boolean,
@@ -96,7 +96,12 @@ abstract class SymbolTable(
         functionPool: FunctionPool
     ): List<WInstruction>
 
-    abstract fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction>
+    abstract fun asmGet(
+        symbol: String,
+        toRegister: Register,
+        data: DataDeclaration
+    ): List<WInstruction>
+
     abstract fun asmGet(
         arrSym: String,
         indices: Array<Expr>,
@@ -106,7 +111,16 @@ abstract class SymbolTable(
         functionPool: FunctionPool
     ): List<WInstruction>
 
-    abstract fun get(
+    abstract fun asmGet(
+        symbol: String,
+        elem: List<String>,
+        toRegister: Register,
+        registerProvider: RegisterProvider,
+        data: DataDeclaration,
+        functionPool: FunctionPool
+    ): List<WInstruction>
+
+    abstract fun getStructElemType(
         structIdent: String,
         structElems: List<String>,
         errorMessageBuilder: SemanticErrorMessageBuilder

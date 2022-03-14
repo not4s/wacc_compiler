@@ -34,7 +34,7 @@ class WACCStruct(
 
 class WACCStructElem(
     identifier: String,
-    private val elems: List<String>,
+    val elems: List<String>,
     override val st: SymbolTable,
     override val type: WAny
 ) : LHS, WStruct(identifier), Expr {

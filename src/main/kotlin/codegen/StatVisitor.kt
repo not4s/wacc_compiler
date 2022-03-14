@@ -53,7 +53,10 @@ class StatVisitor(
     private fun visitDeclarationStat(ctx: StructDeclarationStat): List<WInstruction> {
         // calculate size of struct
         val sizeOfStruct: Int = (ctx.type as WACCStruct).params.entries.sumOf { (_, type) -> typeToByteSize(type) }
-        return listOf(LDR(Register.R0, LoadImmediate(sizeOfStruct)), B(MALLOC))
+        // declaring a struct and storing the address into the stack
+        return listOf(LDR(Register.R0, LoadImmediate(sizeOfStruct)), B(MALLOC)).plus(
+            ctx.st.asmAssign(ctx.identifier, Register.R0, data, ctx.type)
+        )
     }
 
     private fun visitFreeStat(ctx: FreeStat): List<WInstruction> {

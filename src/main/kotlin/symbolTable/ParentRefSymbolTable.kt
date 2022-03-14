@@ -67,7 +67,7 @@ class ParentRefSymbolTable(
         return arrayTypeChecking(prev, indices, errorMessageBuilder)
     }
 
-    override fun get(
+    override fun getStructElemType(
         structIdent: String,
         structElems: List<String>,
         errorMessageBuilder: SemanticErrorMessageBuilder
@@ -95,7 +95,7 @@ class ParentRefSymbolTable(
             } else {
                 errorMessageBuilder.elementDoesntExistInStruct(
                     structIdent,
-                    structElems.subList(0, i+1).reduce { a, b -> "$a.$b" }).buildAndPrint()
+                    structElems.subList(0, i + 1).reduce { a, b -> "$a.$b" }).buildAndPrint()
                 throw SemanticException("Element doesn't exist in struct")
             }
         }
@@ -381,6 +381,41 @@ class ParentRefSymbolTable(
             .plus(restoringIndices)
             .plus(MOV(toRegister, Register.R4))
             .toList()
+    }
+
+    override fun asmGet(
+        symbol: String,
+        elem: List<String>,
+        toRegister: Register,
+        registerProvider: RegisterProvider,
+        data: DataDeclaration,
+        functionPool: FunctionPool
+    ): List<WInstruction> {
+        // first working with immediate elements, not nested struct elements.
+        // get the address of the struct from the stack.
+        val addressOfStruct = registerProvider.get()
+        val getAddressOfStruct = asmGet(symbol, addressOfStruct, data)
+        // calculate the position of the element(s) from the stack
+        val offsetOfElement = getOffset(get(symbol, SemanticErrorMessageBuilder()) as WACCStruct, elem[0])
+        // add the offset into destination register, which will contain the value of the element
+        val addressOfElem = ADD(toRegister, addressOfStruct, Immediate(offsetOfElement))
+        registerProvider.ret()
+        val addressOfStructElem = getAddressOfStruct.plus(addressOfElem)
+        return addressOfStructElem
+    }
+
+    private fun getOffset(
+        struct: WACCStruct,
+        elem: String
+    ): Int {
+        var offset = 0
+        for (element in struct.params) {
+            if (element.key == elem) {
+                break;
+            }
+            offset += typeToByteSize(element.value)
+        }
+        return offset
     }
 
 
