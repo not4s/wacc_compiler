@@ -78,60 +78,77 @@ class ExprVisitor(
                 val reg1 = Register.R0
                 val reg2 = Register.R1
 
-                // // Evaluate expressions with constants at compile-time
-                // constant_evaluation@
-                // while(ctx.left is Literal && ctx.right is Literal) {
+                // Evaluate expressions with constants at compile-time
+                constant_evaluation@
+                while(ctx.left is Literal && ctx.right is Literal) {
 
-                //     // break if it is not the case of int op int or bool op bool
-                //     if(!(ctx.left.type is WInt && ctx.right.type is WInt
-                //             || ctx.left.type is WBool && ctx.right.type is WBool))
-                //         break@constant_evaluation
+                    // break if it is not the case of int op int or bool op bool
+                    if(!(ctx.left.type is WInt && ctx.right.type is WInt
+                            || ctx.left.type is WBool && ctx.right.type is WBool))
+                        break@constant_evaluation
 
-                //     // int op int
-                //     if(ctx.left.type is WInt && ctx.right.type is WInt) {
+                    // int op int
+                    if(ctx.left.type is WInt && ctx.right.type is WInt) {
                         
-                //         val left_val = ctx.left.type.value!!
-                //         val right_val = ctx.right.type.value!!
-                //         val evaluated_constant = when(ctx.op) {
-                //             BinOperator.MUL -> left_val * right_val
-                //             BinOperator.DIV -> left_val / right_val
-                //             BinOperator.MOD -> left_val % right_val
-                //             BinOperator.ADD -> left_val + right_val
-                //             BinOperator.SUB -> left_val - right_val
-                //             else -> 0
-                //         }
-
-                //         return listOf(MOV(Register.R0, Immediate(evaluated_constant)))
-                //     }
+                        val left_val = ctx.left.type.value!!
+                        val right_val = ctx.right.type.value!!
+                        var evaluated_constant = 0
+                        when(ctx.op) {
+                            BinOperator.MUL
+                                    // check for overflows
+                                -> if(left_val * right_val <= Integer.MAX_VALUE 
+                                        && left_val * right_val >= Integer.MIN_VALUE)
+                                    evaluated_constant = left_val + right_val
+                            BinOperator.DIV 
+                                    // check for divide-by-zeros
+                                -> if(right_val != 0)
+                                    evaluated_constant = left_val / right_val
+                            BinOperator.MOD 
+                                    // check for divide-by-zeros
+                                -> if(right_val != 0)
+                                    evaluated_constant = left_val % right_val
+                            BinOperator.ADD 
+                                    // check for overflows
+                                -> if(left_val + right_val <= Integer.MAX_VALUE)
+                                    evaluated_constant = left_val + right_val
+                            BinOperator.SUB 
+                                    // check for overflows
+                                -> if(left_val - right_val >= Integer.MIN_VALUE)
+                                    evaluated_constant = left_val - right_val
+                            else -> error("Unreachable code in ExprVisitor")
+                        }
+                        if(evaluated_constant == 0) break@constant_evaluation
+                        return listOf(MOV(Register.R0, Immediate(evaluated_constant)))
+                    }
                     
-                //     // bool op bool
-                //     if(ctx.left.type is WBool && ctx.right.type is WBool) {
+                    // bool op bool
+                    if(ctx.left.type is WBool && ctx.right.type is WBool) {
 
-                //         val left_val = ctx.left.type.value!!
-                //         val right_val = ctx.right.type.value!!
-                //         val evaluated_constant = when(ctx.op) {
-                //             BinOperator.GT  
-                //                 -> left_val > right_val
-                //             BinOperator.GEQ 
-                //                 -> left_val > right_val || left_val == right_val
-                //             BinOperator.LT  
-                //                 -> left_val < right_val
-                //             BinOperator.LEQ 
-                //                 -> left_val < right_val || left_val == right_val
-                //             BinOperator.EQ  
-                //                 -> left_val == right_val
-                //             BinOperator.NEQ 
-                //                 -> left_val != right_val
-                //             BinOperator.AND 
-                //                 -> left_val && right_val
-                //             BinOperator.OR 
-                //                 -> left_val || right_val
-                //             else -> false
-                //         }
+                        val left_val = ctx.left.type.value!!
+                        val right_val = ctx.right.type.value!!
+                        val evaluated_constant = when(ctx.op) {
+                            BinOperator.GT  
+                                -> left_val > right_val
+                            BinOperator.GEQ 
+                                -> left_val > right_val || left_val == right_val
+                            BinOperator.LT  
+                                -> left_val < right_val
+                            BinOperator.LEQ 
+                                -> left_val < right_val || left_val == right_val
+                            BinOperator.EQ  
+                                -> left_val == right_val
+                            BinOperator.NEQ 
+                                -> left_val != right_val
+                            BinOperator.AND 
+                                -> left_val && right_val
+                            BinOperator.OR 
+                                -> left_val || right_val
+                            else -> false
+                        }
 
-                //         return listOf(MOV(Register.R0, Immediate(btoi(evaluated_constant))))
-                //     }
-                // }
+                        return listOf(MOV(Register.R0, Immediate(btoi(evaluated_constant))))
+                    }
+                }
 
                 val instr =
                     // Evaluate right, result will be in R0. Push this to stack.
@@ -261,6 +278,5 @@ class ExprVisitor(
                 RHSVisitor(data, registerProvider, funcPool).visit(ctx)
             }
         }
-
     }
 }
