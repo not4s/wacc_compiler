@@ -57,7 +57,7 @@ class CodeText(tk.Text):
         self.painter = Painter(self)
 
         # create a proxy for the underlying widget
-        self._orig = self._w + "_oupdate_highlightrig"
+        self._orig = self._w + "_orig"
         self.tk.call("rename", self._w, self._orig)
         self.tk.createcommand(self._w, self._proxy)
 
@@ -65,6 +65,7 @@ class CodeText(tk.Text):
         self.bind("<<TextModified>>", self._on_change)
         self.bind("<<CopyLineCommand>>", self._copy_current_line)
         self.bind("<<CutLineCommand>>", self._cut_current_line)
+        self.bind("<<CursorLineUpdate>>", self._highlight_current_line)
 
     def _proxy(self, command, *args):
         print(args, command)
@@ -79,8 +80,8 @@ class CodeText(tk.Text):
         ):
             self.event_generate("<<Change>>", when="tail")
 
-        if args[0:2] == ('set', 'insert'):
-            self._highlight_current_line()
+        if ('set' in args or command == "see") and 'insert' in args:
+            self.event_generate("<<CursorLineUpdate>>")
 
         # Handling copy and cut commands (^C and ^X)
         if args[0] == 'sel.first' and args[1] == 'sel.last':
@@ -134,7 +135,8 @@ class CodeText(tk.Text):
         if (self.event_counter >= sys.maxsize):
             self.event_counter = 0
 
-    def _highlight_current_line(self):
+    def _highlight_current_line(self, event):
+        print("\n\nUPDATED highlight LINE\n\n")
         self.tag_remove("current_line", '1.0', "end")
         self.tag_add("current_line", "insert linestart", "insert lineend+1c")
 
@@ -145,6 +147,8 @@ class CodeText(tk.Text):
         self.clipboard_clear()
         self.clipboard_append(self.get("insert linestart", "insert lineend+1c"))
         self.delete("insert linestart", "insert lineend+1c")
+
+        self.event_generate("<<CursorLineUpdate>>")
 
 
 class CodeFrame(ttk.Frame):
