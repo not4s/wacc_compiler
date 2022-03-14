@@ -56,7 +56,7 @@ configure_styles(root)
 
 root.title("WACCCode")
 root.minsize(width=800, height=800)
-root.maxsize(width=800, height=800)
+root.resizable(height=True, width=True)
 
 # Menu
 menu_bar = tkinter.Menu(root)
