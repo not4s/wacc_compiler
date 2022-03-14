@@ -15,4 +15,6 @@ begin
   end
   struct A myStruct ;
   myStruct.anotherStruct = struct B
+  myStruct.anotherStruct.someData = 5 ;
+  println myStruct.anotherStruct.someData
 end
