@@ -71,9 +71,11 @@ class CodeText(tk.Text):
         cmd = (self._orig, command) + args
         result = self.tk.call(cmd)
 
+        # print(args, command)
+
         # generate an event if something was added or deleted,
         # or the cursor position changed
-        if (args[0] in ("insert", "replace", "delete", "scroll") or
+        if (args[0] in ("insert", "replace", "delete", "scroll", "moveto") or
             args[0:3] == ("mark", "set", "insert") or
             args[0:2] == ("xview", "moveto") or
             args[0:2] == ("xview", "scroll") or
