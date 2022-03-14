@@ -63,15 +63,13 @@ class CodeText(tk.Text):
 
         self.event_counter = 0
         self.bind("<<TextModified>>", self._on_change)
-        self.bind("<<CopyCommand>>", self._copy_current_line)
-        self.bind("<<CutCommand>>", self._cut_current_line)
+        self.bind("<<CopyLineCommand>>", self._copy_current_line)
+        self.bind("<<CutLineCommand>>", self._cut_current_line)
 
     def _proxy(self, command, *args):
-
         print(args, command)
 
-        # generate an event if something was added or deleted,
-        # or the cursor position changed
+        # generate an event if something was added or deleted or the cursor position changed
         if (args[0] in ("insert", "replace", "delete", "scroll", "moveto") or
             args[0:3] == ("mark", "set", "insert") or
             args[0:2] == ("xview", "moveto") or
@@ -88,9 +86,9 @@ class CodeText(tk.Text):
         if args[0] == 'sel.first' and args[1] == 'sel.last':
             if not self.tag_ranges('sel'):
                 if command == 'get':
-                    self.event_generate('<<CopyCommand>>')
+                    self.event_generate('<<CopyLineCommand>>')
                 elif command == 'delete':
-                    self.event_generate('<<CutCommand>>')
+                    self.event_generate('<<CutLineCommand>>')
                 return
 
         # let the actual widget perform the requested action
@@ -137,14 +135,16 @@ class CodeText(tk.Text):
             self.event_counter = 0
 
     def _highlight_current_line(self):
-        self.tag_remove("current_line", 1.0, "end")
+        self.tag_remove("current_line", '1.0', "end")
         self.tag_add("current_line", "insert linestart", "insert lineend+1c")
 
     def _copy_current_line(self, event):
         print("\n\nCOPIED LINE\n\n")
 
     def _cut_current_line(self, event):
-        print("\n\nCUT LINE\n\n")
+        self.clipboard_clear()
+        self.clipboard_append(self.get("insert linestart", "insert lineend+1c"))
+        self.delete("insert linestart", "insert lineend+1c")
 
 
 class CodeFrame(ttk.Frame):
