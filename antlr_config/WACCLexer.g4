@@ -78,6 +78,7 @@ SYM_SQ_RBRACKET: ']';
 SYM_COMMA: ',';
 SYM_DOUBLEQUOTE: '"' ;
 SYM_SINGLEQUOTE: '\'';
+SYM_PERIOD: '.';
 
 /* Identifier */
 IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
@@ -98,6 +99,6 @@ COMMENT_IGNORE: '#' ~'\n'* '\n' -> skip;
 WS: [ \t\r\n]+ -> channel(HIDDEN);
 
 /* Match anything */
-ANY_IGNORE: . ;
+/* ANY_IGNORE: . ; */
 
 

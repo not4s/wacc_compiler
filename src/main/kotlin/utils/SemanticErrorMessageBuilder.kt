@@ -98,10 +98,6 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return appendSpecificErrorMessage("Cannot redefine struct $structName")
     }
 
-    fun structRedefineError(): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage("Cannot redefine struct")
-    }
-
     fun functionArgumentCountMismatch(
         expectedNum: Int,
         actualNum: Int
@@ -174,21 +170,15 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         )
     }
 
-    fun structUndefinedError(structName: String): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage(
-            "Undefined struct \"$structName\" located"
-        )
-    }
-
-    fun structUndefinedError(): SemanticErrorMessageBuilder {
-        return appendSpecificErrorMessage(
-            "Undefined struct located"
-        )
-    }
-
     fun structContainsDuplicateElements(repeatedIdentifier : String): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
             "Repeated identifier `$repeatedIdentifier` found"
+        )
+    }
+
+    fun elementDoesntExistInStruct(structID: String, nonExistantStructElem : String): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "Tried to access non-existent element ${structID}.${nonExistantStructElem}"
         )
     }
 }

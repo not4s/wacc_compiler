@@ -1,0 +1,16 @@
+# you cannot assign anything to a struct that hasnt been defined
+
+# Output:
+
+# Output:
+
+# Exit: 200
+
+# Program:
+
+begin
+  struct someStruct begin
+    int x ;
+  end
+  someStruct.x = 5
+end

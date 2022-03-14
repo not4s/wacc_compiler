@@ -1,0 +1,15 @@
+# structs' elements can be printed
+
+# Output:
+
+# Output:
+
+# Program:
+
+begin
+    struct MyStruct begin
+        int[] array ;
+    end
+    struct MyStruct myVar ;
+    myVar.array = [1,2,3,4]
+end
