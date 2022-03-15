@@ -111,9 +111,11 @@ class CodeText(tk.Text):
         tab = tk_font.Font(font=self['font']).measure('  ')
         self.config(tabs=tab)
 
-        # Current line highlight
+        # Current line highlight and selection style
         self.tag_configure("current_line", background=code_theme['current_line'])
+        self.tag_raise("sel")
 
+        # Syntax highlight
         self.tag_configure("keyword", foreground=code_theme['keyword'])
         self.tag_configure("main text", foreground=code_theme['main_font_col'])
         self.tag_configure("declaration", foreground=code_theme['declaration'])

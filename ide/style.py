@@ -19,9 +19,9 @@ def configure_styles(root):
 MAIN_FONT_COLOR = '#dfe2f1'
 BACKGROUND_COLOR = '#202746'
 
+# Non Tkinter attributes related to code highlighting
 code_theme = {
     'background': BACKGROUND_COLOR,
-    'current_line': '#293256',
     'comment': '#ff91fa',
     'keyword': '#DD4A68',
     'operator': '#ee9900',
@@ -32,8 +32,12 @@ code_theme = {
     'string_literal': '#669900',
     'int_literal': '#c94922',
     'error': '#9c637a',
+    'current_line': '#374169',
+    'sel_background': '#ffffff',
+    'sel_foreground': '#000000',
 }
 
+# Tkinter attributes
 code_frame_style = {
     'background': BACKGROUND_COLOR,
     'padx': 5,
