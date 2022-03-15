@@ -14,11 +14,11 @@ FILE_NAME = tkinter.NONE
 
 def new_file():
     global FILE_NAME
-    FILE_NAME = "Untitled"
+    FILE_NAME = tkinter.NONE
     code_frame.text.delete('1.0', tkinter.END)
 
 
-def save_file():
+def save_file(event=None):
     data = code_frame.text.get('1.0', tkinter.END)
     out = open(FILE_NAME, 'w')
     out.write(data)
@@ -26,12 +26,21 @@ def save_file():
 
 
 def save_as():
+    global FILE_NAME
     out = asksaveasfile(mode='w', defaultextension='.txt')
+    FILE_NAME = out.name
     data = code_frame.text.get('1.0', tkinter.END)
     try:
         out.write(data.rstrip())
     except Exception:
         showerror(title="Error", message="Saving file error....")
+
+
+def quick_save(event):
+    if FILE_NAME == tkinter.NONE:
+        save_as()
+    else:
+        save_file()
 
 
 def open_file():
@@ -65,6 +74,7 @@ file_menu = tkinter.Menu(menu_bar)
 file_menu.add_command(label="New", command=new_file)
 file_menu.add_command(label="Open", command=open_file)
 file_menu.add_command(label="Save", command=save_file)
+root.bind('<Control-Key-s>', quick_save)
 file_menu.add_command(label="Save as", command=save_as)
 
 menu_bar.add_cascade(label="File", menu=file_menu)
