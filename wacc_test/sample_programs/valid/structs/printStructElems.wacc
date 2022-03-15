@@ -1,0 +1,66 @@
+# structs' elements can be printed
+
+# Output:
+# hello world
+# 42
+# false
+# c
+# #addrs# = {"Hello", "World!"}
+# #addrs# = {4, 2}
+# #addrs# = {true, false}
+# #addrs# = Hello World!
+# #addrs# = (10, a)
+# #addrs# = ("Hello", "World")
+# Overall, this was the struct: #addrs#
+# Output:
+
+# Program:
+
+begin
+  struct myTypes begin
+  # base types
+    string s;
+    int i;
+    bool b;
+    char c;
+  # arrays
+    string[] ss;
+    int[] ints;
+    bool[] bs;
+    char[] cs;
+  # pairs
+    pair(int, char) p1;
+    pair(string, string) p2;
+  # other structs
+    struct miniStruct ms ;
+  end
+  struct miniStruct begin
+    bool b;
+  end
+  struct myTypes ts ;
+  ts.s = "hello world" ;
+  ts.i = 42 ;
+  ts.b = false ;
+  ts.c = 'c' ;
+  ts.ss = ["Hello","World!"] ;
+  ts.ints = [4, 2] ;
+  ts.bs = [true, false] ;
+  ts.cs = ['H','e','l','l','o',' ','W','o','r','l','d','!'] ;
+  ts.p1 = newpair(10, 'a') ;
+  ts.p2 = newpair("Hello","World!") ;
+  struct miniStruct miniS ;
+  ts.ms = miniS ;
+  println ts.s ;
+  println ts.i ;
+  println ts.b ;
+  println ts.c ;
+  println ts.ss ;
+  println ts.ints ;
+  println ts.bs ;
+  println ts.cs ;
+  println ts.p1 ;
+  println ts.p2 ;
+  println ts.ms ;
+  print "Overall, this was the struct: " ;
+  println ts
+end

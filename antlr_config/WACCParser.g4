@@ -5,20 +5,33 @@ options {
 }
 
 program
-  : KW_BEGIN func* stat KW_END EOF
+  : KW_BEGIN (func|struct)* stat KW_END EOF
+  ;
+
+func
+  : type IDENTIFIER SYM_LBRACKET paramList? SYM_RBRACKET KW_IS stat KW_END;
+
+struct
+  : KW_STRUCT IDENTIFIER KW_BEGIN structElems KW_END
   ;
 
 type
   : baseType  #typeBaseType
   | arrayType #typeArrayType
   | pairType #typePairType
+  | structType #typeStructType
   ;
+
 
 /* Need to expand to avoid mutual left-recursion */
 arrayType
   : baseType SYM_SQ_LBRACKET SYM_SQ_RBRACKET #arrayTypeBaseType
   | arrayType SYM_SQ_LBRACKET SYM_SQ_RBRACKET #arrayTypeArrayType
   | pairType SYM_SQ_LBRACKET SYM_SQ_RBRACKET #arrayTypePairType
+  ;
+
+structType
+  : KW_STRUCT IDENTIFIER
   ;
 
 arrayElem
@@ -62,6 +75,7 @@ expr
   : SYM_LBRACKET innerExpr=expr SYM_RBRACKET                   #exprBracket
   | arrayElem                                                  #exprArrayElem
   | literal                                                    #exprLiteral
+  | structElem                                                 #exprStructElem
 
   | unOp=OP_NOT operand=expr                                   #exprUnary
   | unOp=OP_ORD operand=expr                                   #exprUnary
@@ -81,17 +95,23 @@ expr
   ;
 
 assignLhs
-  : IDENTIFIER #assignLhsExpr
-  | arrayElem #assignLhsArrayElem
-  | pairElem #assignLhsPairElem
+  : IDENTIFIER  #assignLhsExpr
+  | arrayElem   #assignLhsArrayElem
+  | pairElem    #assignLhsPairElem
+  | structElem  #assignLhsStructElem
   ;
 
 assignRhs
-  : expr       #assignRhsExpr
+  : expr                                                                   #assignRhsExpr
   | arrayLiter                                                             #assignRhsArrayLiter
   | KW_NEWPAIR SYM_LBRACKET left=expr SYM_COMMA right=expr SYM_RBRACKET    #assignRhsNewPair
   | pairElem                                                               #assignRhsPairElem
   | KW_CALL IDENTIFIER SYM_LBRACKET argList? SYM_RBRACKET                  #assignRhsCall
+  | structType                                                             #assignRhsStructType
+  ;
+
+structElem
+  : IDENTIFIER (SYM_PERIOD IDENTIFIER)+
   ;
 
 argList
@@ -112,6 +132,7 @@ stat
   | type IDENTIFIER SYM_EQUALS assignRhs                                   #statInit
   | assignLhs SYM_EQUALS assignRhs                                         #statStore
   | left=stat SYM_SEMICOLON right=stat                                     #statJoin
+  | structType IDENTIFIER                                                  #statStructDeclare
   ;
 
 param
@@ -122,5 +143,6 @@ paramList
   : param (SYM_COMMA param)*
   ;
 
-func
-  : type IDENTIFIER SYM_LBRACKET paramList? SYM_RBRACKET KW_IS stat KW_END;
+structElems
+  : (param SYM_SEMICOLON)+
+  ;

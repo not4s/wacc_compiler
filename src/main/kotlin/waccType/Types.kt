@@ -1,10 +1,8 @@
 package waccType
 
-interface WAny {
-    fun justType(): String {
-        return toString()
-    }
-}
+import ast.WACCStruct
+
+interface WAny
 
 sealed interface WBase : WAny
 
@@ -23,10 +21,6 @@ class WInt(
     override fun toString(): String {
         return "Int($value)"
     }
-
-    override fun justType(): String {
-        return "Int"
-    }
 }
 
 class WStr(
@@ -34,10 +28,6 @@ class WStr(
 ) : WBase {
     override fun toString(): String {
         return "String(\"${value}\")"
-    }
-
-    override fun justType(): String {
-        return "String"
     }
 }
 
@@ -47,10 +37,6 @@ class WBool(
     override fun toString(): String {
         return "Bool(${value})"
     }
-
-    override fun justType(): String {
-        return "Bool"
-    }
 }
 
 class WChar(
@@ -59,15 +45,11 @@ class WChar(
     override fun toString(): String {
         return "Char(\'${value}\')"
     }
-
-    override fun justType(): String {
-        return "Char"
-    }
 }
 
 class WArray(val elemType: WAny) : WAny {
     override fun toString(): String {
-        return "${elemType.justType()}[]"
+        return "${elemType}[]"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -121,6 +103,19 @@ class WPair(
     }
 }
 
+open class WStruct(open val identifier : String) : WAny {
+    override fun toString(): String {
+        return "struct $identifier"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is WACCStruct && other !is WStruct) {
+            return false
+        }
+        return (other as WStruct).identifier == this.identifier
+    }
+}
+
 /**
  * Used to check type validity when keyword 'pair' is used in variable declaration
  */
@@ -169,7 +164,7 @@ fun typesAreEqual(x: WAny, y: WAny): Boolean {
         return true
     }
     return if (x !is WArray && x !is WPair) {
-        (x::class == y::class || x is WUnknown || y is WUnknown)
+        (x::class == y::class || x is WUnknown || y is WUnknown || x == y)
     } else {
         (x::class == y::class && x == y) || y is WUnknown
     }

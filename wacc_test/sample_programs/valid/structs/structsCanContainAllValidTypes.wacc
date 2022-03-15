@@ -1,0 +1,31 @@
+# structs can have all sorts of types as their elements
+
+# Output:
+
+# Output:
+
+# Program:
+
+begin
+  struct myTypes begin
+  # base types
+    string s;
+    int i;
+    bool b;
+    char c;
+  # arrays
+    string[] ss;
+    int[] ints;
+    bool[] bs;
+    char[] cs;
+  # pairs
+    pair(int, char) p1;
+    pair(string, string) p2;
+  # other structs
+    struct miniStruct ms ;
+  end
+  struct miniStruct begin
+    bool b;
+  end
+  skip
+end

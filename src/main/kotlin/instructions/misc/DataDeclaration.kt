@@ -24,7 +24,6 @@ class DataDeclaration {
 
     /**
      * Reverse operation of taking key by literal value.
-     * TODO: Maybe reverse the map?
      */
     fun getSymbolFromLiteral(literal: String): String {
         for ((k, v) in declarations) {

@@ -77,7 +77,10 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         )
     }
 
-    fun functionArgumentTypeMismatch(expectedType: WAny, actualType: WAny): SemanticErrorMessageBuilder {
+    fun functionArgumentTypeMismatch(
+        expectedType: WAny,
+        actualType: WAny
+    ): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
             "The supplied function argument has incorrect type. Expected $expectedType, got $actualType instead."
         )
@@ -91,18 +94,31 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
         return appendSpecificErrorMessage("Cannot redefine function")
     }
 
-    fun functionArgumentCountMismatch(expectedNum: Int, actualNum: Int): SemanticErrorMessageBuilder {
+    fun structRedefineError(structName: String): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage("Cannot redefine struct $structName")
+    }
+
+    fun functionArgumentCountMismatch(
+        expectedNum: Int,
+        actualNum: Int
+    ): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage("The number of provided arguments ($actualNum) is incorrect, expected : $expectedNum")
     }
 
-    fun functionReturnStatTypeMismatch(functionType: WAny, returnStatType: WAny): SemanticErrorMessageBuilder {
+    fun functionReturnStatTypeMismatch(
+        functionType: WAny,
+        returnStatType: WAny
+    ): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
             "The \"return\" statement of the function returns $returnStatType, " +
                     "but the function has type $functionType"
         )
     }
 
-    fun assignmentTypeMismatch(assignLhsType: WAny, assignRhsType: WAny): SemanticErrorMessageBuilder {
+    fun assignmentTypeMismatch(
+        assignLhsType: WAny,
+        assignRhsType: WAny
+    ): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
             "Cannot assign expression type $assignRhsType to the variable of type $assignLhsType"
         )
@@ -151,6 +167,18 @@ class SemanticErrorMessageBuilder : ErrorMessageBuilder() {
     fun pairElementInvalidType(): SemanticErrorMessageBuilder {
         return appendSpecificErrorMessage(
             "The pair element has an invalid type"
+        )
+    }
+
+    fun structContainsDuplicateElements(repeatedIdentifier : String): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "Repeated identifier `$repeatedIdentifier` found"
+        )
+    }
+
+    fun elementDoesntExistInStruct(structID: String, nonExistantStructElem : String): SemanticErrorMessageBuilder {
+        return appendSpecificErrorMessage(
+            "Tried to access non-existent element ${structID}.${nonExistantStructElem}"
         )
     }
 }

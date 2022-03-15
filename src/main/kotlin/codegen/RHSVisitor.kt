@@ -27,6 +27,7 @@ class RHSVisitor(
             is PairElement -> visitPairElement(ctx)
             is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
             is FunctionCall -> visitFunctionCall(ctx)
+            is WACCStruct -> TODO("in RHSVisitor, WACCStruct is not implemented")
         }
     }
 
@@ -105,7 +106,7 @@ class RHSVisitor(
                     LDR(Register.R0, LabelReference(reference))
                 )
             }
-            is WUnknown -> TODO("Literal type cannot be WUnknown")
+            else -> TODO("Unimplemented")
         }
     }
 

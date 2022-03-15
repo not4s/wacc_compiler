@@ -28,12 +28,14 @@ sealed interface AST {
 class ProgramAST(
     override val st: SymbolTable,
     val functions: List<WACCFunction>,
+    val structs: List<WACCStruct>,
     val body: Stat,
 ) : AST {
     override fun toString(): String {
         return "Prog:\n" +
                 "{\n" +
                 "$functions" +
+                "$structs" +
                 "\n$body\n" +
                 "}"
     }

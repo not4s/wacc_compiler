@@ -14,6 +14,7 @@ KW_INT: 'int';
 KW_BOOL: 'bool';
 KW_CHAR: 'char';
 KW_STRING: 'string';
+KW_STRUCT: 'struct';
 
 /* Pair stuff */
 KW_FREE: 'free';
@@ -46,7 +47,6 @@ KW_DONE: 'done';
 KW_IS: 'is';
 KW_CALL: 'call';
 
-
 /* Operators */
 OP_ORD: 'ord';
 OP_CHR: 'chr';
@@ -78,6 +78,7 @@ SYM_SQ_RBRACKET: ']';
 SYM_COMMA: ',';
 SYM_DOUBLEQUOTE: '"' ;
 SYM_SINGLEQUOTE: '\'';
+SYM_PERIOD: '.';
 
 /* Identifier */
 IDENTIFIER: ID_CHAR (ID_CHAR | DIGIT)*;
@@ -98,7 +99,6 @@ COMMENT_IGNORE: '#' ~'\n'* '\n' -> skip;
 WS: [ \t\r\n]+ -> channel(HIDDEN);
 
 /* Match anything */
-ANY_IGNORE: . ;
+/* ANY_IGNORE: . ; */
 
-/* Extension Lexer patterns */
 
