@@ -347,6 +347,7 @@ valid/structs:
     - ./testOutputOne -e sample_programs/valid/structs/structsCanContainAllValidTypes.wacc
     - ./testOutputOne -e sample_programs/valid/structs/assigningStructInAStruct.wacc
     - ./testOutputOne -e sample_programs/valid/structs/assigningStructInAStruct2.wacc
+    - ./testOutputOne -e sample_programs/valid/structs/canDefineArrayStructs.wacc
 #    - ./testOutputDir.sh -e "sample_programs/valid/structs/*.wacc"
 
 invalid/semanticErr/structs:

@@ -5,19 +5,21 @@ import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
 import symbolTable.typeToByteSize
-import waccType.*
+import waccType.WBool
+import waccType.WChar
+import waccType.WInt
+import waccType.WStr
 
 // Stores visiting result in Register.R0
 class RHSVisitor(
     val data: DataDeclaration,
-    val rp: RegisterProvider,
-    val funcPool: FunctionPool,
+    private val rp: RegisterProvider,
+    private val funcPool: FunctionPool,
     val lhs: LHS? = null
 ) : ASTVisitor<RHS> {
 
     private val registerProvider = RegisterProvider()
 
-    // Stores result of visiting in R4.
     override fun visit(ctx: RHS): List<WInstruction> {
         return when (ctx) {
             is Literal -> visitLiteral(ctx)
@@ -176,7 +178,6 @@ class RHSVisitor(
             )
         )
     }
-
 
     private fun visitPairLiteral(): List<WInstruction> {
         return listOf(

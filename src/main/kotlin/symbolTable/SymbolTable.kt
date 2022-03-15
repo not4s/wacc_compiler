@@ -9,7 +9,6 @@ import instructions.misc.Register
 import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
-import javax.imageio.spi.RegisterableService
 
 abstract class SymbolTable(
     var isGlobal: Boolean,
@@ -100,7 +99,7 @@ abstract class SymbolTable(
         structSym: String,
         elems: List<String>,
         fromRegister: Register,
-        data:DataDeclaration,
+        data: DataDeclaration,
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction>
