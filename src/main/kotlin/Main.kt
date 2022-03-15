@@ -41,12 +41,8 @@ fun main(args: Array<String>) {
         println(e.reason)
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
-
-    // skip code generation for extension files before they are implemented
-    if(!file.absolutePath.contains("struct")) {
-        val instructions = ProgramVisitor(DataDeclaration()).visit(ast)
-        val optimised_instructions = evaluateInstructions(instructions)
-        val code = translateInstructions(optimised_instructions)
-        println(code)
-    }
+    val instructions = ProgramVisitor(DataDeclaration()).visit(ast)
+//  val optimised_instructions = evaluateInstructions(instructions)
+    val code = translateInstructions(instructions)
+    println(code)
 }

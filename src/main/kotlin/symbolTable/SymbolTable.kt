@@ -95,7 +95,21 @@ abstract class SymbolTable(
         functionPool: FunctionPool
     ): List<WInstruction>
 
-    abstract fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction>
+    abstract fun asmAssign(
+        structSym: String,
+        elems: List<String>,
+        fromRegister: Register,
+        data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
+    ): List<WInstruction>
+
+    abstract fun asmGet(
+        symbol: String,
+        toRegister: Register,
+        data: DataDeclaration
+    ): List<WInstruction>
+
     abstract fun asmGet(
         arrSym: String,
         indices: Array<Expr>,
@@ -105,7 +119,16 @@ abstract class SymbolTable(
         functionPool: FunctionPool
     ): List<WInstruction>
 
-    abstract fun get(
+    abstract fun asmGet(
+        structSym: String,
+        elems: List<String>,
+        toRegister: Register,
+        registerProvider: RegisterProvider,
+        data: DataDeclaration,
+        functionPool: FunctionPool
+    ): List<WInstruction>
+
+    abstract fun getStructElemType(
         structIdent: String,
         structElems: List<String>,
         errorMessageBuilder: SemanticErrorMessageBuilder
@@ -120,6 +143,7 @@ fun typeToByteSize(value: WAny): Int {
         is WBool, is WChar -> 1
         is WInt, is WStr, is WArray -> 4
         is WPair, is IncompleteWPair -> 4
+        is WStruct -> 4
         else -> 0
     }
 }

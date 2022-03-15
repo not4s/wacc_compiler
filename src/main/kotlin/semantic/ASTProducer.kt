@@ -572,7 +572,7 @@ class ASTProducer(
     override fun visitStructElem(ctx: WACCParser.StructElemContext?): AST {
         val identifier = ctx!!.IDENTIFIER(0).text
         val elements = ctx.IDENTIFIER().subList(1, ctx.IDENTIFIER().size).map { it.text }
-        val type = st.get(identifier, elements, builderTemplateFromContext(ctx, st))
+        val type = st.getStructElemType(identifier, elements, builderTemplateFromContext(ctx, st))
         return WACCStructElem(identifier, elements, st, type)
     }
 

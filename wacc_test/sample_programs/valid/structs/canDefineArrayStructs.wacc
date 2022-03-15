@@ -1,15 +1,17 @@
 # structs' elements can be printed
 
 # Output:
-
+# #addrs#
 # Output:
 
 # Program:
 
 begin
     struct MyStruct begin
-        int[] array ;
+        int someOtherVal ;
+        int[] myArray ;
     end
     struct MyStruct myVar ;
-    myVar.array = [1,2,3,4]
+    myVar.myArray = [100, 200] ;
+    println myVar.myArray
 end

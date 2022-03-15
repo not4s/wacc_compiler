@@ -2,10 +2,7 @@ package codegen
 
 import ast.*
 import instructions.WInstruction
-import instructions.misc.DataDeclaration
-import instructions.misc.Immediate
-import instructions.misc.Register
-import instructions.misc.ShiftedRegister
+import instructions.misc.*
 import instructions.operations.*
 import waccType.WInt
 import waccType.WBool
@@ -205,7 +202,7 @@ class ExprVisitor(
                 // Delegate to RHS visitor of literals
                 RHSVisitor(data, registerProvider, funcPool).visit(ctx)
             }
-            is WACCStructElem -> TODO("WACCStructElem not implemented yet")
+            is WACCStructElem -> ctx.st.asmGet(ctx.identifier, ctx.elems, Register.R0, registerProvider, data, funcPool)
         }
     }
 }

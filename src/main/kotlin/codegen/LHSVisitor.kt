@@ -6,7 +6,6 @@ import instructions.misc.DataDeclaration
 import instructions.misc.ImmediateOffset
 import instructions.misc.Register
 import instructions.operations.*
-import codegen.CHECK_NULL_POINTER
 
 class LHSVisitor(
     private val data: DataDeclaration,
@@ -46,12 +45,21 @@ class LHSVisitor(
                                 offset = if (ctx.first) 0 else 4
                             )
                         )
-
                     ).plus(
                         STR(Register.R1, Register.R0)
                     )
             }
-            is WACCStructElem -> TODO("WACCStructElem has not been implemented yet")
+            is WACCStructElem -> {
+                // assign the value in R0 into the address indicated by the struct's elem
+                ctx.st.asmAssign(
+                    ctx.identifier,
+                    ctx.elems,
+                    Register.R0,
+                    data,
+                    registerProvider,
+                    funcPool
+                )
+            }
         }
     }
 }

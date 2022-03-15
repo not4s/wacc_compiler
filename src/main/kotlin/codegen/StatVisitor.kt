@@ -3,10 +3,12 @@ package codegen
 import ast.IdentifierSet
 import ast.Literal
 import ast.Stat
+import ast.WACCStruct
 import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
+import symbolTable.typeToByteSize
 import utils.btoi
 import waccType.*
 
@@ -44,12 +46,18 @@ class StatVisitor(
             is ReturnStat -> visitReturnStat(ctx)
             is FreeStat -> visitFreeStat(ctx)
             is StructDeclarationStat -> visitDeclarationStat(ctx)
-            else -> TODO("Unrecognized Statement ${ctx :: class}")
+            else -> TODO("Unrecognized Statement ${ctx::class}")
         }
     }
 
     private fun visitDeclarationStat(ctx: StructDeclarationStat): List<WInstruction> {
-        return listOf()
+        // calculate size of struct
+        val sizeOfStruct: Int =
+            (ctx.type as WACCStruct).elements.entries.sumOf { (_, type) -> typeToByteSize(type) }
+        // declaring a struct and storing the address into the stack
+        return listOf(LDR(Register.R0, LoadImmediate(sizeOfStruct)), B(MALLOC)).plus(
+            ctx.st.asmAssign(ctx.identifier, Register.R0, data, ctx.type)
+        )
     }
 
     private fun visitFreeStat(ctx: FreeStat): List<WInstruction> {
@@ -222,7 +230,7 @@ class StatVisitor(
                     pPrintReference(data, funcPool)
                 }
             }
-            is WPair -> {
+            is WPair, is WStruct -> {
                 printFun = P_PRINT_REFERENCE
                 funcPool.add(pPrintReference(data))
             }

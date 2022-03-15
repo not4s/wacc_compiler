@@ -5,6 +5,7 @@ import ast.WACCStruct
 import codegen.ExprVisitor
 import codegen.FunctionPool
 import codegen.RegisterProvider
+import codegen.WORD_SIZE
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
@@ -67,7 +68,7 @@ class ParentRefSymbolTable(
         return arrayTypeChecking(prev, indices, errorMessageBuilder)
     }
 
-    override fun get(
+    override fun getStructElemType(
         structIdent: String,
         structElems: List<String>,
         errorMessageBuilder: SemanticErrorMessageBuilder
@@ -80,26 +81,26 @@ class ParentRefSymbolTable(
         // is the elem a part of the struct?
         var terminalType = structType
         for (i in structElems.indices) {
-            if ((terminalType as WACCStruct).params.containsKey(structElems[i])) {
+            if ((terminalType as WACCStruct).elements.containsKey(structElems[i])) {
                 if (i == structElems.size - 1) {
                     // if this is the last element, then it is the terminal node, no need to get
-                    return terminalType.params[structElems[i]]!!
+                    return terminalType.elements[structElems[i]]!!
                 } else {
                     // if this isn't the last element, then it HAS to be a struct, and therefore
                     // we must get the original WACC struct definition in the symbol table
                     terminalType = get(
-                        (terminalType.params[structElems[i]]!! as WStruct).identifier,
+                        (terminalType.elements[structElems[i]]!! as WStruct).identifier,
                         errorMessageBuilder
                     )
                 }
             } else {
                 errorMessageBuilder.elementDoesntExistInStruct(
                     structIdent,
-                    structElems.subList(0, i+1).reduce { a, b -> "$a.$b" }).buildAndPrint()
+                    structElems.subList(0, i + 1).reduce { a, b -> "$a.$b" }).buildAndPrint()
                 throw SemanticException("Element doesn't exist in struct")
             }
         }
-        throw Exception("unreachable")
+        throw Exception("Should not have reached this, is structElems > 1?")
     }
 
     override fun getMap(): Map<String, WAny> {
@@ -252,8 +253,12 @@ class ParentRefSymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        val isSmall =
-            typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
+        val isSmall = typeToByteSize(
+            (get(
+                arrSym,
+                SemanticErrorMessageBuilder()
+            ) as WArray).elemType
+        ) != WORD_SIZE
         //    save the fromRegister somewhere somehow in-case it gets overwritten by any of
         //    the indices' evaluation operations
         val saveFromRegister = PUSH(fromRegister, data)
@@ -290,6 +295,40 @@ class ParentRefSymbolTable(
             .plus(POP(Register.R0, data))
             .plus(STR(Register.R0, Register.R4, isSignedByte = isSmall))
             .toList()
+    }
+
+    override fun asmAssign(
+        structSym: String,
+        elems: List<String>,
+        fromRegister: Register,
+        data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
+    ): List<WInstruction> {
+        val addressOfStructRegister = rp.get()
+        val addressOfElemRegister = rp.get()
+        // get the address of the struct from the stack.
+        val addressOfStruct = asmGet(structSym, addressOfStructRegister, data)
+        val addressOfElem = mutableListOf<WInstruction>()
+        for (i in elems.indices) {
+            // calculate the position of the elements(s) from the stack
+            val struct = get(structSym, SemanticErrorMessageBuilder()) as WACCStruct
+            val offset = getOffset(struct, elems[i])
+            // add the offset into destination register, which will contain the value of the element
+            addressOfElem.add(
+                ADD(addressOfElemRegister, addressOfStructRegister, Immediate(offset))
+            )
+            if (i != elems.size - 1) {
+                // only in the case that this is the last element do not dereference. Otherwise,
+                // because of semantic checks we know that this is a continuation in the struct
+                // elem chain
+                addressOfElem.add(LDR(addressOfStructRegister, addressOfElemRegister))
+            }
+        }
+        val storeFromRegisterToElem = STR(fromRegister, addressOfElemRegister)
+        rp.ret()
+        rp.ret()
+        return addressOfStruct.plus(addressOfElem).plus(storeFromRegisterToElem)
     }
 
     override fun asmGet(
@@ -381,6 +420,43 @@ class ParentRefSymbolTable(
             .plus(restoringIndices)
             .plus(MOV(toRegister, Register.R4))
             .toList()
+    }
+
+    override fun asmGet(
+        structSym: String,
+        elems: List<String>,
+        toRegister: Register,
+        registerProvider: RegisterProvider,
+        data: DataDeclaration,
+        functionPool: FunctionPool
+    ): List<WInstruction> {
+        // get the address of the struct from the stack.
+        val addressOfStruct = asmGet(structSym, toRegister, data)
+        val addressOfElem = mutableListOf<WInstruction>()
+        for (elem in elems) {
+            // calculate the position of the elements(s) from the struct
+            val offset =
+                getOffset(get(structSym, SemanticErrorMessageBuilder()) as WACCStruct, elem)
+            // add the offset into destination register
+            addressOfElem.add(ADD(toRegister, toRegister, Immediate(offset)))
+            // dereference the address
+            addressOfElem.add(LDR(toRegister, toRegister))
+        }
+        return addressOfStruct.plus(addressOfElem)
+    }
+
+    private fun getOffset(
+        struct: WACCStruct,
+        elem: String
+    ): Int {
+        var offset = 0
+        for (element in struct.elements) {
+            if (element.key == elem) {
+                break;
+            }
+            offset += typeToByteSize(element.value)
+        }
+        return offset
     }
 
 

@@ -1,20 +1,28 @@
 # a collection of functions that use structs as parameters (but dont use them)
 
 # Output:
-
+# 100
+# 200
 # Output:
 
 # Program:
 
 begin
   int foo(struct MyStruct _Va1iD_v4r_n4m3) is
-    return 0 
+    return _Va1iD_v4r_n4m3.first
   end
   struct MyStruct begin
-    int i;
+    int first;
+    int second;
   end
   int bar(struct MyStruct anyIdentifier123) is
-    return 1
+    return anyIdentifier123.second
   end
-  skip
+  struct MyStruct s ;
+  s.first = 100 ;
+  s.second = 200 ;
+  int first = call foo(s) ;
+  int second = call bar(s) ;
+  println first ;
+  println second
 end
