@@ -1,0 +1,22 @@
+# when a struct contains another struct then to assign it you must create a new struct
+
+# Output:
+# 5
+# Output:
+
+# Program:
+
+begin
+  struct A begin
+    struct B anotherStruct ;
+  end
+  struct B begin
+    int someData ;
+    int otherData ;
+  end
+  struct A myStruct ;
+  struct B subStruct ;
+  myStruct.anotherStruct = subStruct ;
+  myStruct.anotherStruct.otherData = 5 ;
+  println myStruct.anotherStruct.otherData
+end

@@ -3,7 +3,7 @@ stages:
   - test
   - front-end
   - back-end
-  - all-tests
+  - extension
 
 clean:
   stage: build
@@ -186,12 +186,6 @@ invalid/syntaxErr/while:
     - cd wacc_test
     - ./testDir.sh "sample_programs/invalid/syntaxErr/while/*.wacc"
 
-.front-end-tests:
-  stage: front-end
-  script:
-    - cd wacc_test
-    - ./testAll.sh
-
 ########## BACK END TESTS ##########
 
 valid/advanced:
@@ -199,139 +193,155 @@ valid/advanced:
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/advanced/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/advanced/*.wacc"
 
 valid/array:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/array/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/array/*.wacc"
 
 valid/basic/exit:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/basic/exit/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/basic/exit/*.wacc"
 
 valid/basic/skip:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/basic/skip/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/basic/skip/*.wacc"
 
 valid/expressions:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/expressions/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/expressions/*.wacc"
 
 valid/function/nested_functions:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/function/nested_functions/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/function/nested_functions/*.wacc"
 
 valid/function/simple_functions:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/function/simple_functions/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/function/simple_functions/*.wacc"
 
 valid/if:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/if/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/if/*.wacc"
 
 valid/IO/print:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/IO/print/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/IO/print/*.wacc"
 
 valid/IO/read:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/IO/read/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/IO/read/*.wacc"
 
 valid/pairs:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/pairs/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/pairs/*.wacc"
 
 valid/runtimeErr/arrayOutOfBounds:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/runtimeErr/arrayOutOfBounds/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/runtimeErr/arrayOutOfBounds/*.wacc"
 
 valid/runtimeErr/divideByZero:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/runtimeErr/divideByZero/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/runtimeErr/divideByZero/*.wacc"
 
 valid/runtimeErr/integerOverflow:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/runtimeErr/integerOverflow/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/runtimeErr/integerOverflow/*.wacc"
 
 valid/runtimeErr/nullDereference:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/runtimeErr/nullDereference/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/runtimeErr/nullDereference/*.wacc"
 
 valid/scope:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/scope/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/scope/*.wacc"
 
 valid/sequence:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/sequence/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/sequence/*.wacc"
 
 valid/variables:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/variables/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/variables/*.wacc"
 
 valid/while:
   stage: back-end
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputDir.sh "sample_programs/valid/while/*.wacc"
+    - ./testOutputDir.sh -x "sample_programs/valid/while/*.wacc"
 
-########## ALL TESTS ##########
+########## EXTENSION TESTS ##########
 
-.scalable_tests:
-  stage: all-tests
+.invalid/semanticErr/structs:
+  stage: extension
   interruptible: true
   script:
     - cd wacc_test
-    - ./testOutputAll.sh
+    - ./testOutputDir.sh -e "sample_programs/invalid/semanticErr/structs/*.wacc"
+
+## Collective testing of the directory 'valid/structs/' is skipped and tests are incrementally added
+## in a TDD style individually.
+valid/structs:
+  stage: extension
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testOutputDir.sh -e "sample_programs/valid/structs/*.wacc"
+
+invalid/semanticErr/structs:
+  stage: extension
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testOutputDir.sh -e "sample_programs/invalid/semanticErr/structs/*.wacc"

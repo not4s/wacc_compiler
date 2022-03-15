@@ -1,0 +1,20 @@
+# cannot redefine another struct with the same identifier as an previously defined struct
+
+# Output:
+
+# Output:
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct A begin
+    int A;
+  end
+  struct A begin
+    bool B;
+  end
+  skip
+end

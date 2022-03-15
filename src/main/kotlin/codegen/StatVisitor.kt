@@ -3,10 +3,12 @@ package codegen
 import ast.IdentifierSet
 import ast.Literal
 import ast.Stat
+import ast.WACCStruct
 import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
+import symbolTable.typeToByteSize
 import utils.btoi
 import waccType.*
 
@@ -43,8 +45,19 @@ class StatVisitor(
             is WhileStat -> visitWhileStat(ctx)
             is ReturnStat -> visitReturnStat(ctx)
             is FreeStat -> visitFreeStat(ctx)
-            else -> TODO("Unrecognized Statement")
+            is StructDeclarationStat -> visitDeclarationStat(ctx)
+            else -> TODO("Unrecognized Statement ${ctx::class}")
         }
+    }
+
+    private fun visitDeclarationStat(ctx: StructDeclarationStat): List<WInstruction> {
+        // calculate size of struct
+        val sizeOfStruct: Int =
+            (ctx.type as WACCStruct).elements.entries.sumOf { (_, type) -> typeToByteSize(type) }
+        // declaring a struct and storing the address into the stack
+        return listOf(LDR(Register.R0, LoadImmediate(sizeOfStruct)), B(MALLOC)).plus(
+            ctx.st.asmAssign(ctx.identifier, Register.R0, data, ctx.type)
+        )
     }
 
     private fun visitFreeStat(ctx: FreeStat): List<WInstruction> {
@@ -67,8 +80,8 @@ class StatVisitor(
             )
             .plus(
                 listOf(
-                    MOV(Register.resultRegister(), Register.resultRegister()),
-                    POP(Register.programCounter()),
+                    MOV(Register.R0, Register.R0),
+                    POP(Register.PC),
                     LTORG()
                 )
             )
@@ -94,7 +107,7 @@ class StatVisitor(
             .plus(whileBody)
             .plus(Label(whileStartLabel))
             .plus(condition)
-            .plus(CMP(Register.resultRegister(), Immediate(0)))
+            .plus(CMP(Register.R0, Immediate(0)))
             .plus(jump)
             .toList()
     }
@@ -116,22 +129,22 @@ class StatVisitor(
             else -> throw Exception("Can only read chars or ints")
         }
 
-        return output.plus(PUSH(Register.resultRegister()))
-            .plus(MOV(Register.resultRegister(), Register.stackPointer()))
+        return output.asSequence().plus(PUSH(Register.R0))
+            .plus(MOV(Register.R0, Register.SP))
             .plus(
                 B(readFun)
-            ).plus(POP(Register.resultRegister()))
+            ).plus(POP(Register.R0))
             .plus(
                 when (ctx.lhs) {
                     is IdentifierSet -> ctx.st.asmAssign(
                         ctx.lhs.identifier,
-                        Register.resultRegister(),
+                        Register.R0,
                         data,
                         null
                     )
                     else -> TODO()
                 }
-            )
+            ).toList()
 
     }
 
@@ -154,7 +167,7 @@ class StatVisitor(
 
         // compare with false, branch if equal (else branch)
         val jump = listOf(
-            CMP(Register.resultRegister(), Immediate(0)),
+            CMP(Register.R0, Immediate(0)),
             B(elseBranchLabel, cond = B.Condition.EQ)
         )
 
@@ -174,7 +187,7 @@ class StatVisitor(
         val evaluationCode = exprVisitor.visit(ctx.expr)
         return evaluationCode.plus(
             listOf(
-                MOV(Register.resultRegister(), Register.resultRegister()),
+                MOV(Register.R0, Register.R0),
                 B("exit")
             )
         )
@@ -217,7 +230,7 @@ class StatVisitor(
                     pPrintReference(data, funcPool)
                 }
             }
-            is WPair -> {
+            is WPair, is WStruct -> {
                 printFun = P_PRINT_REFERENCE
                 funcPool.add(pPrintReference(data))
             }
@@ -254,7 +267,7 @@ class StatVisitor(
         } else {
             val exprVisitor = ExprVisitor(data, registerProvider, funcPool)
             evalExprInstructions = exprVisitor.visit(ctx.expr)
-            firstArgInitInstruction = MOV(ldrDestReg, Register.resultRegister())
+            firstArgInitInstruction = MOV(ldrDestReg, Register.R0)
         }
 
         if (ctx.newlineAfter) {
@@ -266,7 +279,7 @@ class StatVisitor(
         return evalExprInstructions.plus(
             listOf(
                 firstArgInitInstruction,
-                MOV(Register.resultRegister(), ldrDestReg),
+                MOV(Register.R0, ldrDestReg),
                 B(printFun)
             )
         ).apply {
@@ -280,7 +293,7 @@ class StatVisitor(
         // Visit RHS. Result should be in resultStored register.
         return RHSVisitor(data, registerProvider, funcPool).visit(ctx.rhs)
             .plus(
-                ctx.st.asmAssign(ctx.identifier, Register.resultRegister(), data, ctx.decType)
+                ctx.st.asmAssign(ctx.identifier, Register.R0, data, ctx.decType)
             )
     }
 

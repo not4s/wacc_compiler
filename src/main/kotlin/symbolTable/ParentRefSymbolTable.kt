@@ -1,14 +1,17 @@
 package symbolTable
 
 import ast.Expr
+import ast.WACCStruct
 import codegen.ExprVisitor
 import codegen.FunctionPool
 import codegen.RegisterProvider
+import codegen.WORD_SIZE
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
 import semantic.SemanticChecker
 import utils.SemanticErrorMessageBuilder
+import utils.SemanticException
 import waccType.*
 
 class ParentRefSymbolTable(
@@ -65,6 +68,41 @@ class ParentRefSymbolTable(
         return arrayTypeChecking(prev, indices, errorMessageBuilder)
     }
 
+    override fun getStructElemType(
+        structIdent: String,
+        structElems: List<String>,
+        errorMessageBuilder: SemanticErrorMessageBuilder
+    ): WAny {
+        // is the struct identifier in the scope?
+        val structType = get(structIdent, errorMessageBuilder)
+        if (structType !is WACCStruct) {
+            throw Exception("Expected type WACCStruct but got ${structType::class} instead")
+        }
+        // is the elem a part of the struct?
+        var terminalType = structType
+        for (i in structElems.indices) {
+            if ((terminalType as WACCStruct).elements.containsKey(structElems[i])) {
+                if (i == structElems.size - 1) {
+                    // if this is the last element, then it is the terminal node, no need to get
+                    return terminalType.elements[structElems[i]]!!
+                } else {
+                    // if this isn't the last element, then it HAS to be a struct, and therefore
+                    // we must get the original WACC struct definition in the symbol table
+                    terminalType = get(
+                        (terminalType.elements[structElems[i]]!! as WStruct).identifier,
+                        errorMessageBuilder
+                    )
+                }
+            } else {
+                errorMessageBuilder.elementDoesntExistInStruct(
+                    structIdent,
+                    structElems.subList(0, i + 1).reduce { a, b -> "$a.$b" }).buildAndPrint()
+                throw SemanticException("Element doesn't exist in struct")
+            }
+        }
+        throw Exception("Should not have reached this, is structElems > 1?")
+    }
+
     override fun getMap(): Map<String, WAny> {
         return dict
     }
@@ -91,6 +129,7 @@ class ParentRefSymbolTable(
             parentTable.reassign(symbol, value, errorMessageBuilder)
             return
         }
+
         SemanticChecker.checkThatAssignmentTypesMatch(
             prev, value, errorMessageBuilder,
             failMessage = "Attempted to reassign type of declared $prev to $value"
@@ -164,7 +203,7 @@ class ParentRefSymbolTable(
                     return listOf(
                         STR(
                             fromRegister,
-                            Register.stackPointer(),
+                            Register.SP,
                             totalByteSize - offset,
                             isSignedByte = isSmall
                         )
@@ -188,7 +227,7 @@ class ParentRefSymbolTable(
                     return listOf(
                         STR(
                             fromRegister,
-                            Register.stackPointer(),
+                            Register.SP,
                             totalByteSize - offset,
                             isSignedByte = isSmall
                         )
@@ -214,29 +253,34 @@ class ParentRefSymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        val isSmall = typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
+        val isSmall = typeToByteSize(
+            (get(
+                arrSym,
+                SemanticErrorMessageBuilder()
+            ) as WArray).elemType
+        ) != WORD_SIZE
         //    save the fromRegister somewhere somehow in-case it gets overwritten by any of
         //    the indices' evaluation operations
         val saveFromRegister = PUSH(fromRegister, data)
         //    translate expression(s) in the Array and for each store somewhere somehow
         //    whilst save the indices backwards on the stack
         val translatingExpressions = indices.reversed().map {
-            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
+            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.R0, data))
         }.flatten()
         //    get the address in the heap according to the index
         val intermediateArrayLocationMagic: List<WInstruction> =
-            asmGet(arrSym, Register("r4"), data)
+            asmGet(arrSym, Register.R4, data)
 
         //    Store the original fromRegister into the address calculated above
         val restoringIndices = indices.map { _ ->
             listOf(
-                POP(Register.resultRegister(), data),
+                POP(Register.R0, data),
                 B("p_check_array_bounds"),
-                ADD(Register("r4"), Register("r4"), Immediate(4)),
+                ADD(Register.R4, Register.R4, Immediate(4)),
                 if (isSmall) {
-                    ADD(Register("r4"), Register("r4"), Register.resultRegister())
+                    ADD(Register.R4, Register.R4, Register.R0)
                 } else {
-                    ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                    ADD(Register.R4, Register.R4, LSLRegister(Register.R0, 2))
                 }
             )
         }.flatten()
@@ -248,21 +292,50 @@ class ParentRefSymbolTable(
             .plus(translatingExpressions)
             .plus(intermediateArrayLocationMagic)
             .plus(restoringIndices)
-            .plus(POP(Register.resultRegister(), data))
-            .plus(STR(Register.resultRegister(), Register("r4"), isSignedByte = isSmall))
+            .plus(POP(Register.R0, data))
+            .plus(STR(Register.R0, Register.R4, isSignedByte = isSmall))
             .toList()
     }
 
     override fun asmAssign(
-        pairSym: String,
-        fst: Boolean,
+        structSym: String,
+        elems: List<String>,
         fromRegister: Register,
         data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
     ): List<WInstruction> {
-        TODO("Not yet implemented")
+        val addressOfStructRegister = rp.get()
+        val addressOfElemRegister = rp.get()
+        // get the address of the struct from the stack.
+        val addressOfStruct = asmGet(structSym, addressOfStructRegister, data)
+        val addressOfElem = mutableListOf<WInstruction>()
+        for (i in elems.indices) {
+            // calculate the position of the elements(s) from the stack
+            val struct = get(structSym, SemanticErrorMessageBuilder()) as WACCStruct
+            val offset = getOffset(struct, elems[i])
+            // add the offset into destination register, which will contain the value of the element
+            addressOfElem.add(
+                ADD(addressOfElemRegister, addressOfStructRegister, Immediate(offset))
+            )
+            if (i != elems.size - 1) {
+                // only in the case that this is the last element do not dereference. Otherwise,
+                // because of semantic checks we know that this is a continuation in the struct
+                // elem chain
+                addressOfElem.add(LDR(addressOfStructRegister, addressOfElemRegister))
+            }
+        }
+        val storeFromRegisterToElem = STR(fromRegister, addressOfElemRegister)
+        rp.ret()
+        rp.ret()
+        return addressOfStruct.plus(addressOfElem).plus(storeFromRegisterToElem)
     }
 
-    override fun asmGet(symbol: String, toRegister: Register, data: DataDeclaration): List<WInstruction> {
+    override fun asmGet(
+        symbol: String,
+        toRegister: Register,
+        data: DataDeclaration
+    ): List<WInstruction> {
         // Work out this variable's offset from the start of symbol table.
         var offset = -data.spOffset + forceOffset
         var isSmall = false
@@ -280,7 +353,7 @@ class ParentRefSymbolTable(
                     LDR(
                         toRegister,
                         ImmediateOffset(
-                            Register.stackPointer(),
+                            Register.SP,
                             totalByteSize - offset
                         ),
                         isSignedByte = isSmall
@@ -315,26 +388,27 @@ class ParentRefSymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        val isSmall = typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
+        val isSmall =
+            typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
         val translatingExpressions = indices.reversed().map {
-            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.resultRegister(), data))
+            ExprVisitor(data, rp, functionPool).visit(it).plus(PUSH(Register.R0, data))
         }.flatten()
         //    get the address in the heap according to the index
         val intermediateArrayLocationMagic: List<WInstruction> =
-            asmGet(arrSym, Register("r4"), data)
+            asmGet(arrSym, Register.R4, data)
 
         //    Store the original fromRegister into the address calculated above
         val restoringIndices = indices.map { _ ->
             listOf(
-                POP(Register.resultRegister(), data),
+                POP(Register.R0, data),
                 B("p_check_array_bounds"),
-                ADD(Register("r4"), Register("r4"), Immediate(4)),
+                ADD(Register.R4, Register.R4, Immediate(4)),
                 if (isSmall) {
-                    ADD(Register("r4"), Register("r4"), Register.resultRegister())
+                    ADD(Register.R4, Register.R4, Register.R0)
                 } else {
-                    ADD(Register("r4"), Register("r4"), LSLRegister(Register.resultRegister(), 2))
+                    ADD(Register.R4, Register.R4, LSLRegister(Register.R0, 2))
                 },
-                LDR(Register("r4"), Register("r4"), isSignedByte = isSmall)
+                LDR(Register.R4, Register.R4, isSignedByte = isSmall)
             )
         }.flatten()
 
@@ -344,8 +418,45 @@ class ParentRefSymbolTable(
             .plus(translatingExpressions)
             .plus(intermediateArrayLocationMagic)
             .plus(restoringIndices)
-            .plus(MOV(toRegister, Register("r4")))
+            .plus(MOV(toRegister, Register.R4))
             .toList()
+    }
+
+    override fun asmGet(
+        structSym: String,
+        elems: List<String>,
+        toRegister: Register,
+        registerProvider: RegisterProvider,
+        data: DataDeclaration,
+        functionPool: FunctionPool
+    ): List<WInstruction> {
+        // get the address of the struct from the stack.
+        val addressOfStruct = asmGet(structSym, toRegister, data)
+        val addressOfElem = mutableListOf<WInstruction>()
+        for (elem in elems) {
+            // calculate the position of the elements(s) from the struct
+            val offset =
+                getOffset(get(structSym, SemanticErrorMessageBuilder()) as WACCStruct, elem)
+            // add the offset into destination register
+            addressOfElem.add(ADD(toRegister, toRegister, Immediate(offset)))
+            // dereference the address
+            addressOfElem.add(LDR(toRegister, toRegister))
+        }
+        return addressOfStruct.plus(addressOfElem)
+    }
+
+    private fun getOffset(
+        struct: WACCStruct,
+        elem: String
+    ): Int {
+        var offset = 0
+        for (element in struct.elements) {
+            if (element.key == elem) {
+                break;
+            }
+            offset += typeToByteSize(element.value)
+        }
+        return offset
     }
 
 

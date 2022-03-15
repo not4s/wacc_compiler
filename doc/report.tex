@@ -1,0 +1,187 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{fullpage}
+\usepackage[margin=2cm]{geometry}
+\usepackage[fontsize=12pt]{fontsize}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{enumitem}
+
+% custom syntax highlighting in code blocks
+\usepackage{minted}
+\usepackage{xcolor} % to access the named colour lightGrey
+\definecolor{lightGrey}{gray}{0.975}
+
+\newcommand{\filename}[1]{
+    \vspace{1em}
+    \texttt{ #1:}
+    \vspace*{-0.5em}
+}
+
+\newenvironment{codeblock}{
+    \VerbatimEnvironment
+    \begin{minted}[frame=single,framesep=0.5em,bgcolor=lightGrey,fontsize=\small]{c}
+}
+{\end{minted}}
+
+
+% imported from template: allow source code inclusion
+\usepackage{listings}
+\lstset{
+    tabsize=2,
+    basicstyle = \ttfamily
+}
+
+% imported from template: code style for shell commands
+\lstdefinestyle{shell}{
+    tabsize=2,
+    basicstyle = \ttfamily\small,
+}
+
+% imported from template: inline code styling
+\newcommand{\shell}[1]{\lstinline!#1!}
+
+\title{WACC Group 06: Project Report}
+\author{
+    Anton Zhitomirsky \\ \texttt{\href{mailto:ps1620@ic.ac.uk}{az620@ic.ac.uk}}
+    \and
+    Andrey Popov \\ \texttt{\href{mailto:ap4220@ic.ac.uk}{ap4220@ic.ac.uk}}
+    \and
+    Jaeho Chung \\ \texttt{\href{mailto:jc2520@ic.ac.uk}{jc2520@ic.ac.uk}}
+}
+
+\date\today
+
+\begin{document}
+
+\sloppy
+
+\maketitle
+
+\subsection*{The final product}
+
+\subsubsection*{Evaluation of the WACC compiler}
+
+WACC's high-level language is accurately translated into low-level ARM assembly by the compiler. It includes handling edge cases such as null dereferences, array-out-of-bounds indexing, and other run-time errors accurately. 
+
+The front end of the compiler computes in linear time, with each line being analyzed only once, only deviating to perform efficient semantic checks. In the case of a semantic error, the compiler outputs a readable error message that indicates both the location and possible solutions. As the compiler generated the AST, it also monitored the AST for further semantic errors. 
+
+Back-end code generation is based on a stack implementation. Despite the lack of use of the diversity of registers available to the compiler, this approach is functionally correct. Variable locations were monitored flawlessly by the symbol table.
+
+In the system tests, the assembly code optimisation enables the compiler to produce fast results for larger programs, such as the \shell{sample_programs/valid/advanced/*.wacc}. Additionally, this optimized assembly had the intended effect of increasing the speed of emulation.
+
+\subsubsection*{Future Development}
+
+By using coding principles such as builder patterns and minimizing code repetition, the state of the compiler has been left in a healthy position to be upgraded. Additionally, we opted to use ANTLR, an open-source parser generator with a wealth of detailed documentation. A popular parser generator means that many people have contributed to its development, and a lot of forums exist with popular problems and questions with detailed solutions. As a result, future developers won't have the pleasure of working with our highly bespoke, minimally documented parser generator.
+
+Furthermore, flexible testing scripts written in parallel with the compiler's development make it easy to test new features.
+
+\subsection*{Project Management}
+
+\subsubsection*{Project Maintenance Tools}
+
+\begin{figure}
+  \includegraphics[width=\linewidth]{healthyGitGraph.png}
+  \caption{A snapshot of a healthy Git graph structure demonstrating great concurrent development between 4 group memebers with meaningfull commit messages.}
+  \label{fig:gitGraph}
+\end{figure}
+
+Developing great code while working with many group members required keeping good Git hygiene and adhering to recognized Git disciplines.
+
+To separate the different developmental stages from the master branch, three disjoint and independent branches were created: the front-end branch, the back-end branch, and the extension branch. Only code that passed all unit and system tests for a particular milestone was included in the master branch of the repository. This kept it in a state where it could be deployed at any time. Continuous Integration practices were used to provide agile and simple code development by merging frequently and never letting a sub-branch live more than a couple days without merging to the parent branch.
+
+The majority of group communication was conducted through Discord. Each milestone had its own channel. Members were able to share any changes they wanted to expand on, ask any questions, and receive help regarding features implementation. In addition, it served as a great way to share resources; working with a compiler requires a lot of reference material, which was available in the relevant channels.
+
+Meaningful commit messages and discussion channels are also important aspects of git hygiene and communication. In order to understand changes and who authored the commit at a glance, the messages utilized the following format:
+
+\verb|[verb describing changes/(authors)+]: short description of context and changes]|
+\verb|(any other relevant meta information describing changes)*|
+
+This style of commit messages can be seen in Figure \ref{fig:gitGraph}. 
+
+\subsubsection*{Project Communication and Group Synergy}
+
+Most days, group coding sessions occurred in person at the Labs in campus. When working together, people could work collaboratively on a problem and problems were solved faster than if it were just one person working on them. Before each meeting, a SCRUM meeting was held. As a team, we would discuss our activities and problems each day. As opposed to building software, this methodology focused more on iterating within a fixed time frame. Thus, we found that this method of group work was very practical, since it could efficiently track the project's general progress and keep group members up to date.
+
+\subsubsection*{Testing and Development}
+
+Where possible, we created unit tests to test implementations of the hidden components of our software, such as the symbol table. 
+
+Tests would assess correct compilation of programs depending on the milestone. The front end tests would judge if a program that is semantically and syntactically invalid halted and correct error messages presented. Back-end tests made sure that valid programs produced the correct output by comparing an emulated output of the generated code to the refCompile script. Extension tests could not use the refCompile script as a foothold because we implemented new features into the language that were not recognised by it. Instead predicted outputs were included in the WACC test files.
+
+For each of these tests, it was possible to test a directory or all available wacc files in the \shell{sample_programs/} directory. To see an example of such a script, navigate to \shell{wacc_test/} and use the command \shell{./testOutputOne --help} to see a list of options.
+
+Where necessary, new wacc tests were added to the \shell{sample_programs/} directory and conformed to the style and format provided by the department. Such examples can be seen in \shell{sample_programs/valid/structs/}, \shell{sample_programs/invalid/semanticErr/array/} and more.
+
+\subsubsection*{Strengths and Shortcomings}
+
+There was a tendency for group members to work on a feature without communicating it to the rest of the team. As a result, a group member would work on the same problem, only to realize the solution already existed. This led to minor confusion and frustration at times.
+
+Punctuality was also a minor shortcoming, which ended up disrupting the SCRUM meeting cycle because it wouldn't be time efficient to have a separate meeting every time a member arrived. This however wasn't majorly impactful as great progress due to amazing group synergy was achieved without all members being present.
+
+If we were to have more time, we would have made a more thorough testing script. Our primitive script made it difficult to test I/O programs. Therefore these tests were skipped, which contained some bugs themselves which we were too late to fix.
+
+\subsection*{Design Choices and Implementation Details}
+
+\begin{quote}
+    An analysis of the design choices that you
+made during the WACC project, including your implementation language and tool choices (with
+justifications), and any interesting issues you had to overcome during the implementation of your
+compiler. You should discuss the design patterns you used when designing your code and why you
+chose to use them. You might also want to provide a system architecture diagram for you compiler
+to aid this discussion.
+\end{quote}
+
+\subsection*{Beyond the Specification}
+
+\subsubsection*{Language Extensions}
+
+\shell{C}-like structs were introduced to WACC to allow for more rich data collections. These could be used, much like \shell{C}, to create a diverse range of programs and open up a new avenue into data collection. Examples can be seen at \shell{wacc_test/sample_programs/valid/structs}.
+
+To begin with, the \shell{WACCLexer.g4} and \shell{WACCParser.g4} were updated to represent the correct behaviour of the structs. Structs are parsed first in \shell{ASTProducer.kt}. The back end generates the assembly code after the front-end has been completed in the relevant visitors' procedures. Most notably, \shell{ParentRegSymbolTable.kt} handled element access. This code was generated with the help of careful observations from  \hyperlink{ https://godbolt.org/ }{godbolt} website and the ARM Technical Reference Manual.
+
+\subsubsection*{Optimisations}
+\paragraph{1. Constant Evaluation} \mbox{}
+
+Expressions are evaluated by evaluating both the left and right side of the expression. Upon evaluating the right side of the expression, the result stored in register R0 is pushed to the stack, which is then popped back once the left side is evaluated. This is completely unnecessary if the operands of the expression are constants and the expression could be evaluated at compile-time. The optimisation was achieved by modifying the AST in \shell{ASTProducer.kt} to evaluate the expression beforehand if both the operands are Literal nodes.
+
+\paragraph{2. Booth's Algorithm} \mbox{}
+
+MUL instructions in ARM assembly are computed slower than other operations such as SUB or LSL. This is because the former has a multiple cycle latency while the latter has a single cycle latency to compute. An attempt was made to solve this problem and optimise the run time speed of our compiler in the Binary Operation part of our \shell{ExprVisitor.kt}; we used the Booth's algorithm which multiplies two signed binary numbers in two's complement notation to split the MUL instruction into faster sub instructions.
+
+
+\paragraph{3. Peephole Optimisations - Instruction Evaluation} \mbox{}
+
+Peephole optimisation of removing or replacing redundant or dead code was attempted in \shell{InstructionEvaluation.kt}. Pattern matching was primarily used to for implementation.
+
+\begin{itemize}
+\item{Dead LDR Instructions: LDR instructions that load content from memory is often called right after a STR instruction that stores the same content into memory. This is redundant because the content to load is already in the target register, hence, was a target of elimination.}
+
+\item{Redundant MOV: The generated code contained cyclic MOV instructions which loaded one register to another and called the MOV instruction again with the source register and destination register switched. This was also redundant and a target pattern of elimination.}
+
+\item{Efficient MOV: Two sequential MOV instructions can be optimised to a MOV instruction and an ADD instruction that performs the same action, which results in higher performance because MOV is done by shifting in ARM assembly and by modifying one instruction to an ADD instruction, both the shifter and adder can be utilised.}
+\end{itemize}
+
+\subsubsection*{Integrated Development Environments}
+
+\begin{quote}
+     An evaluation of IDE, especially highlighting \textbf{how these features can be accessed or viewed}. Briefly discuss what future extensions you would add if you had more time.
+\end{quote}
+
+Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. 
+
+Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. 
+
+\subsubsection*{Future extensions}
+
+Adding new features has been easy due to the clean and iterative code format. ANTLR provides a very useful tree visitor scheme which can be extended with additional features from the Lexer and Parser file. Using this made it simple to implement new features to the language.
+
+In addition to structs, it would be great to implement classes as well. The same semantic rules apply to classes and their elements, since classes group data similarly to structs. Thus, classes already accomplish half of their job before they even start.
+
+Our compiler design is flawed because we did not consider optimizations from the beginning. Hence in the future, building a control flow graph or a single static assignment form representation from the abstract syntax tree would be a challenging yet rewarding extension we could work on. By implementing a CFG or SSA form from AST, we hope to explore more advanced topics in optimisations such as global value numbering.
+
+\end{document}

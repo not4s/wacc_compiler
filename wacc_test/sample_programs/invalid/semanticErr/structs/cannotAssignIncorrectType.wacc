@@ -1,0 +1,22 @@
+# you cannot assign incorrect types to a struct's elements
+
+# Output:
+
+# Output:
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct Name begin
+    string first_name ;
+    string second_name ;
+    int age ;
+  end
+  struct Name developer ;
+  developer.first_name = 13 ;
+  developer.second_name = 14 ;
+  developer.age = "Whats just happened here"
+end

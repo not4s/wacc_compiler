@@ -8,6 +8,9 @@ ANTLR_SOURCE_DIR := $(SOURCE_DIR)/antlr
 OUTPUT_DIR	 := bin
 COMPILATION_DIR	:=	wacc_test/compiled_code
 
+PYTHON_SOURCE_DIR	 := ide
+PYTHON_ANTLR_SOURCE_DIR := $(PYTHON_SOURCE_DIR)/antlr
+
 # Project tools
 
 ANTLR	:= antlrBuild
@@ -32,8 +35,10 @@ all:
 
 # clean up all of the compiled files
 clean:
-	$(RM) $(OUTPUT_DIR) $(SOURCE_DIR)/antlr
-	$(RM) $(COMPILATION_DIR)
+	$(RM) $(OUTPUT_DIR) $(SOURCE_DIR)/antlr $(COMPILATION_DIR)
+	$(RM) *.s
 	mvn clean
+	$(RM) $(PYTHON_ANTLR_SOURCE_DIR)
+	cd $(ANTLR_DIR) && ./namedeclash --clean
 
 .PHONY: all clean

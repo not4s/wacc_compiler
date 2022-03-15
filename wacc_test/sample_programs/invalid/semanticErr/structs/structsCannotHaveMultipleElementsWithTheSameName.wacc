@@ -1,0 +1,22 @@
+# structs cannot have multiple variables with the same variable name
+
+# Output:
+
+# Output:
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct NotMyStruct begin
+    int a;
+    string b;
+    int[] someIntermediaryValue;
+    string a; # uhoh, why do we have another a???!
+    bool[] anotherIntermediaryValue;
+    char b; # uhoh, why do we have another b???!
+  end
+  skip
+end

@@ -33,3 +33,8 @@ target
 
 # ignore any garbage produced by compile script
 *.s
+
+# Ignore Python part, WACC IDE project
+__pycache__
+ide/antlr
+antlr_config/g4py

@@ -1,0 +1,18 @@
+# when declaring a new struct it must be defined in the scope
+
+# Output:
+
+# Output:
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct A begin
+    int A;
+  end
+  struct A this_is_ok ;
+  struct B NOT_OK
+end

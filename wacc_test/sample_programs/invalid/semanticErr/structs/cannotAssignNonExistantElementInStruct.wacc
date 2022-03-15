@@ -1,0 +1,18 @@
+# you cannot assign a non existant element to a struct
+
+# Output:
+
+# Output:
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  struct someStruct begin
+    int x ;
+  end
+  struct someStruct letsGo ;
+  letsGo.y = 5
+end

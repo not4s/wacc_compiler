@@ -1,0 +1,21 @@
+# structs that haven't been defined before are a source of semantic errors
+
+# Output:
+
+# Output:
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+
+  struct Student begin 
+    string first_name ; 
+    string second_name ; 
+    struct Tutor t ;
+  end
+  
+  skip
+end
