@@ -81,15 +81,15 @@ class ParentRefSymbolTable(
         // is the elem a part of the struct?
         var terminalType = structType
         for (i in structElems.indices) {
-            if ((terminalType as WACCStruct).params.containsKey(structElems[i])) {
+            if ((terminalType as WACCStruct).elements.containsKey(structElems[i])) {
                 if (i == structElems.size - 1) {
                     // if this is the last element, then it is the terminal node, no need to get
-                    return terminalType.params[structElems[i]]!!
+                    return terminalType.elements[structElems[i]]!!
                 } else {
                     // if this isn't the last element, then it HAS to be a struct, and therefore
                     // we must get the original WACC struct definition in the symbol table
                     terminalType = get(
-                        (terminalType.params[structElems[i]]!! as WStruct).identifier,
+                        (terminalType.elements[structElems[i]]!! as WStruct).identifier,
                         errorMessageBuilder
                     )
                 }
@@ -299,21 +299,36 @@ class ParentRefSymbolTable(
 
     override fun asmAssign(
         structSym: String,
-        elem: List<String>,
+        elems: List<String>,
         fromRegister: Register,
         data: DataDeclaration,
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        // first working with immediate elements, not nested struct elements.
         val addressOfStructRegister = rp.get()
         val addressOfElemRegister = rp.get()
         // get the address of the struct from the stack.
         val addressOfStruct = asmGet(structSym, addressOfStructRegister, data)
-        // calculate the position of the element(s) from the stack
-        val offset = getOffset(get(structSym, SemanticErrorMessageBuilder()) as WACCStruct, elem[0])
-        // add the offset into destination register, which will contain the value of the element
-        val addressOfElem = ADD(addressOfElemRegister, addressOfStructRegister, Immediate(offset))
+        val addressOfElem = mutableListOf<WInstruction>()
+        for (i in elems.indices) {
+            // calculate the position of the elements(s) from the stack
+            val struct = get(structSym, SemanticErrorMessageBuilder()) as WACCStruct
+            val offset = getOffset(struct, elems[i])
+            // add the offset into destination register, which will contain the value of the element
+            addressOfElem.add(
+                ADD(
+                    addressOfElemRegister,
+                    addressOfStructRegister,
+                    Immediate(offset)
+                )
+            )
+            if (i != elems.size - 1) {
+                // only in the case that this is the last element do not dereference. Otherwise,
+                // because of semantic checks we know that this is a continuation in the struct
+                // elem chain
+                addressOfElem.add(LDR(addressOfStructRegister, addressOfElemRegister))
+            }
+        }
         val storeFromRegisterToElem = STR(fromRegister, addressOfElemRegister)
         rp.ret()
         rp.ret()
@@ -412,34 +427,39 @@ class ParentRefSymbolTable(
     }
 
     override fun asmGet(
-        symbol: String,
-        elem: List<String>,
+        structSym: String,
+        elems: List<String>,
         toRegister: Register,
         registerProvider: RegisterProvider,
         data: DataDeclaration,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        // first working with immediate elements, not nested struct elements.
         // get the address of the struct from the stack.
-        val addressOfStruct = registerProvider.get()
-        val getAddressOfStruct = asmGet(symbol, addressOfStruct, data)
-        // calculate the position of the element(s) from the stack
-        val offsetOfElement =
-            getOffset(get(symbol, SemanticErrorMessageBuilder()) as WACCStruct, elem[0])
-        // add the offset into destination register, which will contain the value of the element
-        val addressOfElem = ADD(toRegister, addressOfStruct, Immediate(offsetOfElement))
-        val valueOfElem = LDR(toRegister, toRegister)
-        registerProvider.ret()
-        return getAddressOfStruct.plus(addressOfElem).plus(valueOfElem)
+        val addressOfStruct = asmGet(structSym, toRegister, data)
+        val addressOfElem = mutableListOf<WInstruction>()
+        for (elem in elems) {
+            // calculate the position of the elements(s) from the stack
+            val struct = get(structSym, SemanticErrorMessageBuilder()) as WACCStruct
+            val offset = getOffset(struct, elem)
+            // add the offset into destination register, which will contain the value of the element
+            addressOfElem.add(
+                ADD(
+                    toRegister,
+                    toRegister,
+                    Immediate(offset)
+                )
+            )
+            addressOfElem.add(LDR(toRegister, toRegister))
+        }
+        return addressOfStruct.plus(addressOfElem)
     }
-
 
     private fun getOffset(
         struct: WACCStruct,
         elem: String
     ): Int {
         var offset = 0
-        for (element in struct.params) {
+        for (element in struct.elements) {
             if (element.key == elem) {
                 break;
             }

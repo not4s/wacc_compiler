@@ -181,12 +181,13 @@ os.chdir("..")
 
 errCode: int = os.system(f"timeout 20s ./compile wacc_test/{path} -d") >> 8
 # if the error code is because of an invalid program compilation
+expectedErrorCode = getExitCodeFromWaccFile()
 if (errCode in [100, 200]):
-    if errCode == getExitCodeFromWaccFile():
+    if errCode == expectedErrorCode:
         os.system(f"echo \"{green}pass {path}{clear} invalid program, don't compile\"")
         sys.exit(0)
     else:
-        os.system(f"echo \"{red}FAIL {path}{clear} program failed but not for the reason expected\"")
+        os.system(f"echo \"{red}FAIL {path}{clear} program failed but not for the reason expected (expected {expectedErrorCode} got {errCode})\"")
         sys.exit(errCode)
 # if the error code is not a pass
 elif (errCode != 0):

@@ -7,15 +7,17 @@ import waccType.WStruct
 class WACCStruct(
     override val st: SymbolTable,
     override val identifier: String,
-    val params: Map<String, WAny>
+    val elements: Map<String, WAny>
 ) : AST, WStruct(identifier), RHS {
     override fun toString(): String {
         return "struct $identifier{${
-            params.map { (id, t) -> "$t $id" }.reduceOrNull { a, b -> "$a, $b" } ?: throw Exception(
+            elements.map { (id, t) -> "$t $id" }.reduceOrNull { a, b -> "$a, $b" } ?: throw Exception(
                 "Cannot have no elements in a struct, this should have been handled during syntax analysis"
             )
         }}"
     }
+
+    fun elemType(elem: String) = elements[elem]
 
     override fun equals(other: Any?): Boolean {
         if (other !is WACCStruct && other !is WStruct) {

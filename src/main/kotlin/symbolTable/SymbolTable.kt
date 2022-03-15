@@ -98,7 +98,7 @@ abstract class SymbolTable(
 
     abstract fun asmAssign(
         structSym: String,
-        elem: List<String>,
+        elems: List<String>,
         fromRegister: Register,
         data:DataDeclaration,
         rp: RegisterProvider,
@@ -121,8 +121,8 @@ abstract class SymbolTable(
     ): List<WInstruction>
 
     abstract fun asmGet(
-        symbol: String,
-        elem: List<String>,
+        structSym: String,
+        elems: List<String>,
         toRegister: Register,
         registerProvider: RegisterProvider,
         data: DataDeclaration,

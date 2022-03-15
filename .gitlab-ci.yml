@@ -340,8 +340,12 @@ valid/structs:
     - ./testOutputOne -e sample_programs/valid/structs/basicStruct.wacc
     - ./testOutputOne -e sample_programs/valid/structs/inlineStructIsFineIGuess.wacc
     - ./testOutputOne -e sample_programs/valid/structs/structDeclaration.wacc
-    - ./testOutputOne -e sample_programs/valid/structs/structAssignment.wacc
+    - ./testOutputOne -e sample_programs/valid/structs/structAssignments.wacc
     - ./testOutputOne -e sample_programs/valid/structs/structsCanContainStructs.wacc
+    - ./testOutputOne -e sample_programs/valid/structs/structAssignmentsWithStructReferences.wacc
+    - ./testOutputOne -e sample_programs/valid/structs/structsCanBeUsedInFunctions.wacc
+    - ./testOutputOne -e sample_programs/valid/structs/structsCanContainAllValidTypes.wacc
+    - ./testOutputOne -e sample_programs/valid/structs/assigningStructInAStruct.wacc
 #    - ./testOutputDir.sh -e "sample_programs/valid/structs/*.wacc"
 
 invalid/semanticErr/structs:
