@@ -67,7 +67,7 @@ def extractGoodStuffFromRefCompile(refCompileOutput: str):
 def extractGoodStuffFromWaccExtensionFile():
     # compare output extracted from test file to output from program; go into refCompile's directory
     if EXTENSION_OUTPUT_SPLIT not in wacc_sourceCode:
-        print(f"all extension files must contain the line '{EXTENSION_OUTPUT_SPLIT}(.*){EXTENSION_OUTPUT_SPLIT}' to indicate desired output from assembly")
+        print(f"all extension files must contain the line '{EXTENSION_OUTPUT_SPLIT}((.*\n)*){EXTENSION_OUTPUT_SPLIT}' to indicate desired output from assembly")
         sys.exit(-1)
 
     exit_code = getExitCodeFromWaccFile()
@@ -98,6 +98,7 @@ def emulateAssembly() -> str:
         print(f"WARNING: The file {test_name} could not be decoded (utf-8?)")
         wacc_emulated_output = ""
         wacc_exit_code = -1
+    
     return wacc_emulated_output + f"\nExit code returned: {wacc_exit_code}\n"
 
 # check that the output from the program is the same
@@ -227,13 +228,13 @@ else:
     # there is no trivial way of comparing the assembly output so assume that only the output is
     # to be compared
     if(len(wacc_sourceCode) > 0):
+        stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
         diff = compareExtensionOutput()
         if len(diff) != 0:
             fail = True
             stringBuffer += diff
         else:
             stringBuffer += "Output matches\n"
-        stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
 
 with open(test_name + '.output', 'w') as f:
     f.write(stringBuffer)

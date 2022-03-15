@@ -5,6 +5,7 @@ import ast.WACCStruct
 import codegen.ExprVisitor
 import codegen.FunctionPool
 import codegen.RegisterProvider
+import codegen.WORD_SIZE
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
@@ -99,7 +100,7 @@ class ParentRefSymbolTable(
                 throw SemanticException("Element doesn't exist in struct")
             }
         }
-        throw Exception("unreachable")
+        throw Exception("Should not have reached this, is structElems > 1?")
     }
 
     override fun getMap(): Map<String, WAny> {
@@ -252,8 +253,12 @@ class ParentRefSymbolTable(
         rp: RegisterProvider,
         functionPool: FunctionPool
     ): List<WInstruction> {
-        val isSmall =
-            typeToByteSize((get(arrSym, SemanticErrorMessageBuilder()) as WArray).elemType) != 4
+        val isSmall = typeToByteSize(
+            (get(
+                arrSym,
+                SemanticErrorMessageBuilder()
+            ) as WArray).elemType
+        ) != WORD_SIZE
         //    save the fromRegister somewhere somehow in-case it gets overwritten by any of
         //    the indices' evaluation operations
         val saveFromRegister = PUSH(fromRegister, data)
@@ -290,6 +295,29 @@ class ParentRefSymbolTable(
             .plus(POP(Register.R0, data))
             .plus(STR(Register.R0, Register.R4, isSignedByte = isSmall))
             .toList()
+    }
+
+    override fun asmAssign(
+        structSym: String,
+        elem: List<String>,
+        fromRegister: Register,
+        data: DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
+    ): List<WInstruction> {
+        // first working with immediate elements, not nested struct elements.
+        val addressOfStructRegister = rp.get()
+        val addressOfElemRegister = rp.get()
+        // get the address of the struct from the stack.
+        val addressOfStruct = asmGet(structSym, addressOfStructRegister, data)
+        // calculate the position of the element(s) from the stack
+        val offset = getOffset(get(structSym, SemanticErrorMessageBuilder()) as WACCStruct, elem[0])
+        // add the offset into destination register, which will contain the value of the element
+        val addressOfElem = ADD(addressOfElemRegister, addressOfStructRegister, Immediate(offset))
+        val storeFromRegisterToElem = STR(fromRegister, addressOfElemRegister)
+        rp.ret()
+        rp.ret()
+        return addressOfStruct.plus(addressOfElem).plus(storeFromRegisterToElem)
     }
 
     override fun asmGet(
@@ -396,13 +424,15 @@ class ParentRefSymbolTable(
         val addressOfStruct = registerProvider.get()
         val getAddressOfStruct = asmGet(symbol, addressOfStruct, data)
         // calculate the position of the element(s) from the stack
-        val offsetOfElement = getOffset(get(symbol, SemanticErrorMessageBuilder()) as WACCStruct, elem[0])
+        val offsetOfElement =
+            getOffset(get(symbol, SemanticErrorMessageBuilder()) as WACCStruct, elem[0])
         // add the offset into destination register, which will contain the value of the element
         val addressOfElem = ADD(toRegister, addressOfStruct, Immediate(offsetOfElement))
+        val valueOfElem = LDR(toRegister, toRegister)
         registerProvider.ret()
-        val addressOfStructElem = getAddressOfStruct.plus(addressOfElem)
-        return addressOfStructElem
+        return getAddressOfStruct.plus(addressOfElem).plus(valueOfElem)
     }
+
 
     private fun getOffset(
         struct: WACCStruct,

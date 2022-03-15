@@ -96,6 +96,15 @@ abstract class SymbolTable(
         functionPool: FunctionPool
     ): List<WInstruction>
 
+    abstract fun asmAssign(
+        structSym: String,
+        elem: List<String>,
+        fromRegister: Register,
+        data:DataDeclaration,
+        rp: RegisterProvider,
+        functionPool: FunctionPool
+    ): List<WInstruction>
+
     abstract fun asmGet(
         symbol: String,
         toRegister: Register,

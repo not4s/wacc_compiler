@@ -45,14 +45,20 @@ class LHSVisitor(
                                 offset = if (ctx.first) 0 else 4
                             )
                         )
-
                     ).plus(
                         STR(Register.R1, Register.R0)
                     )
             }
             is WACCStructElem -> {
-                // get the address of the element from the structs address on the stack
-                ctx.st.asmGet(ctx.identifier, ctx.elems, Register.R0, registerProvider, data, funcPool)
+                // assign the value in R0 into the address indicated by the struct's elem
+                ctx.st.asmAssign(
+                    ctx.identifier,
+                    ctx.elems,
+                    Register.R0,
+                    data,
+                    registerProvider,
+                    funcPool
+                )
             }
         }
     }

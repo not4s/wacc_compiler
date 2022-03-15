@@ -1,7 +1,7 @@
 # structs' elements can be printed
 
 # Output:
-
+# #addrs# = {1, 2, 3, 4}
 # Output:
 
 # Program:
@@ -11,5 +11,6 @@ begin
         int[] array ;
     end
     struct MyStruct myVar ;
-    myVar.array = [1,2,3,4]
+    myVar.array = [1,2,3,4] ;
+    println myVar.array
 end

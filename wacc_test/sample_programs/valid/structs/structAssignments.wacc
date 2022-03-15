@@ -2,7 +2,7 @@
 # further, you may assign a value of the correct type to any of its elements
 
 # Output:
-# Developers name is: Anton Zhitomirsky
+# Developers name is FirstName SecondName
 # Developers age is 19
 # Developers age is 20
 # Output:
@@ -16,8 +16,8 @@ begin
     int age ;
   end
   struct Name developer ;
-  developer.first_name = "Anton" ;
-  developer.second_name = "Zhitomirsky" ;
+  developer.first_name = "FirstName" ;
+  developer.second_name = "SecondName" ;
   developer.age = 19 ;
   print "Developers name is " ;
   print developer.first_name ;

@@ -2,10 +2,7 @@ package codegen
 
 import ast.*
 import instructions.WInstruction
-import instructions.misc.DataDeclaration
-import instructions.misc.Immediate
-import instructions.misc.Register
-import instructions.misc.ShiftedRegister
+import instructions.misc.*
 import instructions.operations.*
 import waccType.WInt
 import waccType.WBool
