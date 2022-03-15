@@ -293,11 +293,83 @@ class ASTProducer(
         return safeVisit(Literal(st, WUnknown)) { this.visit(ctx.arrayElem()) } as ArrayElement
     }
 
-    override fun visitExprBinary(ctx: WACCParser.ExprBinaryContext): BinaryOperation {
+    override fun visitExprBinary(ctx: WACCParser.ExprBinaryContext): Expr {
         val errorMessageBuilder = builderTemplateFromContext(ctx, st)
         val left = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.left) } as Expr
         val right = safeVisit(Literal(st, WUnknown)) { this.visit(ctx.right) } as Expr
         val op = BinOperator.fromWACCParserContextBinOp(ctx.binOp)
+
+        // Evaluate expressions with constants at compile-time
+        constant_evaluation@
+        while(left is Literal && right is Literal) {
+
+            // break if it is not the case of int op int or bool op bool
+            if(!(left.type is WInt && right.type is WInt
+                    || left.type is WBool && right.type is WBool))
+                break@constant_evaluation
+
+            // int op int
+            if(left.type is WInt && right.type is WInt) {
+                
+                val left_val = left.type.value!!
+                val right_val = right.type.value!!
+                var evaluated_constant = 0
+                when(op) {
+                    BinOperator.MUL
+                            // check for overflows
+                        -> if(left_val * right_val <= Integer.MAX_VALUE 
+                                && left_val * right_val >= Integer.MIN_VALUE)
+                            evaluated_constant = left_val * right_val
+                    BinOperator.DIV 
+                            // check for divide-by-zeros
+                        -> if(right_val != 0)
+                            evaluated_constant = left_val / right_val
+                    BinOperator.MOD 
+                            // check for divide-by-zeros
+                        -> if(right_val != 0)
+                            evaluated_constant = left_val % right_val
+                    BinOperator.ADD 
+                            // check for overflows
+                        -> if(left_val + right_val <= Integer.MAX_VALUE)
+                            evaluated_constant = left_val + right_val
+                    BinOperator.SUB 
+                            // check for overflows
+                        -> if(left_val - right_val >= Integer.MIN_VALUE)
+                            evaluated_constant = left_val - right_val
+                    else -> evaluated_constant = 0
+                }
+                if(evaluated_constant == 0) break@constant_evaluation
+                return Literal(st, WInt(evaluated_constant))
+            }
+            
+            // bool op bool
+            if(left.type is WBool && right.type is WBool) {
+
+                val left_val = left.type.value!!
+                val right_val = right.type.value!!
+                val evaluated_constant = when(op) {
+                    BinOperator.GT  
+                        -> left_val > right_val
+                    BinOperator.GEQ 
+                        -> left_val > right_val || left_val == right_val
+                    BinOperator.LT  
+                        -> left_val < right_val
+                    BinOperator.LEQ 
+                        -> left_val < right_val || left_val == right_val
+                    BinOperator.EQ  
+                        -> left_val == right_val
+                    BinOperator.NEQ 
+                        -> left_val != right_val
+                    BinOperator.AND 
+                        -> left_val && right_val
+                    BinOperator.OR 
+                        -> left_val || right_val
+                    else -> false
+                }
+            return Literal(st, WBool(evaluated_constant))
+            }
+        }
+
         SemanticChecker.checkThatOperandTypesMatch(
             firstType = left.type,
             secondType = right.type,
