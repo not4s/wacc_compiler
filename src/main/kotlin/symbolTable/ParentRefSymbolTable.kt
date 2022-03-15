@@ -316,11 +316,7 @@ class ParentRefSymbolTable(
             val offset = getOffset(struct, elems[i])
             // add the offset into destination register, which will contain the value of the element
             addressOfElem.add(
-                ADD(
-                    addressOfElemRegister,
-                    addressOfStructRegister,
-                    Immediate(offset)
-                )
+                ADD(addressOfElemRegister, addressOfStructRegister, Immediate(offset))
             )
             if (i != elems.size - 1) {
                 // only in the case that this is the last element do not dereference. Otherwise,
@@ -438,17 +434,12 @@ class ParentRefSymbolTable(
         val addressOfStruct = asmGet(structSym, toRegister, data)
         val addressOfElem = mutableListOf<WInstruction>()
         for (elem in elems) {
-            // calculate the position of the elements(s) from the stack
-            val struct = get(structSym, SemanticErrorMessageBuilder()) as WACCStruct
-            val offset = getOffset(struct, elem)
-            // add the offset into destination register, which will contain the value of the element
-            addressOfElem.add(
-                ADD(
-                    toRegister,
-                    toRegister,
-                    Immediate(offset)
-                )
-            )
+            // calculate the position of the elements(s) from the struct
+            val offset =
+                getOffset(get(structSym, SemanticErrorMessageBuilder()) as WACCStruct, elem)
+            // add the offset into destination register
+            addressOfElem.add(ADD(toRegister, toRegister, Immediate(offset)))
+            // dereference the address
             addressOfElem.add(LDR(toRegister, toRegister))
         }
         return addressOfStruct.plus(addressOfElem)

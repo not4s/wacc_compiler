@@ -83,7 +83,7 @@ def getExitCodeFromWaccFile() -> int:
     if EXIT_CODE_REGEX not in wacc_sourceCode:
         return 0
     else:
-        return int(re.search(rf'{EXIT_CODE_REGEX} ((-|\+)?[0-9]+)', wacc_sourceCode).group(1))
+        return int(re.search(rf'{EXIT_CODE_REGEX}\n# ((-|\+)?[0-9]+)', wacc_sourceCode).group(1))
 
 
 def emulateAssembly() -> str:
