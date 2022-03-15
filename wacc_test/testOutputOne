@@ -150,6 +150,8 @@ parser.add_argument('-e', action="store_true", help='a flag indicating that the 
                                                     'Therefore it might be that the refCompiler does not support the same features. The output ' \
                                                     'must be extracted from the testfile which contains the output for all extension files in ' \
                                                     f'the form ^{EXTENSION_OUTPUT_SPLIT}\\n(.*){EXTENSION_OUTPUT_SPLIT}')
+parser.add_argument('-o', action="store_true", help='a flag indicating pure printing of output to terminal without checking validity of output '\
+                                                    'against any other')
 
 options = parser.parse_args()
 args = vars(options)
@@ -205,26 +207,15 @@ fail: bool = False
 
 # cwd = directory of .s file
 
-if(not options.e):
-    if(options.a):
-        stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in assembly\n{REFCOMPILER_SPLIT}\n"
-        diff = compareAssembly()
-        if len(diff) != 0:
-            fail = True
-            stringBuffer += f"{diff}\n"
-        else:
-            stringBuffer += "Assembly code matches\n"
-
-    # if no argmuents provided by default compares output
-    if options.x or (not options.x and not options.a):
-        stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
-        diff = compareOutput()
-        if len(diff) != 0:
-            fail = True
-            stringBuffer += diff
-        else:
-            stringBuffer += "Output matches\n"
-else:
+if(options.a):
+    stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in assembly\n{REFCOMPILER_SPLIT}\n"
+    diff = compareAssembly()
+    if len(diff) != 0:
+        fail = True
+        stringBuffer += f"{diff}\n"
+    else:
+        stringBuffer += "Assembly code matches\n"
+elif(options.e):
     # the file presented is an extension project. The refcompiler must not be used.
     # there is no trivial way of comparing the assembly output so assume that only the output is
     # to be compared
@@ -236,6 +227,17 @@ else:
             stringBuffer += diff
         else:
             stringBuffer += "Output matches\n"
+elif(options.o):
+    print(emulateAssembly())
+else:
+    # if no argmuents provided by default compares output
+    stringBuffer += f"{REFCOMPILER_SPLIT}\nDifferences in output\n{REFCOMPILER_SPLIT}\n"
+    diff = compareOutput()
+    if len(diff) != 0:
+        fail = True
+        stringBuffer += diff
+    else:
+        stringBuffer += "Output matches\n"
 
 with open(test_name + '.output', 'w') as f:
     f.write(stringBuffer)

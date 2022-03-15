@@ -230,7 +230,7 @@ class StatVisitor(
                     pPrintReference(data, funcPool)
                 }
             }
-            is WPair -> {
+            is WPair, is WStruct -> {
                 printFun = P_PRINT_REFERENCE
                 funcPool.add(pPrintReference(data))
             }
