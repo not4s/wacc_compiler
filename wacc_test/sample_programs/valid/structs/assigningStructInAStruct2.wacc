@@ -1,7 +1,7 @@
 # when a struct contains another struct then to assign it you must create a new struct
 
 # Output:
-
+# 5
 # Output:
 
 # Program:
@@ -12,6 +12,7 @@ begin
   end
   struct B begin
     int someData ;
+    int moreData ;
   end
   struct A myStruct ;
   myStruct.anotherStruct = struct B ;

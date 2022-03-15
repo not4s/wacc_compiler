@@ -27,8 +27,15 @@ class RHSVisitor(
             is PairElement -> visitPairElement(ctx)
             is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
             is FunctionCall -> visitFunctionCall(ctx)
-            is WACCStruct -> TODO("in RHSVisitor, WACCStruct is not implemented")
+            is WACCStruct -> visitStruct(ctx)
         }
+    }
+
+    private fun visitStruct(ctx: WACCStruct): List<WInstruction> {
+        // calculate size of struct
+        val sizeOfStruct: Int = ctx.elements.entries.sumOf { (_, type) -> typeToByteSize(type) }
+        // declaring a struct and storing the address into the stack
+        return listOf(LDR(Register.R0, LoadImmediate(sizeOfStruct)), B(MALLOC))
     }
 
     private fun visitFunctionCall(ctx: FunctionCall): List<WInstruction> {
