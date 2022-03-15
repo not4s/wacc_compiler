@@ -337,7 +337,7 @@ valid/structs:
   interruptible: true
   script:
     - cd wacc_test
-   - ./testOutputDir.sh -e "sample_programs/valid/structs/*.wacc"
+    - ./testOutputDir.sh -e "sample_programs/valid/structs/*.wacc"
 
 invalid/semanticErr/structs:
   stage: extension
