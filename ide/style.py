@@ -29,6 +29,7 @@ code_theme = {
     'type': '#ee9900',
     'main_font_col': MAIN_FONT_COLOR,
     'function': '#8ebffb',
+    'attribute': '#9ded9e',
     'string_literal': '#669900',
     'int_literal': '#c94922',
     'error': '#9c637a',

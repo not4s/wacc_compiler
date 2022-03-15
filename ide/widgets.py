@@ -117,6 +117,7 @@ class CodeText(tk.Text):
 
         # Syntax highlight
         self.tag_configure("keyword", foreground=code_theme['keyword'])
+        self.tag_configure("attribute", foreground=code_theme['attribute'])
         self.tag_configure("main text", foreground=code_theme['main_font_col'])
         self.tag_configure("declaration", foreground=code_theme['declaration'])
         self.tag_configure("operator", foreground=code_theme['operator'])
@@ -131,6 +132,7 @@ class CodeText(tk.Text):
         self.painter.paint()
 
     def handle_events(self, triggerer_count):
+        ''' Calls syntax painting only if user didn't edit text for more than one second '''
         if triggerer_count != self.event_counter:
             return
         self.update_highlight()

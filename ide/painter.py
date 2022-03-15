@@ -55,6 +55,9 @@ class PainterVisitor(WACCParserVisitor):
     def paint_function(self, token):
         self.paint_token(token, "function")
 
+    def paint_attribute(self, token):
+        self.paint_token(token, "attribute")
+
     def paint_base_type(self, type_ctx):
         if isinstance(type_ctx, WACCParser.BaseTypeIntContext):
             self.paint_type(type_ctx.KW_INT())
@@ -239,6 +242,32 @@ class PainterVisitor(WACCParserVisitor):
         self.paint_keyword(ctx.KW_IS())
         self.paint_keyword(ctx.KW_END())
         self.paint_declaration(ctx.IDENTIFIER())
+        return self.visitChildren(ctx)
+
+    ### Struct feature methods:
+
+    def visitStruct(self, ctx:WACCParser.StructContext):
+        self.paint_keyword(ctx.KW_STRUCT())
+        self.paint_keyword(ctx.KW_BEGIN())
+        self.paint_keyword(ctx.KW_END())
+        self.paint_declaration(ctx.IDENTIFIER())
+        return self.visitChildren(ctx)
+
+    def visitStructType(self, ctx:WACCParser.StructTypeContext):
+        self.paint_keyword(ctx.KW_STRUCT())
+        self.paint_type(ctx.IDENTIFIER())
+        return self.visitChildren(ctx)
+
+    def visitStructElem(self, ctx:WACCParser.StructElemContext):
+        for period in ctx.SYM_PERIOD():
+            self.paint_operator(period)
+        for elem in ctx.IDENTIFIER()[1:]:
+            self.paint_attribute(elem)
+        return self.visitChildren(ctx)
+
+    def visitStructElems(self, ctx:WACCParser.StructElemsContext):
+        for semicolon in ctx.SYM_SEMICOLON():
+            self.paint_function(semicolon)
         return self.visitChildren(ctx)
 
 
