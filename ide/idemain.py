@@ -5,15 +5,16 @@ from tkinter.messagebox import showerror
 from tkinter import messagebox
 from tkinter import ttk
 
-from codeframe import *
+from codeframe import CodeFrame
 from style import configure_styles
+from eventlog import EventLog
 
 
 FILE_NAME = tkinter.NONE
 CODE_SIDE_MINSIZE = 300
 SHELL_MINSIZE = CODE_SIDE_MINSIZE
 WINDOW_MINSIZE = CODE_SIDE_MINSIZE + SHELL_MINSIZE
-HORISONTAL_SASH_WIDTH = 8
+HORISONTAL_SASH_WIDTH = 1
 
 
 def new_file():
@@ -108,7 +109,7 @@ main_pane.add(devtool_pane, minsize=SHELL_MINSIZE)
 wacc_shell_frame = Frame(devtool_pane, bg="#00ff00")
 devtool_pane.add(wacc_shell_frame, minsize=SHELL_MINSIZE)
 
-event_log = Frame(devtool_pane, bg="#0000ff")
+event_log = EventLog(devtool_pane)
 devtool_pane.add(event_log, minsize=SHELL_MINSIZE)
 
 root.mainloop()

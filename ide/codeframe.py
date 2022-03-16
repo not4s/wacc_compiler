@@ -5,7 +5,7 @@ from tkinter import font as tk_font
 
 import sys
 
-from style import get_default_font, code_frame_style, code_theme
+from style import get_default_font, common_text_style, code_theme
 from painter import Painter
 
 
@@ -105,7 +105,7 @@ class CodeText(tk.Text):
         return result
 
     def configure_style(self):
-        self.configure(**code_frame_style)
+        self.configure(**common_text_style)
 
         # Setting tab size to 2 spaces
         tab = tk_font.Font(font=self['font']).measure('  ')
