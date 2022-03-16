@@ -31,7 +31,7 @@ class EventLog(ttk.Frame):
         ttk.Frame.__init__(self, *args, **kwargs)
 
         self.label = Label(self, text="Event Log")
-        self.label.pack(side="top", fill="both", expand=True)
+        self.label.pack(side="top", fill="x")
 
         self.text = Text(self)
         # self.text = Text(self, width=400, height=400)

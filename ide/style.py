@@ -19,6 +19,7 @@ def get_smaller_font():
 def configure_styles(root):
     style = ttk.Style(root)
     style.configure('CodeFrame.TFrame', **common_text_style)
+    style.configure('DevToolBox.TFrame', **devtool_box_style)
 
 
 MAIN_FONT_COLOR = '#dfe2f1'
@@ -48,6 +49,17 @@ common_text_style = {
     'background': BACKGROUND_COLOR,
     'padx': 5,
     'pady': 5,
+    'font': (DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE),
+    'bg': BACKGROUND_COLOR,
+    'foreground': MAIN_FONT_COLOR,
+    'insertbackground': MAIN_FONT_COLOR,
+}
+
+devtool_box_style = {
+    'background': BACKGROUND_COLOR,
+    # 'background': '#00ff00',
+    'padx': 30,
+    'pady': 30,
     'font': (DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE),
     'bg': BACKGROUND_COLOR,
     'foreground': MAIN_FONT_COLOR,

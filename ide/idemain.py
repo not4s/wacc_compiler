@@ -8,12 +8,13 @@ from tkinter import ttk
 from codeframe import CodeFrame
 from style import configure_styles
 from eventlog import EventLog
+from devtools import DevTools
 
 
 FILE_NAME = tkinter.NONE
 CODE_SIDE_MINSIZE = 300
-SHELL_MINSIZE = CODE_SIDE_MINSIZE
-WINDOW_MINSIZE = CODE_SIDE_MINSIZE + SHELL_MINSIZE
+TOOLS_MINSIZE = CODE_SIDE_MINSIZE
+WINDOW_MINSIZE = CODE_SIDE_MINSIZE + TOOLS_MINSIZE
 HORISONTAL_SASH_WIDTH = 1
 
 
@@ -91,7 +92,7 @@ root.config(menu=menu_bar)
 
 # Resizable Panes with sashes design:
 #  +----------+---------+
-#  |          |  Shell  |
+#  |          |  Tools  |
 #  |   Code   +---------+
 #  |   edit   |  Event  |
 #  |          |   Log   |
@@ -104,13 +105,13 @@ code_frame = CodeFrame(main_pane)
 main_pane.add(code_frame, minsize=CODE_SIDE_MINSIZE)
 
 devtool_pane = PanedWindow(main_pane, orient=VERTICAL, sashwidth=HORISONTAL_SASH_WIDTH)
-main_pane.add(devtool_pane, minsize=SHELL_MINSIZE)
+main_pane.add(devtool_pane, minsize=TOOLS_MINSIZE)
 
-wacc_shell_frame = Frame(devtool_pane, bg="#00ff00")
-devtool_pane.add(wacc_shell_frame, minsize=SHELL_MINSIZE)
+# dev_tools_frame = DevTools(devtool_pane)
+# devtool_pane.add(dev_tools_frame, minsize=TOOLS_MINSIZE)
 
 event_log = EventLog(devtool_pane)
 code_frame.link_event_log(event_log)
-devtool_pane.add(event_log, minsize=SHELL_MINSIZE)
+devtool_pane.add(event_log, minsize=TOOLS_MINSIZE)
 
 root.mainloop()
