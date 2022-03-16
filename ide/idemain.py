@@ -5,11 +5,15 @@ from tkinter.messagebox import showerror
 from tkinter import messagebox
 from tkinter import ttk
 
-from widgets import *
+from codeframe import *
 from style import configure_styles
 
 
 FILE_NAME = tkinter.NONE
+CODE_SIDE_MINSIZE = 300
+SHELL_MINSIZE = CODE_SIDE_MINSIZE
+WINDOW_MINSIZE = CODE_SIDE_MINSIZE + SHELL_MINSIZE
+HORISONTAL_SASH_WIDTH = 8
 
 
 def new_file():
@@ -64,7 +68,7 @@ root = tkinter.Tk()
 configure_styles(root)
 
 root.title("WACCCode")
-root.minsize(width=800, height=800)
+root.minsize(width=WINDOW_MINSIZE, height=WINDOW_MINSIZE)
 root.resizable(height=True, width=True)
 
 # Menu
@@ -83,7 +87,28 @@ menu_bar.add_command(label="Exit", command=root.quit)
 
 root.config(menu=menu_bar)
 
-code_frame = CodeFrame(root)
-code_frame.pack(side="top", fill="both", expand=True)
+
+# Resizable Panes with sashes design:
+#  +----------+---------+
+#  |          |  Shell  |
+#  |   Code   +---------+
+#  |   edit   |  Event  |
+#  |          |   Log   |
+#  +----------+---------+
+
+main_pane = PanedWindow(root, orient=HORIZONTAL)
+main_pane.pack(fill="both", expand=True)
+
+code_frame = CodeFrame(main_pane)
+main_pane.add(code_frame, minsize=CODE_SIDE_MINSIZE)
+
+devtool_pane = PanedWindow(main_pane, orient=VERTICAL, sashwidth=HORISONTAL_SASH_WIDTH)
+main_pane.add(devtool_pane, minsize=SHELL_MINSIZE)
+
+wacc_shell_frame = Frame(devtool_pane, bg="#00ff00")
+devtool_pane.add(wacc_shell_frame, minsize=SHELL_MINSIZE)
+
+event_log = Frame(devtool_pane, bg="#0000ff")
+devtool_pane.add(event_log, minsize=SHELL_MINSIZE)
 
 root.mainloop()

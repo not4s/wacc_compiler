@@ -169,7 +169,7 @@ class CodeFrame(ttk.Frame):
         self.text = CodeText(self, width=400, height=400, wrap=NONE)
 
         self.scrollbar_v = Scrollbar(self, orient=VERTICAL, command=self.text.yview)
-        self.scrollbar_h = Scrollbar(self, orient=HORIZONTAL, command=self.text.xview)
+        self.scrollbar_h = Scrollbar(self.text, orient=HORIZONTAL, command=self.text.xview)
         self.scrollbar_h.pack(side="bottom", fill="x")
         self.text.configure(yscrollcommand=self.scrollbar_v.set)
         self.text.configure(xscrollcommand=self.scrollbar_h.set)
