@@ -2,10 +2,7 @@ package symbolTable
 
 import ast.Expr
 import ast.WACCStruct
-import codegen.ExprVisitor
-import codegen.FunctionPool
-import codegen.RegisterProvider
-import codegen.WORD_SIZE
+import codegen.*
 import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
@@ -445,6 +442,30 @@ class ParentRefSymbolTable(
         return addressOfStruct.plus(addressOfElem)
     }
 
+    override fun assignPairElem(
+        first: Boolean,
+        isSmall: Boolean,
+        data: DataDeclaration,
+        functionPool: FunctionPool
+    ): List<WInstruction> {
+        data.addDeclaration(NULL_POINTER_MESSAGE)
+        pCheckNullPointer(data, functionPool)
+        return listOf(B(CHECK_NULL_POINTER))
+            .plus(
+                LDR(
+                    Register.R0,
+                    ImmediateOffset(Register.R0, if (first) 0 else WORD_SIZE)
+                )
+            )
+            .plus(
+                LDR(
+                    Register.R0,
+                    ImmediateOffset(Register.R0),
+                    isSignedByte = isSmall
+                )
+            )
+    }
+
     private fun getOffset(
         struct: WACCStruct,
         elem: String
@@ -458,7 +479,6 @@ class ParentRefSymbolTable(
         }
         return offset
     }
-
 
     override fun toString(): String {
         val radix = 16

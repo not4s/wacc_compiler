@@ -133,6 +133,13 @@ abstract class SymbolTable(
         structElems: List<String>,
         errorMessageBuilder: SemanticErrorMessageBuilder
     ): WAny
+
+    abstract fun assignPairElem(
+        first: Boolean,
+        isSmall: Boolean,
+        data: DataDeclaration,
+        functionPool: FunctionPool
+    ): List<WInstruction>
 }
 
 fun typeToByteSize(value: WAny): Int {
