@@ -187,5 +187,8 @@ class CodeFrame(ttk.Frame):
         self.text.bind("<<Change>>", self._on_change)
         self.text.bind("<Configure>", self._on_change)
 
+    def link_event_log(self, event_log):
+        self.text.painter.attach_event_log(event_log)
+
     def _on_change(self, event):
         self.linenumbers.redraw()

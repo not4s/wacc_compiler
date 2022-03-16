@@ -1,9 +1,30 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import font as tk_font
+from antlr4.error.ErrorListener import ErrorListener
 from style import get_smaller_font, common_text_style
 
+
+class ErrorData:
+    def __init__(self, line, charPositionInLine, msg):
+        self.line = line
+        self.charPositionInLine = charPositionInLine
+        self.msg = msg
+
+
+class SyntaxErrorListener(ErrorListener):
+
+    def __init__(self, errors):
+        super().__init__()
+        self.errors = errors
+
+    def syntaxError(self, recognizer, offendingSymbol, line, charPositionInLine, msg, e):
+        self.errors.append(ErrorData(line, charPositionInLine, msg))
+
+
 class EventLog(ttk.Frame):
+
+    NO_SYNTAX_ERRORS_MSG = "No Syntax Errors have been detected."
 
     def __init__(self, *args, **kwargs):
         kwargs['style'] = "CodeFrame.TFrame"
@@ -28,6 +49,15 @@ class EventLog(ttk.Frame):
         self.scrollbar_v.pack(side="right", fill="y")
         self.text.pack(side="top", fill="both", expand=True)
 
+    def log(self, errors):
+        if not errors:
+            summary = self.NO_SYNTAX_ERRORS_MSG
+        else:
+            summary = ""
+            for er in errors:
+                summary += f"- Line {er.line}:{er.charPositionInLine} {er.msg}\n\n"
+
         self.text.configure(state='normal')
-        self.text.insert("end", "Lorem Ipsum Lorem Huipsum Assa Massa")
+        self.text.delete('1.0', 'end')
+        self.text.insert('1.0', summary)
         self.text.configure(state='disabled')

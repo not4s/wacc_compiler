@@ -110,6 +110,7 @@ wacc_shell_frame = Frame(devtool_pane, bg="#00ff00")
 devtool_pane.add(wacc_shell_frame, minsize=SHELL_MINSIZE)
 
 event_log = EventLog(devtool_pane)
+code_frame.link_event_log(event_log)
 devtool_pane.add(event_log, minsize=SHELL_MINSIZE)
 
 root.mainloop()
