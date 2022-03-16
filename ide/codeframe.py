@@ -5,7 +5,7 @@ from tkinter import font as tk_font
 
 import sys
 
-from style import get_default_font, code_frame_style, code_theme
+from style import get_default_font, common_text_style, code_theme
 from painter import Painter
 
 
@@ -105,7 +105,7 @@ class CodeText(tk.Text):
         return result
 
     def configure_style(self):
-        self.configure(**code_frame_style)
+        self.configure(**common_text_style)
 
         # Setting tab size to 2 spaces
         tab = tk_font.Font(font=self['font']).measure('  ')
@@ -169,7 +169,7 @@ class CodeFrame(ttk.Frame):
         self.text = CodeText(self, width=400, height=400, wrap=NONE)
 
         self.scrollbar_v = Scrollbar(self, orient=VERTICAL, command=self.text.yview)
-        self.scrollbar_h = Scrollbar(self, orient=HORIZONTAL, command=self.text.xview)
+        self.scrollbar_h = Scrollbar(self.text, orient=HORIZONTAL, command=self.text.xview)
         self.scrollbar_h.pack(side="bottom", fill="x")
         self.text.configure(yscrollcommand=self.scrollbar_v.set)
         self.text.configure(xscrollcommand=self.scrollbar_h.set)
@@ -186,6 +186,9 @@ class CodeFrame(ttk.Frame):
 
         self.text.bind("<<Change>>", self._on_change)
         self.text.bind("<Configure>", self._on_change)
+
+    def link_event_log(self, event_log):
+        self.text.painter.attach_event_log(event_log)
 
     def _on_change(self, event):
         self.linenumbers.redraw()
