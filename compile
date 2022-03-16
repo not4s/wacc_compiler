@@ -61,7 +61,7 @@ if file_type != 'wacc':
 file_name = os.path.splitext(os.path.basename(path))[0]
 
 if options.d:
-    output = compileCode()
+    output, errCode = compileCode()
 
     # move to wacc_test directory
     os.chdir("wacc_test")
