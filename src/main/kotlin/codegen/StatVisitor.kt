@@ -1,9 +1,6 @@
 package codegen
 
-import ast.IdentifierSet
-import ast.Literal
-import ast.Stat
-import ast.WACCStruct
+import ast.*
 import ast.statement.*
 import instructions.WInstruction
 import instructions.misc.*
@@ -142,7 +139,15 @@ class StatVisitor(
                         data,
                         null
                     )
-                    else -> TODO()
+                    is PairElement -> {
+                        ctx.st.assignPairElem(
+                            ctx.lhs.first,
+                            (ctx.lhs.type is WChar || ctx.lhs.type is WBool),
+                            data,
+                            funcPool
+                        )
+                    }
+                    else -> TODO("StatVisitor not implemented for ${ctx::class}")
                 }
             ).toList()
 

@@ -186,27 +186,15 @@ class RHSVisitor(
     }
 
     private fun visitPairElement(ctx: PairElement): List<WInstruction> {
-        val offset = if (ctx.first) 0 else WORD_SIZE
-        val charOrBool = (lhs?.type is WChar || lhs?.type is WBool)
-
-        data.addDeclaration(NULL_POINTER_MESSAGE)
-        pCheckNullPointer(data, funcPool)
-        val instr = listOf<WInstruction>()
+        return listOf<WInstruction>()
             .plus(visit(ctx.expr))
-            .plus(B(CHECK_NULL_POINTER))
             .plus(
-                LDR(
-                    Register.R0,
-                    ImmediateOffset(Register.R0, offset)
+                ctx.st.assignPairElem(
+                    ctx.first,
+                    (lhs?.type is WChar || lhs?.type is WBool),
+                    data,
+                    funcPool
                 )
             )
-            .plus(
-                LDR(
-                    Register.R0,
-                    ImmediateOffset(Register.R0),
-                    isSignedByte = charOrBool
-                )
-            )
-        return instr
     }
 }
