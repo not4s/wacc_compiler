@@ -46,8 +46,8 @@ class InstructionEvaluation {
                     is MOV -> {
                         // if MOV r4, r0; MOV r0, r4 the latter instruction is deleted
                         if(prev is MOV && prev_list.size == 3 
-                                && prev_list[1] == instr_list[1]
-                                && prev_list[2] == instr_list[2]) continue
+                                && prev_list[1] == instr_list[2]
+                                && prev_list[2] == instr_list[1]) continue
 
                         // if two MOV instructions come sequentially change one to an ADD instruction
                         // Using the adder and shifter in parallel resultins in higher speed
