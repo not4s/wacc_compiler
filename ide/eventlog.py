@@ -36,7 +36,6 @@ class EventLog(ttk.Frame):
         self.label.pack(side="top", fill="x")
 
         self.text = Text(self)
-        # self.text = Text(self, width=400, height=400)
 
         self.scrollbar_v = Scrollbar(self, orient=VERTICAL, command=self.text.yview)
         self.text.configure(yscrollcommand=self.scrollbar_v.set)

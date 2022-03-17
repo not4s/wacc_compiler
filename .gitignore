@@ -38,4 +38,3 @@ target
 __pycache__
 ide/antlr
 antlr_config/g4py
-devtools.py
