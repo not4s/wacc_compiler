@@ -11,7 +11,6 @@
 \usepackage{graphicx}
 \usepackage{enumitem}
 
-
 % custom syntax highlighting in code blocks
 \usepackage{minted}
 \usepackage{xcolor} % to access the named colour lightGrey
@@ -65,40 +64,39 @@
 
 \subsection*{The final product}
 
-\begin{quote}
-    An analysis and critical evaluation of the quality of the WACC compiler you
-have built. You should consider both whether it meets the functional specification of the project
-and whether you judge that it forms a sound basis for future development. You may also wish to
-address the performance characteristics of your compiler.
-\end{quote}
+\subsubsection*{Evaluation of the WACC compiler}
+
+WACC's high-level language is accurately translated into low-level ARM assembly by the compiler. It includes handling edge cases such as null dereferences, array-out-of-bounds indexing, and other run-time errors accurately. 
+
+The front end of the compiler computes in linear time, with each line being analyzed only once, only deviating to perform efficient semantic checks. In the case of a semantic error, the compiler outputs a readable error message that indicates both the location and possible solutions. As the compiler generated the AST, it also monitored the AST for further semantic errors. 
+
+Back-end code generation is based on a stack implementation. Despite the lack of use of the diversity of registers available to the compiler, this approach is functionally correct. Variable locations were monitored flawlessly by the symbol table.
+
+In the system tests, the assembly code optimisation enables the compiler to produce fast results for larger programs, such as the \shell{sample_programs/valid/advanced/*.wacc}. Additionally, this optimized assembly had the intended effect of increasing the speed of emulation.
+
+\subsubsection*{Future Development}
+
+By using coding principles such as builder patterns and minimizing code repetition, the state of the compiler has been left in a healthy position to be upgraded. Additionally, we opted to use ANTLR, an open-source parser generator with a wealth of detailed documentation. A popular parser generator means that many people have contributed to its development, and a lot of forums exist with popular problems and questions with detailed solutions. As a result, future developers won't have the pleasure of working with our highly bespoke, minimally documented parser generator.
+
+Furthermore, flexible testing scripts written in parallel with the compiler's development make it easy to test new features.
 
 \subsection*{Project Management}
-
-\begin{quote}
-    An analysis of the organisation of your group and your use of project
-management tools (such as Git). You should describe how your group was structured, how you
-coordinated your work and detail any tools that helped/hindered your progress. You should also
-discuss what went well and what you would do differently if you were to do the lab again.
-
-\end{quote}
 
 \subsubsection*{Project Maintenance Tools}
 
 \begin{figure}
   \includegraphics[width=\linewidth]{healthyGitGraph.png}
-  \caption{A snapshot of a healthy Git graph structure demonstrating great concurrent development between 4 group memebers}
+  \caption{A snapshot of a healthy Git graph structure demonstrating great concurrent development between 4 group memebers with meaningfull commit messages.}
   \label{fig:gitGraph}
 \end{figure}
 
 Developing great code while working with many group members required keeping good Git hygiene and adhering to recognized Git disciplines.
 
-The main branch of the repository was kept clean and 'ready to deploy' by only containing code that was known to compile, run and pass all unit and system tests for a particular milestone. By being meticulous about what code is merged onto the branch this kept the master branch in a state where it could be deployed at any time.
+To separate the different developmental stages from the master branch, three disjoint and independent branches were created: the front-end branch, the back-end branch, and the extension branch. Only code that passed all unit and system tests for a particular milestone was included in the master branch of the repository. This kept it in a state where it could be deployed at any time. Continuous Integration practices were used to provide agile and simple code development by merging frequently and never letting a sub-branch live more than a couple days without merging to the parent branch.
 
-To separate different milestones off the master branch three disjoint and independent branches were created to house the main changes of each developmental stage; the front-end branch, back-end branch and the extension branch. For each milestone, developers create sub-branches off these supplementary branches. 
+The majority of group communication was conducted through Discord. Each milestone had its own channel. Members were able to share any changes they wanted to expand on, ask any questions, and receive help regarding features implementation. In addition, it served as a great way to share resources; working with a compiler requires a lot of reference material, which was available in the relevant channels.
 
-Merging changes when a branch is days old is extremely difficult and with a high probability of merge conflicts it is difficult to guarantee a safe merge. Instead, Continuous Integration practices were used to provide agile and simple code development by merging frequently and never letting a sub-branch live more than a couple days without merging to the parent branch. Figure \ref{fig:gitGraph} demonstrates a snapshot of a the project's git graphing structure.
-
-Another important application of great git hygiene and great communication lies in meaningful commit messages and discussion channels. To understand what was going on at a glance and who authored the commit, the messages employed the following format:
+Meaningful commit messages and discussion channels are also important aspects of git hygiene and communication. In order to understand changes and who authored the commit at a glance, the messages utilized the following format:
 
 \verb|[verb describing changes/(authors)+]: short description of context and changes]|
 \verb|(any other relevant meta information describing changes)*|
@@ -107,30 +105,15 @@ This style of commit messages can be seen in Figure \ref{fig:gitGraph}.
 
 \subsubsection*{Project Communication and Group Synergy}
 
-Most group communication was done through a Discord group. Here, we had channels for each milestone. This allowed members to communicate about any sort of changes that they'd like to expand on, ask any questions, receive help regarding feature implementation and more. It also was a great medium to share resources; working with a compiler requires a lot of reference material, which was provided in the relevant channels.
-
-Most days, group coding sessions happened in person at the Labs in campus. Being together meant a more dynamic work environment, where people would work collaboratively on a problem if required. This meant that everyone worked efficiently, and any problem was solved faster than if one person was working on it.
-
-Each meeting was prepended with a SCRUM meeting. Each day we would discuss what would be done during the day and the strategies used to solve them. This methodology focused more on working in an iterative fashion inside a fixed time box, rather than building software. We found great use out of this style of group work, as it would efficiently capture the projects general progress and keep group members upto date and included.
+Most days, group coding sessions occurred in person at the Labs in campus. When working together, people could work collaboratively on a problem and problems were solved faster than if it were just one person working on them. Before each meeting, a SCRUM meeting was held. As a team, we would discuss our activities and problems each day. As opposed to building software, this methodology focused more on iterating within a fixed time frame. Thus, we found that this method of group work was very practical, since it could efficiently track the project's general progress and keep group members up to date.
 
 \subsubsection*{Testing and Development}
 
-\begin{figure}
-  \includegraphics[width=\linewidth]{testScript.png}
-  \caption{The helper menu generated with the -h falg explaining all possible options of the testing script}
-  \label{fig:testScript}
-\end{figure}
+Where possible, we created unit tests to test implementations of the hidden components of our software, such as the symbol table. 
 
-Testing remains a mandatory practice during any type of code development and it has never been more prevalent than in this assignment. Where possible, we created unit tests to test implementations of the hidden components of our software, such as the symbol table.
+Tests would assess correct compilation of programs depending on the milestone. The front end tests would judge if a program that is semantically and syntactically invalid halted and correct error messages presented. Back-end tests made sure that valid programs produced the correct output by comparing an emulated output of the generated code to the refCompile script. Extension tests could not use the refCompile script as a foothold because we implemented new features into the language that were not recognised by it. Instead predicted outputs were included in the WACC test files.
 
-Testing was split into three parts:
-\begin{itemize}
-    \item Front-end tests made sure that compilation semantically and syntactically invalid programs were halted and correct error messages were presented.
-    \item Back-end tests made sure that valid programs produced the correct output by comparing an emulated output of the generated code to the refCompile script. By writing the script in python, we made use of provided libraries for checking the difference between outputs and assembly code if such a need was required.
-    \item Extension tests could not use the refCompile script as a foothold because we implemented new features into the language that were not recognised by it. Therefore testing was conducted by comparing the output with a predicted output already in the wacc test.
-\end{itemize}
-
-For each of these tests, it was possible to test a directory or all available wacc files in the \shell{sample_programs/} directory. Examples of the scripts can be seen in Figure \ref{fig:testScript}.
+For each of these tests, it was possible to test a directory or all available wacc files in the \shell{sample_programs/} directory. To see an example of such a script, navigate to \shell{wacc_test/} and use the command \shell{./testOutputOne --help} to see a list of options.
 
 Where necessary, new wacc tests were added to the \shell{sample_programs/} directory and conformed to the style and format provided by the department. Such examples can be seen in \shell{sample_programs/valid/structs/}, \shell{sample_programs/invalid/semanticErr/array/} and more.
 
@@ -153,32 +136,52 @@ chose to use them. You might also want to provide a system architecture diagram 
 to aid this discussion.
 \end{quote}
 
-
 \subsection*{Beyond the Specification}
-
-\begin{quote}
-     An evaluation of your extensions to your WACC compiler. You
-should describe all of the language extensions, optimisations or other aspects that you have added
-to your compiler, especially highlighting \textbf{how these features can be accessed or viewed.} You should
-also briefly discuss what future extensions you would add to your compiler if you had more time.
-\end{quote}
 
 \subsubsection*{Language Extensions}
 
-\shell{C}-like structs were introduced to WACC to allow for more rich data collections. Much like \shell{C}, these would be used to diversify the programs that could be written and open up a new door into data collections. Previously, this would have relied on carefully setting up arrays and/or pairs in order to store collections of data. 
+\shell{C}-like structs were introduced to WACC to allow for more rich data collections. These could be used, much like \shell{C}, to create a diverse range of programs and open up a new avenue into data collection. Examples can be seen at \shell{wacc_test/sample_programs/valid/structs}.
 
-To begin with, the \shell{WACCLexer.g4} and \shell{WACCParser.g4} were updated to represent the correct behaviour of the structs. These involve struct declarations, struct uses and struct manipulation. Because all struct declarations should happen at the begining of the program (as are functions), structs are parsed first. In \shell{ASTProducer.kt}, when the visitors are traversing the parse tree, we check for semantic errors such as incorrect usages of structs or undefined struct references.
-
-After the front-end is complete the back end generates appropriate assembly code. This code was generated with the help of careful observations from  \hyperlink{ https://godbolt.org/ }{godbolt} website and the ARM Technical Reference Manual.
+To begin with, the \shell{WACCLexer.g4} and \shell{WACCParser.g4} were updated to represent the correct behaviour of the structs. Structs are parsed first in \shell{ASTProducer.kt}. The back end generates the assembly code after the front-end has been completed in the relevant visitors' procedures. Most notably, \shell{ParentRegSymbolTable.kt} handled element access. This code was generated with the help of careful observations from  \hyperlink{ https://godbolt.org/ }{godbolt} website and the ARM Technical Reference Manual.
 
 \subsubsection*{Optimisations}
+\paragraph{1. Constant Evaluation} \mbox{}
+
+Expressions are evaluated by evaluating both the left and right side of the expression. Upon evaluating the right side of the expression, the result stored in register R0 is pushed to the stack, which is then popped back once the left side is evaluated. This is completely unnecessary if the operands of the expression are constants and the expression could be evaluated at compile-time. The optimisation was achieved by modifying the AST in \shell{ASTProducer.kt} to evaluate the expression beforehand if both the operands are Literal nodes.
+
+\paragraph{2. Booth's Algorithm} \mbox{}
+
+MUL instructions in ARM assembly are computed slower than other operations such as SUB or LSL. This is because the former has a multiple cycle latency while the latter has a single cycle latency to compute. An attempt was made to solve this problem and optimise the run time speed of our compiler in the Binary Operation part of our \shell{ExprVisitor.kt}; we used the Booth's algorithm which multiplies two signed binary numbers in two's complement notation to split the MUL instruction into faster sub instructions.
+
+
+\paragraph{3. Peephole Optimisations - Instruction Evaluation} \mbox{}
+
+Peephole optimisation of removing or replacing redundant or dead code was attempted in \shell{InstructionEvaluation.kt}. Pattern matching was primarily used to for implementation.
+
+\begin{itemize}
+\item{Dead LDR Instructions: LDR instructions that load content from memory is often called right after a STR instruction that stores the same content into memory. This is redundant because the content to load is already in the target register, hence, was a target of elimination.}
+
+\item{Redundant MOV: The generated code contained cyclic MOV instructions which loaded one register to another and called the MOV instruction again with the source register and destination register switched. This was also redundant and a target pattern of elimination.}
+
+\item{Efficient MOV: Two sequential MOV instructions can be optimised to a MOV instruction and an ADD instruction that performs the same action, which results in higher performance because MOV is done by shifting in ARM assembly and by modifying one instruction to an ADD instruction, both the shifter and adder can be utilised.}
+\end{itemize}
 
 \subsubsection*{Integrated Development Environments}
 
+\begin{quote}
+     An evaluation of IDE, especially highlighting \textbf{how these features can be accessed or viewed}. Briefly discuss what future extensions you would add if you had more time.
+\end{quote}
+
+Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. 
+
+Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. Place holder paragraph. 
+
 \subsubsection*{Future extensions}
 
-The clean and iterative code format has made it easy to add new features to the code. ANTLR helpfully provides a great tree visitor scheme which can be expanded to use and include extra features added in the Lexer and Parser files. Using this made it simple to implement new features to the language.
+Adding new features has been easy due to the clean and iterative code format. ANTLR provides a very useful tree visitor scheme which can be extended with additional features from the Lexer and Parser file. Using this made it simple to implement new features to the language.
 
-Having implemented structs, it would also be great to implement classes. Classes would introduce so much potential to WACC and allow it to do so much more. Since classes are comparable to structs in the way they group data, classes would be a job half done before even starting it; the same semantic rules apply for classes and their elements. The only difference being, it would be more difficult to account for class functions, as well as different protection levels on its fields and functions.
+In addition to structs, it would be great to implement classes as well. The same semantic rules apply to classes and their elements, since classes group data similarly to structs. Thus, classes already accomplish half of their job before they even start.
+
+Our compiler design is flawed because we did not consider optimizations from the beginning. Hence in the future, building a control flow graph or a single static assignment form representation from the abstract syntax tree would be a challenging yet rewarding extension we could work on. By implementing a CFG or SSA form from AST, we hope to explore more advanced topics in optimisations such as global value numbering.
 
 \end{document}

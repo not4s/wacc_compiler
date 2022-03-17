@@ -5,19 +5,21 @@ import instructions.WInstruction
 import instructions.misc.*
 import instructions.operations.*
 import symbolTable.typeToByteSize
-import waccType.*
+import waccType.WBool
+import waccType.WChar
+import waccType.WInt
+import waccType.WStr
 
 // Stores visiting result in Register.R0
 class RHSVisitor(
     val data: DataDeclaration,
-    val rp: RegisterProvider,
-    val funcPool: FunctionPool,
+    private val rp: RegisterProvider,
+    private val funcPool: FunctionPool,
     val lhs: LHS? = null
 ) : ASTVisitor<RHS> {
 
     private val registerProvider = RegisterProvider()
 
-    // Stores result of visiting in R4.
     override fun visit(ctx: RHS): List<WInstruction> {
         return when (ctx) {
             is Literal -> visitLiteral(ctx)
@@ -27,8 +29,15 @@ class RHSVisitor(
             is PairElement -> visitPairElement(ctx)
             is Expr -> ExprVisitor(data, rp, funcPool).visit(ctx)
             is FunctionCall -> visitFunctionCall(ctx)
-            is WACCStruct -> TODO("in RHSVisitor, WACCStruct is not implemented")
+            is WACCStruct -> visitStruct(ctx)
         }
+    }
+
+    private fun visitStruct(ctx: WACCStruct): List<WInstruction> {
+        // calculate size of struct
+        val sizeOfStruct: Int = ctx.elements.entries.sumOf { (_, type) -> typeToByteSize(type) }
+        // declaring a struct and storing the address into the stack
+        return listOf(LDR(Register.R0, LoadImmediate(sizeOfStruct)), B(MALLOC))
     }
 
     private fun visitFunctionCall(ctx: FunctionCall): List<WInstruction> {
@@ -169,7 +178,6 @@ class RHSVisitor(
             )
         )
     }
-
 
     private fun visitPairLiteral(): List<WInstruction> {
         return listOf(

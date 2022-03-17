@@ -323,6 +323,15 @@ valid/while:
 
 ########## EXTENSION TESTS ##########
 
+.invalid/semanticErr/structs:
+  stage: extension
+  interruptible: true
+  script:
+    - cd wacc_test
+    - ./testOutputDir.sh -e "sample_programs/invalid/semanticErr/structs/*.wacc"
+
+## Collective testing of the directory 'valid/structs/' is skipped and tests are incrementally added
+## in a TDD style individually.
 valid/structs:
   stage: extension
   interruptible: true
