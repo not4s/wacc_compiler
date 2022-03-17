@@ -89,15 +89,6 @@ menu_bar.add_command(label="Exit", command=root.quit)
 
 root.config(menu=menu_bar)
 
-
-# Resizable Panes with sashes design:
-#  +----------+---------+
-#  |          |  Tools  |
-#  |   Code   +---------+
-#  |   edit   |  Event  |
-#  |          |   Log   |
-#  +----------+---------+
-
 main_pane = PanedWindow(root, orient=HORIZONTAL)
 main_pane.pack(fill="both", expand=True)
 

@@ -11,19 +11,21 @@ class ErrorData:
         self.charPositionInLine = charPositionInLine
         self.msg = msg
 
+    def char_pos(self):
+        return f"{self.line}.{self.charPositionInLine}"
+
 
 class SyntaxErrorListener(ErrorListener):
-
     def __init__(self, errors):
         super().__init__()
         self.errors = errors
 
     def syntaxError(self, recognizer, offendingSymbol, line, charPositionInLine, msg, e):
-        self.errors.append(ErrorData(line, charPositionInLine, msg))
+        if not msg.endswith('\'<EOF>\''):
+            self.errors.append(ErrorData(line, charPositionInLine, msg))
 
 
 class EventLog(ttk.Frame):
-
     NO_SYNTAX_ERRORS_MSG = "No Syntax Errors have been detected."
 
     def __init__(self, *args, **kwargs):

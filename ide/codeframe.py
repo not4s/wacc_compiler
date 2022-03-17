@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 from tkinter import font as tk_font
+from PIL import ImageTk
 
 import sys
 
@@ -9,7 +10,57 @@ from style import get_default_font, common_text_style, code_theme
 from painter import Painter
 
 
-ONE_SECOND = 1000
+ONE_SECOND = 1000  # milliseconds
+
+
+class Bulb(tk.Label):
+    ''' Widget which acts like yellow light bulb in IntelliJ IDEA.
+    It is place next to an error region and it displays a relevant
+    error message on mouse hover
+
+    The technical name is Bulb, but the appearance design is a broken heart '''
+
+    DISTANCE_FROM_CHAR = 20
+    HOVER_LABEL_OFFSET = 36
+    PADX_OFFSET = common_text_style['padx']
+    PADY_OFFSET = common_text_style['pady']
+
+    def __init__(self, error, *args, **kwargs):
+        tk.Label.__init__(self, *args, **kwargs)
+        self.error = error
+        self.text = args[0]
+        self.frame_x = 0
+        self.frame_y = 0
+
+        self.image = PhotoImage(file="broken_heart.png")
+        self.configure(image=self.image, bg=common_text_style['background'])
+
+        self.hover_label = None
+        self.bind("<Enter>", self._hover)
+        self.bind("<Leave>", self._hover_leave)
+
+    def redraw(self):
+        ''' Change position when user scrolls '''
+        char_pos = self.error.char_pos()
+        character = self.text.get(char_pos)
+        x, y, width, height = self.text.bbox(char_pos)
+
+        # Coords of char center relative to the top left corner of code text
+        self.frame_x = x + self.PADX_OFFSET - width
+        self.frame_y = y + self.DISTANCE_FROM_CHAR + self.PADY_OFFSET
+        self.place_configure(x=self.frame_x, y=self.frame_y)
+
+    def _hover(self, event):
+        self.hover_label = Label(
+            self.text, text=self.error.msg, bd=1, relief='sunken',
+            anchor='e', justify='left', wraplength=300,
+            padx=5, pady=5
+        )
+        self.hover_label.place(x=self.frame_x + self.HOVER_LABEL_OFFSET, y=self.frame_y)
+
+    def _hover_leave(self, event):
+        self.hover_label.destroy()
+        self.hover_label = None
 
 
 class TextLineNumbers(tk.Canvas):
@@ -56,6 +107,7 @@ class CodeText(tk.Text):
         tk.Text.__init__(self, *args, **kwargs)
 
         self.painter = Painter(self)
+        self.bulbs = []
 
         # create a proxy for the underlying widget
         self._orig = self._w + "_orig"
@@ -81,6 +133,7 @@ class CodeText(tk.Text):
         ):
             self.event_generate("<<Change>>", when="tail")
 
+        # Triggering update of current line highlight
         if ('set' in args or command == "see") and 'insert' in args:
             self.event_generate("<<CursorLineUpdate>>")
 
@@ -97,6 +150,7 @@ class CodeText(tk.Text):
         cmd = (self._orig, command) + args
         result = self.tk.call(cmd)
 
+        # Some common updates of a text
         if command in ('insert', 'delete', 'replace'):
             self.event_generate('<<TextModified>>')
             self.event_generate('<<Change>>')
@@ -125,11 +179,22 @@ class CodeText(tk.Text):
         self.tag_configure("comment", foreground=code_theme['comment'])
         self.tag_configure("string", foreground=code_theme['string_literal'])
         self.tag_configure("int", foreground=code_theme['int_literal'])
-        self.tag_configure("error", foreground=code_theme['error'])
+        self.tag_configure("error", background=code_theme['error'], foreground='#ffffff')
         self.tag_configure("function", foreground=code_theme['function'])
 
     def update_highlight(self):
         self.painter.paint()
+
+    def clear_error_bulbs(self):
+        for bulb in self.bulbs:
+            bulb.destroy()
+        self.bulbs = []
+
+    def add_error_bulb(self, error):
+        bulb = Bulb(error, self)
+        bulb.place(x=0, y=0)
+        bulb.redraw()
+        self.bulbs.append(bulb)
 
     def handle_events(self, triggerer_count):
         ''' Calls syntax painting only if user didn't edit text for more than one second '''
@@ -138,6 +203,8 @@ class CodeText(tk.Text):
         self.update_highlight()
 
     def _on_change(self, event):
+        self.clear_error_bulbs()
+
         self.event_counter += 1
         self.after(ONE_SECOND, self.handle_events, self.event_counter)
 
@@ -145,16 +212,15 @@ class CodeText(tk.Text):
             self.event_counter = 0
 
     def _highlight_current_line(self, event):
-        print("\n\nUPDATED highlight LINE\n\n")
         self.tag_remove("current_line", '1.0', "end")
         self.tag_add("current_line", "insert linestart", "insert lineend+1c")
 
     def _copy_current_line(self, event):
         self.clipboard_clear()
         self.clipboard_append(self.get("insert linestart", "insert lineend+1c"))
-        print("\n\nCOPIED LINE\n\n")
 
     def _cut_current_line(self, event):
+        print(self.bulbs)
         self._copy_current_line(event)
         self.delete("insert linestart", "insert lineend+1c")
 
@@ -169,7 +235,7 @@ class CodeFrame(ttk.Frame):
         self.text = CodeText(self, width=400, height=400, wrap=NONE)
 
         self.scrollbar_v = Scrollbar(self, orient=VERTICAL, command=self.text.yview)
-        self.scrollbar_h = Scrollbar(self.text, orient=HORIZONTAL, command=self.text.xview)
+        self.scrollbar_h = Scrollbar(self, orient=HORIZONTAL, command=self.text.xview)
         self.scrollbar_h.pack(side="bottom", fill="x")
         self.text.configure(yscrollcommand=self.scrollbar_v.set)
         self.text.configure(xscrollcommand=self.scrollbar_h.set)
@@ -192,3 +258,5 @@ class CodeFrame(ttk.Frame):
 
     def _on_change(self, event):
         self.linenumbers.redraw()
+        for bulb in self.text.bulbs:
+            bulb.redraw()
