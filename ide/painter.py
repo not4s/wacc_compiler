@@ -324,6 +324,16 @@ class Painter:
     def attach_event_log(self, event_log):
         self.event_log = event_log
 
+    def paint_errors(self):
+        self.text.tag_remove('error', '1.0', 'end')
+        self.text.clear_error_bulbs()
+        for er in self.errors:
+            self.text.tag_add('error', er.char_pos(),
+                              f"{er.line}.{er.charPositionInLine + 1}")
+            self.text.add_error_bulb(er)
+
+
     def pass_errors_to_event_log(self):
         self.event_log.log(self.errors)
+        self.paint_errors()
         self.errors = []

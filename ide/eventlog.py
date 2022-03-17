@@ -11,6 +11,9 @@ class ErrorData:
         self.charPositionInLine = charPositionInLine
         self.msg = msg
 
+    def char_pos(self):
+        return f"{self.line}.{self.charPositionInLine}"
+
 
 class SyntaxErrorListener(ErrorListener):
 
@@ -23,7 +26,6 @@ class SyntaxErrorListener(ErrorListener):
 
 
 class EventLog(ttk.Frame):
-
     NO_SYNTAX_ERRORS_MSG = "No Syntax Errors have been detected."
 
     def __init__(self, *args, **kwargs):
