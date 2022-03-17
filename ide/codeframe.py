@@ -21,6 +21,7 @@ class Bulb(tk.Label):
     The technical name is Bulb, but the appearance design is a broken heart '''
 
     DISTANCE_FROM_CHAR = 20
+    HOVER_LABEL_OFFSET = 36
     PADX_OFFSET = common_text_style['padx']
     PADY_OFFSET = common_text_style['pady']
 
@@ -28,26 +29,38 @@ class Bulb(tk.Label):
         tk.Label.__init__(self, *args, **kwargs)
         self.error = error
         self.text = args[0]
-        # self.configure(font=get_default_font())
+        self.frame_x = 0
+        self.frame_y = 0
+
         self.image = PhotoImage(file="broken_heart.png")
         self.configure(image=self.image, bg=common_text_style['background'])
+
+        self.hover_label = None
+        self.bind("<Enter>", self._hover)
+        self.bind("<Leave>", self._hover_leave)
 
     def redraw(self):
         ''' Change position when user scrolls '''
         char_pos = self.error.char_pos()
         character = self.text.get(char_pos)
-        try:
-            x, y, width, height = self.text.bbox(char_pos)
-        except TypeError:
-            return
-
-        print(f"xywh{x, y, width, height}")
+        x, y, width, height = self.text.bbox(char_pos)
 
         # Coords of char center relative to the top left corner of code text
-        # frame_x = x + (0 if character == u'\n' else width // 2)
-        frame_x = x + self.PADX_OFFSET - width
-        frame_y = y + self.DISTANCE_FROM_CHAR + self.PADY_OFFSET
-        self.place_configure(x=frame_x, y=frame_y)
+        self.frame_x = x + self.PADX_OFFSET - width
+        self.frame_y = y + self.DISTANCE_FROM_CHAR + self.PADY_OFFSET
+        self.place_configure(x=self.frame_x, y=self.frame_y)
+
+    def _hover(self, event):
+        self.hover_label = Label(
+            self.text, text=self.error.msg, bd=1, relief='sunken',
+            anchor='e', justify='left', wraplength=300,
+            padx=5, pady=5
+        )
+        self.hover_label.place(x=self.frame_x + self.HOVER_LABEL_OFFSET, y=self.frame_y)
+
+    def _hover_leave(self, event):
+        self.hover_label.destroy()
+        self.hover_label = None
 
 
 class TextLineNumbers(tk.Canvas):
