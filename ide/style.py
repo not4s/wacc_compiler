@@ -4,7 +4,7 @@ from tkinter import font as tk_font
 
 DEFAULT_FONT_FAMILY = "Consolas"
 DEFAULT_THEME = 'Eye Pain'
-DEFAULT_FONT_SIZE = 14
+DEFAULT_FONT_SIZE = 16
 SMALLER_FONT_SIZE = 11
 
 

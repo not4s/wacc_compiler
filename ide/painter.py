@@ -313,6 +313,13 @@ class Painter:
 
         tree = parser.program()
 
+        # Removing errors which cannot be highlighted
+        filtered_errors = []
+        for er in self.errors:
+            if self.text.get(er.char_pos()):
+                filtered_errors.append(er)
+        self.errors = filtered_errors
+
         visitor = PainterVisitor()
         visitor.visit(tree)
 
@@ -331,7 +338,6 @@ class Painter:
             self.text.tag_add('error', er.char_pos(),
                               f"{er.line}.{er.charPositionInLine + 1}")
             self.text.add_error_bulb(er)
-
 
     def pass_errors_to_event_log(self):
         self.event_log.log(self.errors)

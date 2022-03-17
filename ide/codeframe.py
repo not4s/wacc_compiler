@@ -20,7 +20,9 @@ class Bulb(tk.Label):
 
     The technical name is Bulb, but the appearance design is a broken heart '''
 
-    DISTANCE_FROM_CHAR = 30
+    DISTANCE_FROM_CHAR = 20
+    PADX_OFFSET = common_text_style['padx']
+    PADY_OFFSET = common_text_style['pady']
 
     def __init__(self, error, *args, **kwargs):
         tk.Label.__init__(self, *args, **kwargs)
@@ -34,11 +36,17 @@ class Bulb(tk.Label):
         ''' Change position when user scrolls '''
         char_pos = self.error.char_pos()
         character = self.text.get(char_pos)
-        x, y, width, height = self.text.bbox(char_pos)
+        try:
+            x, y, width, height = self.text.bbox(char_pos)
+        except TypeError:
+            return
+
+        print(f"xywh{x, y, width, height}")
 
         # Coords of char center relative to the top left corner of code text
-        frame_x = x + (0 if character == u'\n' else width // 2)
-        frame_y = y + height // 2 + self.DISTANCE_FROM_CHAR
+        # frame_x = x + (0 if character == u'\n' else width // 2)
+        frame_x = x + self.PADX_OFFSET - width
+        frame_y = y + self.DISTANCE_FROM_CHAR + self.PADY_OFFSET
         self.place_configure(x=frame_x, y=frame_y)
 
 
@@ -182,6 +190,8 @@ class CodeText(tk.Text):
         self.update_highlight()
 
     def _on_change(self, event):
+        self.clear_error_bulbs()
+
         self.event_counter += 1
         self.after(ONE_SECOND, self.handle_events, self.event_counter)
 
@@ -197,6 +207,7 @@ class CodeText(tk.Text):
         self.clipboard_append(self.get("insert linestart", "insert lineend+1c"))
 
     def _cut_current_line(self, event):
+        print(self.bulbs)
         self._copy_current_line(event)
         self.delete("insert linestart", "insert lineend+1c")
 
@@ -211,7 +222,7 @@ class CodeFrame(ttk.Frame):
         self.text = CodeText(self, width=400, height=400, wrap=NONE)
 
         self.scrollbar_v = Scrollbar(self, orient=VERTICAL, command=self.text.yview)
-        self.scrollbar_h = Scrollbar(self.text, orient=HORIZONTAL, command=self.text.xview)
+        self.scrollbar_h = Scrollbar(self, orient=HORIZONTAL, command=self.text.xview)
         self.scrollbar_h.pack(side="bottom", fill="x")
         self.text.configure(yscrollcommand=self.scrollbar_v.set)
         self.text.configure(xscrollcommand=self.scrollbar_h.set)

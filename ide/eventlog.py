@@ -16,13 +16,13 @@ class ErrorData:
 
 
 class SyntaxErrorListener(ErrorListener):
-
     def __init__(self, errors):
         super().__init__()
         self.errors = errors
 
     def syntaxError(self, recognizer, offendingSymbol, line, charPositionInLine, msg, e):
-        self.errors.append(ErrorData(line, charPositionInLine, msg))
+        if not msg.endswith('\'<EOF>\''):
+            self.errors.append(ErrorData(line, charPositionInLine, msg))
 
 
 class EventLog(ttk.Frame):
