@@ -402,10 +402,16 @@ class ASTProducer(
      * Here the SemanticChecker statement was removed as redundant. Maybe worth looking at this function
      * if some unknown bug will show up.
      */
-    override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): IdentifierGet {
+    override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): Expr {
         val symbol = ctx.IDENTIFIER().text
-        st.get(symbol, builderTemplateFromContext(ctx, st))
-        return IdentifierGet(st, symbol, ctx)
+        val identifier_val = st.get(symbol, builderTemplateFromContext(ctx, st))
+        if(identifier_val is WInt && identifier_val.value != null) {
+            return Literal(st, WInt(identifier_val.value))
+        } else if(identifier_val is WBool && identifier_val.value != null) {
+            return Literal(st, WBool(identifier_val.value))
+        } else {
+            return IdentifierGet(st, symbol, ctx)
+        }
     }
 
     override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Expr {

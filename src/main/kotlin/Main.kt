@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
         exitProcess(ExitCode.SEMANTIC_ERROR)
     }
     val instructions = ProgramVisitor(DataDeclaration()).visit(ast)
-//  val optimised_instructions = evaluateInstructions(instructions)
-    val code = translateInstructions(instructions)
+    val optimised_instructions = evaluateInstructions(instructions)
+    val code = translateInstructions(optimised_instructions)
     println(code)
 }
