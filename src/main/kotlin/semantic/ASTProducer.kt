@@ -12,6 +12,7 @@ import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
 import java.util.concurrent.atomic.AtomicInteger
+import lib.boothAlgorithm
 
 class ASTProducer(
     private val st: SymbolTable,
@@ -314,12 +315,15 @@ class ASTProducer(
                 val left_val = left.type.value!!
                 val right_val = right.type.value!!
                 var evaluated_constant = 0
+
+                val mul_values = boothAlgorithm(left_val, right_val).evaluate()
+
                 when(op) {
                     BinOperator.MUL
                             // check for overflows
-                        -> if(left_val * right_val <= Integer.MAX_VALUE 
-                                && left_val * right_val >= Integer.MIN_VALUE)
-                            evaluated_constant = left_val * right_val
+                        -> if(mul_values <= Integer.MAX_VALUE 
+                                && mul_values >= Integer.MIN_VALUE)
+                            evaluated_constant = mul_values
                     BinOperator.DIV 
                             // check for divide-by-zeros
                         -> if(right_val != 0)
