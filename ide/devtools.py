@@ -4,10 +4,45 @@ from tkinter import font as tk_font
 from style import devtool_box_style, common_text_style, get_smaller_font
 import subprocess
 import os
+import threading
+
+
+def God_forgive_me(writing, woutput):
+
+    def wrapper():
+        writing()
+        woutput.forgive()
+
+    return wrapper
+
+
+def run_emulator(woutput, binary_file):
+
+
+    woutput.run_proc = subprocess.Popen(
+        ["qemu-arm", "-L", "/usr/arm-linux-gnueabi/", binary_file],
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        # stdin=woutput.stdin.fileno(),
+        stderr=subprocess.PIPE,
+    )
+
+    woutput.run_proc.stdout.write = God_forgive_me(woutput.run_proc.stdout.write, woutput)
+    print("jopa")
+    # stdout_text, _ = woutput.run_proc.communicate(input=woutput.heresy_magic())
+
+    # woutput.heresy_magic()
+
+    # stdout_text, _ = woutput.run_proc.communicate()
+
+    text = woutput.run_proc.stdout.read().decode('utf-8')
+    print("stddout>:", text, ":<stdout")
+    woutput.write(text)
+    print("finito")
+    woutput.run_proc = None
+
 
 class WOutput(ttk.Frame):
-    ''' Read only shell which show compiler and emulator outut '''
-    NO_SYNTAX_ERRORS_MSG = "No Syntax Errors have been detected."
 
     def __init__(self, *args, **kwargs):
         kwargs['style'] = "CodeFrame.TFrame"
@@ -45,42 +80,50 @@ class WOutput(ttk.Frame):
     def _submit(self, event):
         if not self.run_proc:
             return
-        stdout_data = self.run_proc.communicate(input=self.entry.get())[0]
-        print(stdout_data)
+        stdout_data = self.run_proc.stdin.write(self.entry.get().encode('utf-8'))
         self.entry.delete(0, END)
-        self.write(self.run_proc.stdout)
+        self.write(self.run_proc.stdout.read().decode('utf-8'))
 
     def run(self, compile_command, target_dir, file_name):
+        self.text.configure(state='normal')
+        self.text.delete('1.0', 'end')
+        self.text.configure(state='disabled')
+        if self.run_proc:
+            self.run_proc.kill()
         if file_name == NONE:
             self.write("Please save the file before running it")
             return
 
-        proc = subprocess.run([compile_command, '-p', file_name], capture_output=True)
+        prevDir = os.getcwd()
+        os.chdir('..')
+        proc = subprocess.run([compile_command, '-p', file_name], text=True, capture_output=True)
         if proc.returncode != 0:
-            print([compile_command, '-p', file_name])
-            print(f"\n\nreturn code of compile {proc.returncode}\n")
             self.write(proc.stdout)
             return
+        os.chdir(prevDir)
 
-        output_assemply = os.path.join(target_dir, 'out.s')
+        output_assembly = os.path.join(target_dir, 'out.s')
         output_binary = os.path.join(target_dir, 'out')
 
-        with open(output_assemply, 'w') as f:
+        with open(output_assembly, 'w') as f:
             f.write(proc.stdout)
 
         subprocess.run(f"arm-linux-gnueabi-gcc -o {output_binary} " +\
-            f"-mcpu=arm1176jzf-s -mtune=arm1176jzf-s {output_assemply}")
+            f"-mcpu=arm1176jzf-s -mtune=arm1176jzf-s {output_assembly}", shell=True)
 
-        self.run_proc = Popen(["qemu-arm", "-L", "/usr/arm-linux-gnueabi/", test_name], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        self.write(self.run_proc.stdout)
-        self.run_proc.wait()
-
-        print(f"\nERROR -----> {self.run_proc.errorcode}\n")
-
-        self.run_proc = None
+        trd = threading.Thread(target=run_emulator, args=(self, output_binary))
+        trd.start()
+        print("thread started")
 
     def write(self, text):
         self.text.configure(state='normal')
-        self.text.delete('1.0', 'end')
-        self.text.insert('1.0', text)
+        self.text.insert('end', text)
         self.text.configure(state='disabled')
+
+    def forgive(self):
+        self.
+
+    def heresy_magic(self):
+        while True:
+            pass
+            # input =
