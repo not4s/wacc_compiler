@@ -7,41 +7,6 @@ import os
 import threading
 
 
-def God_forgive_me(writing, woutput):
-
-    def wrapper():
-        writing()
-        woutput.forgive()
-
-    return wrapper
-
-
-def run_emulator(woutput, binary_file):
-
-
-    woutput.run_proc = subprocess.Popen(
-        ["qemu-arm", "-L", "/usr/arm-linux-gnueabi/", binary_file],
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        # stdin=woutput.stdin.fileno(),
-        stderr=subprocess.PIPE,
-    )
-
-    woutput.run_proc.stdout.write = God_forgive_me(woutput.run_proc.stdout.write, woutput)
-    print("jopa")
-    # stdout_text, _ = woutput.run_proc.communicate(input=woutput.heresy_magic())
-
-    # woutput.heresy_magic()
-
-    # stdout_text, _ = woutput.run_proc.communicate()
-
-    text = woutput.run_proc.stdout.read().decode('utf-8')
-    print("stddout>:", text, ":<stdout")
-    woutput.write(text)
-    print("finito")
-    woutput.run_proc = None
-
-
 class WOutput(ttk.Frame):
 
     def __init__(self, *args, **kwargs):
@@ -55,6 +20,8 @@ class WOutput(ttk.Frame):
 
         self.entry = Entry(self)
         self.entry.pack(side='top', fill='x', anchor='s')
+        self.entry.insert(0, "Coming soon :)")
+        self.entry.configure(state="disabled")
 
         self.label_out = Label(self, text="Program Output")
         self.label_out.pack(side="top", fill="x")
@@ -99,6 +66,7 @@ class WOutput(ttk.Frame):
         proc = subprocess.run([compile_command, '-p', file_name], text=True, capture_output=True)
         if proc.returncode != 0:
             self.write(proc.stdout)
+            os.chdir(prevDir)
             return
         os.chdir(prevDir)
 
@@ -111,19 +79,41 @@ class WOutput(ttk.Frame):
         subprocess.run(f"arm-linux-gnueabi-gcc -o {output_binary} " +\
             f"-mcpu=arm1176jzf-s -mtune=arm1176jzf-s {output_assembly}", shell=True)
 
-        trd = threading.Thread(target=run_emulator, args=(self, output_binary))
-        trd.start()
-        print("thread started")
+        self.provide_stdin(output_binary)
+
+    def provide_stdin(self, output_binary):
+        ''' Create window and ask User to provide stdin for the program '''
+
+        def submit_stdin():
+            self.run_proc = subprocess.Popen(
+                ["qemu-arm", "-L", "/usr/arm-linux-gnueabi/", output_binary],
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            submission = text.get('1.0', 'end').encode('utf-8')
+            res, _ = self.run_proc.communicate(input=submission)
+            self.write(res.decode('utf-8'))
+            self.run_proc = None
+            win.destroy()
+            win.update()
+
+        win = Toplevel(self.master)
+        win.title("Please, Provide Standart Input")
+        win.geometry("300x300")
+
+        text = Text(win)
+        # Text style
+        text.configure(**common_text_style)
+        tab = tk_font.Font(font=self.text['font']).measure('  ')
+        text.config(tabs=tab)
+        text['font'] = get_smaller_font()
+
+        button = Button(win, text="Submit", command=submit_stdin)
+        button.pack(side="top", fill="x")
+        text.pack(side="top", fill="x", expand=True)
 
     def write(self, text):
         self.text.configure(state='normal')
         self.text.insert('end', text)
         self.text.configure(state='disabled')
-
-    def forgive(self):
-        self.
-
-    def heresy_magic(self):
-        while True:
-            pass
-            # input =

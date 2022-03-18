@@ -82,7 +82,6 @@ def get_dirname(self=None, event=None):
 
 
 def run_prog():
-    print("Running prog")
     woutput.run(COMPILE_SCRIPT_PATH, DIR_NAME, FILE_NAME)
 
 

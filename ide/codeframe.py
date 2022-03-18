@@ -121,7 +121,6 @@ class CodeText(tk.Text):
         self.bind("<<CursorLineUpdate>>", self._highlight_current_line)
 
     def _proxy(self, command, *args):
-        print(args, command)
 
         # generate an event if something was added or deleted or the cursor position changed
         if (args[0] in ("insert", "replace", "delete", "scroll", "moveto") or
@@ -220,7 +219,6 @@ class CodeText(tk.Text):
         self.clipboard_append(self.get("insert linestart", "insert lineend+1c"))
 
     def _cut_current_line(self, event):
-        print(self.bulbs)
         self._copy_current_line(event)
         self.delete("insert linestart", "insert lineend+1c")
 
