@@ -63,5 +63,6 @@ else:
     output, errCode = compileCode()
     createRemoteFile("", file_name + '.s', output)
 
-# On Unix, the return value is a 16-bit number whose high byte is the exit status (if the signal number is zero)
+# On Unix, the return value is a 16-bit number whose high byte is the
+# exit status (if the signal number is zero)
 sys.exit(errCode)
