@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import os, sys, shutil, argparse
+import subprocess
 
 COMPILE_DIR = 'compiled_code'
-BIN_DIR = f'wacc_test/{COMPILE_DIR}'
-BIN_FILE = 'bin'
 def createRemoteFile(path: str, file_name: str, content: str = ""):
     if(len(path) != 0):
         prevDir = os.getcwd()
@@ -21,18 +20,8 @@ def createRemoteFile(path: str, file_name: str, content: str = ""):
         os.chdir(prevDir)
 
 def compileCode() -> str:
-    if not os.path.isfile(f"{BIN_DIR}/{BIN_FILE}"):
-        createRemoteFile(BIN_DIR, BIN_FILE)
-
-    # the user wants to save the output of the file
-    errCode = os.system(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']} > {BIN_DIR}/{BIN_FILE}")
-
-    # get output from bin file
-    output = ""
-    with open(f"{BIN_DIR}/{BIN_FILE}", 'r') as f:
-        output = f.read()
-
-    return output, errCode
+    proc = subprocess.run(f"java -jar target/WACC_06-1.0-SNAPSHOT-jar-with-dependencies.jar {args['src_file']}", capture_output=True, text=True, shell=True)
+    return proc.stdout, proc.returncode
 
 parser=argparse.ArgumentParser(description='Script compiling a wacc file')
 
@@ -74,6 +63,6 @@ else:
     output, errCode = compileCode()
     createRemoteFile("", file_name + '.s', output)
 
-# On Unix, the return value is a 16-bit number whose high byte is the exit status (if the signal number is zero)
-if(errCode >> 8 != 0):
-    sys.exit(errCode >> 8)
+# On Unix, the return value is a 16-bit number whose high byte is the
+# exit status (if the signal number is zero)
+sys.exit(errCode)

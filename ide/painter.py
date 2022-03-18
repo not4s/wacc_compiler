@@ -3,6 +3,7 @@ from antlr.WACCLexer import WACCLexer
 from antlr.WACCParser import WACCParser
 from antlr.WACCParserVisitor import WACCParserVisitor
 from io import StringIO
+from eventlog import SyntaxErrorListener
 
 
 class PainterVisitor(WACCParserVisitor):
@@ -272,10 +273,13 @@ class PainterVisitor(WACCParserVisitor):
 
 
 class Painter:
-    ''' Works with ANTLR Parser and CodeText to create syntax highlight '''
+    ''' Works with ANTLR and CodeText to create syntax highlight
+        Also delegates With error highlighting '''
 
     def __init__(self, code_text):
         self.text = code_text
+        self.event_log = None
+        self.errors = []
 
     def paint_comments(self, text):
         line_counter = 0
@@ -286,7 +290,6 @@ class Painter:
             comment_start = line.find('#')
             self.text.tag_add("comment", f'{line_counter}.{comment_start}', f'{line_counter}.end')
 
-
     def paint(self):
         '''
         "Compiling" the code and getting the sequence of commands to color the code
@@ -294,7 +297,7 @@ class Painter:
         for example:
             ('keyword', '5.0', '6.0')
 
-        painting_commands :: [(tag :: str, start :: str, end :: str)] '''
+        visitor.painting_commands :: [(tag :: str, start :: str, end :: str)] '''
 
         text_content = self.text.get("1.0", "end")
         self.paint_comments(text_content)
@@ -303,10 +306,40 @@ class Painter:
         tokens = CommonTokenStream(lexer)
 
         parser = WACCParser(tokens)
+
+        parser.removeErrorListeners()
+        errorListener = SyntaxErrorListener(self.errors)
+        parser.addErrorListener(errorListener)
+
         tree = parser.program()
+
+        # Removing errors which cannot be highlighted
+        filtered_errors = []
+        for er in self.errors:
+            if self.text.get(er.char_pos()):
+                filtered_errors.append(er)
+        self.errors = filtered_errors
 
         visitor = PainterVisitor()
         visitor.visit(tree)
 
+        self.pass_errors_to_event_log()
+
         for command in visitor.painting_commands:
             self.text.tag_add(*command)
+
+    def attach_event_log(self, event_log):
+        self.event_log = event_log
+
+    def paint_errors(self):
+        self.text.tag_remove('error', '1.0', 'end')
+        self.text.clear_error_bulbs()
+        for er in self.errors:
+            self.text.tag_add('error', er.char_pos(),
+                              f"{er.line}.{er.charPositionInLine + 1}")
+            self.text.add_error_bulb(er)
+
+    def pass_errors_to_event_log(self):
+        self.event_log.log(self.errors)
+        self.paint_errors()
+        self.errors = []
