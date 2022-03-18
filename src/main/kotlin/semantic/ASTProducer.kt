@@ -10,6 +10,7 @@ import syntax.SyntaxChecker
 import utils.SemanticException
 import waccType.*
 import java.util.concurrent.atomic.AtomicInteger
+import lib.BoothAlgorithm
 
 class ASTProducer(
     private val st: SymbolTable,
@@ -298,29 +299,32 @@ class ASTProducer(
                 val left_val = left.type.value!!
                 val right_val = right.type.value!!
                 var evaluated_constant = 0
-                when (op) {
-                    BinOperator.MUL
+
+                when(op) {
+                    BinOperator.MUL -> {
+                        // Booth's algorithm for multiplication
+                        val mul_values = BoothAlgorithm.evaluate(left_val, right_val)
                         // check for overflows
-                    -> if (left_val * right_val <= Integer.MAX_VALUE
-                        && left_val * right_val >= Integer.MIN_VALUE
-                    )
-                        evaluated_constant = left_val * right_val
-                    BinOperator.DIV
-                        // check for divide-by-zeros
-                    -> if (right_val != 0)
-                        evaluated_constant = left_val / right_val
-                    BinOperator.MOD
-                        // check for divide-by-zeros
-                    -> if (right_val != 0)
-                        evaluated_constant = left_val % right_val
-                    BinOperator.ADD
-                        // check for overflows
-                    -> if (left_val + right_val <= Integer.MAX_VALUE)
-                        evaluated_constant = left_val + right_val
-                    BinOperator.SUB
-                        // check for overflows
-                    -> if (left_val - right_val >= Integer.MIN_VALUE)
-                        evaluated_constant = left_val - right_val
+                        if(mul_values <= Integer.MAX_VALUE 
+                            && mul_values >= Integer.MIN_VALUE)
+                            evaluated_constant = mul_values
+                    }
+                    BinOperator.DIV 
+                            // check for divide-by-zeros
+                        -> if(right_val != 0)
+                            evaluated_constant = left_val / right_val
+                    BinOperator.MOD 
+                            // check for divide-by-zeros
+                        -> if(right_val != 0)
+                            evaluated_constant = left_val % right_val
+                    BinOperator.ADD 
+                            // check for overflows
+                        -> if(left_val + right_val <= Integer.MAX_VALUE)
+                            evaluated_constant = left_val + right_val
+                    BinOperator.SUB 
+                            // check for overflows
+                        -> if(left_val - right_val >= Integer.MIN_VALUE)
+                            evaluated_constant = left_val - right_val
                     else -> evaluated_constant = 0
                 }
                 if (evaluated_constant == 0) break@constant_evaluation
