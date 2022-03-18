@@ -658,7 +658,7 @@ class ASTProducer(
             )
             // if the element is already in the paramMap then throw a semantic Error
             catchSemanticError {
-                prev ?: {
+                if (prev != null) {
                     builderTemplateFromContext(ctx, st).structContainsDuplicateElements(id)
                         .buildAndPrint()
                     throw SemanticException("Duplicate Element detected")
