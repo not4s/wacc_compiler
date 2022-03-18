@@ -71,7 +71,10 @@ class SemanticChecker {
         /**
          * Prints error and quits if the type of the value is not a WArray
          */
-        fun checkThatTheValueIsWArray(valueType: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
+        fun checkThatTheValueIsWArray(
+            valueType: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
             if (valueType !is WArray) {
                 errorMessageBuilder.nonArrayTypeElemAccess(valueType).buildAndPrint()
                 throw SemanticException("Cannot access index elements of non-array type: $valueType")
@@ -82,7 +85,11 @@ class SemanticChecker {
          * Ensuring that declaration variable is not declared already
          * @param prev is the previous type of the symbol table. Must be null in a valid program case.
          */
-        fun checkIfRedeclarationHappens(prev: WAny?, symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder) {
+        fun checkIfRedeclarationHappens(
+            prev: WAny?,
+            symbol: String,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
             if (prev != null) {
                 errorMessageBuilder.variableRedeclaration(symbol).buildAndPrint()
                 throw SemanticException("Attempted to redeclare variable $symbol")
@@ -108,7 +115,11 @@ class SemanticChecker {
          * Checks if the value obtained from the table is null or not
          * @param valueGot is the type of the symbol queried earlier
          */
-        fun checkIfTheVariableIsInScope(valueGot: WAny?, symbol: String, errorMessageBuilder: SemanticErrorMessageBuilder) {
+        fun checkIfTheVariableIsInScope(
+            valueGot: WAny?,
+            symbol: String,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
             if (valueGot == null) {
                 errorMessageBuilder.variableNotInScope(symbol).buildAndPrint()
                 throw SemanticException("Attempted to get undeclared variable $symbol")
@@ -139,21 +150,43 @@ class SemanticChecker {
         /**
          * Checks that the type of the expression is WInt
          */
-        fun checkExprTypeIsWInt(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
-            checkExprTypeIs(type, WInt(), errorMessageBuilder, failMessage) { it.nonIntExpressionExit(type) }
+        fun checkExprTypeIsWInt(
+            type: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            failMessage: String
+        ) {
+            checkExprTypeIs(
+                type,
+                WInt(),
+                errorMessageBuilder,
+                failMessage
+            ) { it.nonIntExpressionExit(type) }
         }
 
         /**
          * Checks that the type of the expression is WPair (of whatever, does not matter)
          */
-        fun checkExprTypeIsWPair(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
-            checkExprTypeIs(type, WPair.ofWUnknowns(), errorMessageBuilder, failMessage) { it.freeNonPair(type) }
+        fun checkExprTypeIsWPair(
+            type: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            failMessage: String
+        ) {
+            checkExprTypeIs(
+                type,
+                WPair.ofWUnknowns(),
+                errorMessageBuilder,
+                failMessage
+            ) { it.freeNonPair(type) }
         }
 
         /**
          * Checks that the type of the 'if' statement condition expression is WBool
          */
-        fun checkIfCondIsWBool(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+        fun checkIfCondIsWBool(
+            type: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            failMessage: String
+        ) {
             checkExprTypeIs(type, WBool(), errorMessageBuilder, failMessage) {
                 it.ifStatConditionHasNonBooleanType(type)
             }
@@ -162,7 +195,11 @@ class SemanticChecker {
         /**
          * Checks that the type of the 'while' statement condition expression is WBool
          */
-        fun checkWhileCondIsWBool(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+        fun checkWhileCondIsWBool(
+            type: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            failMessage: String
+        ) {
             checkExprTypeIs(type, WBool(), errorMessageBuilder, failMessage) {
                 it.whileStatConditionHasNonBooleanType(type)
             }
@@ -171,7 +208,11 @@ class SemanticChecker {
         /**
          * Checks that the type of the read expression is either WChar or WInt
          */
-        fun checkReadType(type: WAny, errorMessageBuilder: SemanticErrorMessageBuilder, failMessage: String) {
+        fun checkReadType(
+            type: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder,
+            failMessage: String
+        ) {
             if (type !is WChar && type !is WInt) {
                 errorMessageBuilder.readTypeIsIncorrect(type).buildAndPrint()
                 throw SemanticException(failMessage)
@@ -183,7 +224,10 @@ class SemanticChecker {
          * It is important for the 'return' statement outside a function
          * @param st is the symbol table which is expected to be global.
          */
-        fun checkReturnFromGlobalScope(st: SymbolTable, errorMessageBuilder: SemanticErrorMessageBuilder) {
+        fun checkReturnFromGlobalScope(
+            st: SymbolTable,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
             if (st.isGlobal) {
                 errorMessageBuilder.returnFromGlobalScope().buildAndPrint()
                 throw SemanticException("Cannot return out of global scope.")
@@ -215,7 +259,12 @@ class SemanticChecker {
             extraMessage: String? = null,
             failMessage: String = "Operand Type Mismatch"
         ) {
-            perform(!typesAreEqual(firstType, secondType), errorMessageBuilder, extraMessage, failMessage) {
+            perform(
+                !typesAreEqual(firstType, secondType),
+                errorMessageBuilder,
+                extraMessage,
+                failMessage
+            ) {
                 it.operandTypeMismatch(firstType, secondType)
             }
         }
@@ -240,9 +289,11 @@ class SemanticChecker {
                 else -> throw Exception("Unknown BinOperator value!")
             }
             if (operationTypeNotValid) {
-                errorMessageBuilder.binOpInvalidType(operandType, operation.toString()).buildAndPrint()
+                errorMessageBuilder.binOpInvalidType(operandType, operation.toString())
+                    .buildAndPrint()
                 throw SemanticException(
-                    "Attempted to call binary operation $operation on operands of invalid type: $operandType")
+                    "Attempted to call binary operation $operation on operands of invalid type: $operandType"
+                )
             }
         }
 
@@ -261,7 +312,8 @@ class SemanticChecker {
                 UnOperator.CHR, UnOperator.SUB -> operandType !is WInt
             }
             if (typeIsIncorrect) {
-                errorMessageBuilder.unOpInvalidType(operandType, operation.toString()).buildAndPrint()
+                errorMessageBuilder.unOpInvalidType(operandType, operation.toString())
+                    .buildAndPrint()
                 throw SemanticException("Attempted to call $operation operation on invalid type: $operandType")
             }
         }
@@ -280,7 +332,10 @@ class SemanticChecker {
          * Ensures that all the indices in arbitrary dimension array ate ints.
          * @param indices is a collection of N indices o N-dimensional array
          */
-        fun checkThatAllIndicesAreWInts(indices: Array<Expr>, errorMessageBuilder: SemanticErrorMessageBuilder) {
+        fun checkThatAllIndicesAreWInts(
+            indices: Array<Expr>,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
             indices.map { expr -> takeExprTypeAsWIntWithCheck(expr, errorMessageBuilder) }
         }
 
@@ -330,17 +385,21 @@ class SemanticChecker {
         ) {
             // Checking argument count in function call and in the definition
             if (func.params.size != params.size) {
-                errorMessageBuilder.functionArgumentCountMismatch(func.params.size, params.size).buildAndPrint()
+                errorMessageBuilder.functionArgumentCountMismatch(func.params.size, params.size)
+                    .buildAndPrint()
                 throw SemanticException(
-                    "Argument count does not match up with expected count for function $identifier")
+                    "Argument count does not match up with expected count for function $identifier"
+                )
             }
             // Checking type validity for each parameter
             func.params.onEachIndexed { index, (_, expectedType) ->
                 val actualType = params[index].type
                 if (!typesAreEqual(expectedType, actualType)) {
-                    errorMessageBuilder.functionArgumentTypeMismatch(expectedType, actualType).buildAndPrint()
+                    errorMessageBuilder.functionArgumentTypeMismatch(expectedType, actualType)
+                        .buildAndPrint()
                     throw SemanticException(
-                        "Mismatching types for function $identifier call: expected $expectedType, got $actualType")
+                        "Mismatching types for function $identifier call: expected $expectedType, got $actualType"
+                    )
                 }
             }
         }
@@ -350,15 +409,24 @@ class SemanticChecker {
          * @param expr is the expression which is expected to be WInt
          * @throws SemanticException if safe casting did not succeed
          */
-        private fun takeExprTypeAsWIntWithCheck(expr: Expr, errorMessageBuilder: SemanticErrorMessageBuilder): WInt {
+        private fun takeExprTypeAsWIntWithCheck(
+            expr: Expr,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ): WInt {
             return expr.type as? WInt ?: run {
                 errorMessageBuilder.arrayIndexInvalidType().buildAndPrint()
                 throw SemanticException("Cannot use non-int index for array, actual: ${expr.type}")
             }
         }
 
-        fun checkAssignment(lhs: LHS, rhs: RHS, st: SymbolTable, errorMessageBuilder: SemanticErrorMessageBuilder) {
-            checkThatOperandTypesMatch(lhs.type, rhs.type, errorMessageBuilder,
+        fun checkAssignment(
+            lhs: LHS,
+            rhs: RHS,
+            st: SymbolTable,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
+            checkThatOperandTypesMatch(
+                lhs.type, rhs.type, errorMessageBuilder,
                 failMessage = "Cannot assign ${rhs.type} to ${lhs.type}"
             )
             // Checking AssignLhs Depending on its type
@@ -372,7 +440,12 @@ class SemanticChecker {
                 }
                 is PairElement -> {
                     val msg = "Cannot refer to ${lhs.type} with fst/snd"
-                    perform(lhs.expr !is IdentifierGet, errorMessageBuilder, msg, msg) { it.pairElementInvalidType() }
+                    perform(
+                        lhs.expr !is IdentifierGet,
+                        errorMessageBuilder,
+                        msg,
+                        msg
+                    ) { it.pairElementInvalidType() }
 
                     val identifier = (lhs.expr as IdentifierGet).identifier
                     st.reassign(identifier, lhs.first, rhs.type, errorMessageBuilder)
@@ -387,7 +460,11 @@ class SemanticChecker {
          * @param expected : expected type to be matched
          * @param errorMessageBuilder : incomplete semantic error message builder which is built in error case
          **/
-        fun checkReturnType(stat: Stat, expected: WAny, errorMessageBuilder: SemanticErrorMessageBuilder) {
+        fun checkReturnType(
+            stat: Stat,
+            expected: WAny,
+            errorMessageBuilder: SemanticErrorMessageBuilder
+        ) {
             when (stat) {
                 is IfThenStat -> {
                     checkReturnType(stat.thenStat, expected, errorMessageBuilder)
@@ -402,9 +479,11 @@ class SemanticChecker {
                     if (typesAreEqual(expected, stat.type)) {
                         return
                     }
-                    errorMessageBuilder.functionReturnStatTypeMismatch(expected, stat.type).buildAndPrint()
+                    errorMessageBuilder.functionReturnStatTypeMismatch(expected, stat.type)
+                        .buildAndPrint()
                     throw SemanticException(
-                        "Mismatching return type for function, expected: $expected, got: ${stat.type}")
+                        "Mismatching return type for function, expected: $expected, got: ${stat.type}"
+                    )
                 }
             }
         }

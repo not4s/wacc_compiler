@@ -7,8 +7,6 @@ import ast.statement.*
 import symbolTable.ParentRefSymbolTable
 import symbolTable.SymbolTable
 import syntax.SyntaxChecker
-import utils.PositionedError
-import utils.SemanticErrorMessageBuilder
 import utils.SemanticException
 import waccType.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -41,6 +39,14 @@ class ASTProducer(
         }
     }
 
+    private fun catchSemanticError(block: () -> Any) {
+        try {
+            block.invoke()
+        } catch (e: SemanticException) {
+            semanticErrorCount.incrementAndGet()
+        }
+    }
+
     override fun visitProgram(ctx: WACCParser.ProgramContext): ProgramAST {
         // Add all structs to the symbol table
         val structASTs = visitAllStructs(ctx)
@@ -52,15 +58,14 @@ class ASTProducer(
         childScope.isGlobal = true
         val programBody =
             safeVisit(SkipStat(st)) {
-                ASTProducer(
-                    childScope,
-                    semanticErrorCount
-                ).visit(ctx.stat())
+                ASTProducer(childScope, semanticErrorCount).visit(ctx.stat())
             } as Stat
+        // extract number of semantic errors and print a summary
         val totalSemanticErrors = semanticErrorCount.get()
         if (totalSemanticErrors > 0) {
             throw SemanticException("Semantic errors detected: $totalSemanticErrors, compilation aborted.")
         }
+        // otherwise, the AST was constructed fine
         return ProgramAST(st, funcASTs, structASTs, programBody)
     }
 
@@ -68,71 +73,51 @@ class ASTProducer(
         // This adds functions to symbol table
         val functions: MutableList<Pair<WACCParser.FuncContext, WACCFunction>> = mutableListOf()
         for (f in ctx.func()) {
-            val errBuilder = SemanticErrorMessageBuilder()
-                .provideStart(PositionedError(f))
-                .setLineTextFromSrcFile(st.srcFilePath)
-            val id = f.IDENTIFIER().text
-            if (id in st.getMap()) {
-                errBuilder.functionRedefineError(id)
-                    .buildAndPrint()
-                semanticErrorCount.incrementAndGet()
-            }
             val bodyLessFunction = visitFuncParams(f)
-            try {
+            catchSemanticError {
                 st.declare(
-                    symbol = id,
+                    symbol = f.IDENTIFIER().text,
                     value = bodyLessFunction,
                     errorMessageBuilder = builderTemplateFromContext(ctx, st)
                 )
-            } catch (e: SemanticException) {
-                semanticErrorCount.incrementAndGet()
             }
             functions.add(Pair(f, bodyLessFunction))
         }
-        val funcASTs = mutableListOf<WACCFunction>()
-        for ((funCtx, function) in functions) {
+        return functions.map { (funCtx, function) ->
             val funcAST = safeVisit(function) { visitFuncBody(function, funCtx) } as WACCFunction
-            st.reassign(
-                funcAST.identifier,
-                funcAST,
-                builderTemplateFromContext(funCtx, st)
-            )
-            funcASTs.add(funcAST)
+            catchSemanticError {
+                st.reassign(
+                    symbol = funcAST.identifier,
+                    value = funcAST,
+                    errorMessageBuilder = builderTemplateFromContext(funCtx, st)
+                )
+            }
+            funcAST
         }
-        return funcASTs
     }
 
     private fun visitAllStructs(ctx: WACCParser.ProgramContext): List<WACCStruct> {
         // note down the existence of all structs
-        for (s in ctx.struct()) {
-            val struct = scrapeStruct(s)
-            try {
+        ctx.struct().forEach {
+            catchSemanticError {
                 st.declare(
-                    symbol = s.IDENTIFIER().text,
-                    value = struct,
+                    symbol = it.IDENTIFIER().text,
+                    value = WStruct(it.IDENTIFIER().text),
                     errorMessageBuilder = builderTemplateFromContext(ctx, st)
                 )
-            } catch (e: SemanticException) {
-                semanticErrorCount.incrementAndGet()
             }
         }
-        val structs: MutableList<WACCStruct> = mutableListOf()
-        // now that all the struct names have been acknowledged, visit all structs and verify
-        // that the elements are valid
-        for (s in ctx.struct()) {
-            try {
-                val struct = visitStruct(s)
+        return ctx.struct().map {
+            val struct = visitStruct(it)
+            catchSemanticError {
                 st.reassign(
-                    symbol = s.IDENTIFIER().text,
+                    symbol = it.IDENTIFIER().text,
                     value = struct,
                     errorMessageBuilder = builderTemplateFromContext(ctx, st)
                 )
-                structs.add(struct)
-            } catch (e: SemanticException) {
-                semanticErrorCount.incrementAndGet()
             }
+            struct
         }
-        return structs
     }
 
     override fun visitTypeBaseType(ctx: WACCParser.TypeBaseTypeContext): WACCType {
@@ -201,9 +186,7 @@ class ASTProducer(
      * Visits the first or second element access of the pair.
      */
     private fun visitPair(
-        ctx: WACCParser.PairElemContext,
-        ctxExpr: WACCParser.ExprContext,
-        isFirst: Boolean
+        ctx: WACCParser.PairElemContext, ctxExpr: WACCParser.ExprContext, isFirst: Boolean
     ): PairElement {
         val expr = safeVisit(Literal(st, WUnknown)) { this.visit(ctxExpr) } as Expr
         SemanticChecker.checkTheExprIsPairAndNoNullDereference(
@@ -301,72 +284,74 @@ class ASTProducer(
 
         // Evaluate expressions with constants at compile-time
         constant_evaluation@
-        while(left is Literal && right is Literal) {
+        while (left is Literal && right is Literal) {
 
             // break if it is not the case of int op int or bool op bool
-            if(!(left.type is WInt && right.type is WInt
-                    || left.type is WBool && right.type is WBool))
+            if (!(left.type is WInt && right.type is WInt
+                        || left.type is WBool && right.type is WBool)
+            )
                 break@constant_evaluation
 
             // int op int
-            if(left.type is WInt && right.type is WInt) {
-                
-                val left_val = left.type.value!!
-                val right_val = right.type.value!!
-                var evaluated_constant = 0
-                when(op) {
-                    BinOperator.MUL
-                            // check for overflows
-                        -> if(left_val * right_val <= Integer.MAX_VALUE 
-                                && left_val * right_val >= Integer.MIN_VALUE)
-                            evaluated_constant = left_val * right_val
-                    BinOperator.DIV 
-                            // check for divide-by-zeros
-                        -> if(right_val != 0)
-                            evaluated_constant = left_val / right_val
-                    BinOperator.MOD 
-                            // check for divide-by-zeros
-                        -> if(right_val != 0)
-                            evaluated_constant = left_val % right_val
-                    BinOperator.ADD 
-                            // check for overflows
-                        -> if(left_val + right_val <= Integer.MAX_VALUE)
-                            evaluated_constant = left_val + right_val
-                    BinOperator.SUB 
-                            // check for overflows
-                        -> if(left_val - right_val >= Integer.MIN_VALUE)
-                            evaluated_constant = left_val - right_val
-                    else -> evaluated_constant = 0
-                }
-                if(evaluated_constant == 0) break@constant_evaluation
-                return Literal(st, WInt(evaluated_constant))
-            }
-            
-            // bool op bool
-            if(left.type is WBool && right.type is WBool) {
+            if (left.type is WInt && right.type is WInt) {
 
                 val left_val = left.type.value!!
                 val right_val = right.type.value!!
-                val evaluated_constant = when(op) {
-                    BinOperator.GT  
-                        -> left_val > right_val
-                    BinOperator.GEQ 
-                        -> left_val > right_val || left_val == right_val
-                    BinOperator.LT  
-                        -> left_val < right_val
-                    BinOperator.LEQ 
-                        -> left_val < right_val || left_val == right_val
-                    BinOperator.EQ  
-                        -> left_val == right_val
-                    BinOperator.NEQ 
-                        -> left_val != right_val
-                    BinOperator.AND 
-                        -> left_val && right_val
-                    BinOperator.OR 
-                        -> left_val || right_val
+                var evaluated_constant = 0
+                when (op) {
+                    BinOperator.MUL
+                        // check for overflows
+                    -> if (left_val * right_val <= Integer.MAX_VALUE
+                        && left_val * right_val >= Integer.MIN_VALUE
+                    )
+                        evaluated_constant = left_val * right_val
+                    BinOperator.DIV
+                        // check for divide-by-zeros
+                    -> if (right_val != 0)
+                        evaluated_constant = left_val / right_val
+                    BinOperator.MOD
+                        // check for divide-by-zeros
+                    -> if (right_val != 0)
+                        evaluated_constant = left_val % right_val
+                    BinOperator.ADD
+                        // check for overflows
+                    -> if (left_val + right_val <= Integer.MAX_VALUE)
+                        evaluated_constant = left_val + right_val
+                    BinOperator.SUB
+                        // check for overflows
+                    -> if (left_val - right_val >= Integer.MIN_VALUE)
+                        evaluated_constant = left_val - right_val
+                    else -> evaluated_constant = 0
+                }
+                if (evaluated_constant == 0) break@constant_evaluation
+                return Literal(st, WInt(evaluated_constant))
+            }
+
+            // bool op bool
+            if (left.type is WBool && right.type is WBool) {
+
+                val left_val = left.type.value!!
+                val right_val = right.type.value!!
+                val evaluated_constant = when (op) {
+                    BinOperator.GT
+                    -> left_val > right_val
+                    BinOperator.GEQ
+                    -> left_val > right_val || left_val == right_val
+                    BinOperator.LT
+                    -> left_val < right_val
+                    BinOperator.LEQ
+                    -> left_val < right_val || left_val == right_val
+                    BinOperator.EQ
+                    -> left_val == right_val
+                    BinOperator.NEQ
+                    -> left_val != right_val
+                    BinOperator.AND
+                    -> left_val && right_val
+                    BinOperator.OR
+                    -> left_val || right_val
                     else -> false
                 }
-            return Literal(st, WBool(evaluated_constant))
+                return Literal(st, WBool(evaluated_constant))
             }
         }
 
@@ -404,14 +389,8 @@ class ASTProducer(
      */
     override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): Expr {
         val symbol = ctx.IDENTIFIER().text
-        val identifier_val = st.get(symbol, builderTemplateFromContext(ctx, st))
-        if(identifier_val is WInt && identifier_val.value != null) {
-            return Literal(st, WInt(identifier_val.value))
-        } else if(identifier_val is WBool && identifier_val.value != null) {
-            return Literal(st, WBool(identifier_val.value))
-        } else {
-            return IdentifierGet(st, symbol, ctx)
-        }
+        st.get(symbol, builderTemplateFromContext(ctx, st))
+        return IdentifierGet(st, symbol, ctx)
     }
 
     override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Expr {
@@ -443,12 +422,9 @@ class ASTProducer(
     }
 
     override fun visitAssignRhsArrayLiter(ctx: WACCParser.AssignRhsArrayLiterContext): ArrayLiteral {
-        return safeVisit(
-            ArrayLiteral(
-                st,
-                arrayOf()
-            )
-        ) { this.visit(ctx.arrayLiter()) } as ArrayLiteral
+        return safeVisit(ArrayLiteral(st, arrayOf())) {
+            this.visit(ctx.arrayLiter())
+        } as ArrayLiteral
     }
 
     override fun visitAssignRhsNewPair(ctx: WACCParser.AssignRhsNewPairContext): NewPairRHS {
@@ -466,10 +442,7 @@ class ASTProducer(
         if (rhs.type !is WPairKW || !(rhs is PairElement && rhs.expr is IdentifierGet)) {
             return rhs
         }
-        val rhsType = st.get(
-            rhs.expr.identifier,
-            builderTemplateFromContext(ctx, st)
-        ) as WPair
+        val rhsType = st.get(rhs.expr.identifier, builderTemplateFromContext(ctx, st)) as WPair
         val newType = if (rhs.first) rhsType.leftType else rhsType.rightType
         rhs.updateType(newType)
         return rhs
@@ -486,10 +459,6 @@ class ASTProducer(
         val func = st.get(identifier, errorMessageBuilder) as WACCFunction
         SemanticChecker.checkFunctionCall(func, params, errorMessageBuilder, identifier)
         return FunctionCall(st, identifier, params, ctx)
-    }
-
-    override fun visitArgList(ctx: WACCParser.ArgListContext): AST {
-        throw Exception("Don't call me!")
     }
 
     override fun visitStatInit(ctx: WACCParser.StatInitContext): Declaration {
@@ -620,14 +589,6 @@ class ASTProducer(
         return StructDeclarationStat(st, type, ctx.IDENTIFIER().text)
     }
 
-    override fun visitParam(ctx: WACCParser.ParamContext): AST {
-        throw Exception("Don't call me!")
-    }
-
-    override fun visitParamList(ctx: WACCParser.ParamListContext): AST {
-        throw Exception("Don't call me!")
-    }
-
     /**
      * Visiting the function parameters to add its type signature later
      * @return WACCFunction which has all the fields but the Abstract
@@ -637,21 +598,16 @@ class ASTProducer(
         val params: MutableMap<String, WAny> = mutableMapOf()
         val funScope = st.createChildScope() as ParentRefSymbolTable
         funScope.forceOffset = -4 // Accounts for extra space between LR and stack frame.
-        if (ctx.paramList() != null) {
-            for (p in ctx.paramList().param()) {
-                val id = p.IDENTIFIER().text
+        // for each parameter declare it in the function's scope
+        ctx.paramList()?.let { paramList ->
+            paramList.param().forEach {
+                val id = it.IDENTIFIER().text
                 funScope.redeclaredVars.add(id)
-                try {
-                    val ty = (safeVisit(
-                        WACCType(
-                            st,
-                            WUnknown
-                        )
-                    ) { this.visit(p.type()) } as WACCType).type
-                    params[id] = ty
-                    funScope.declare(id, ty, builderTemplateFromContext(ctx, st))
-                } catch (e: SemanticException) {
-                    semanticErrorCount.incrementAndGet()
+                val type =
+                    (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
+                params[id] = type
+                catchSemanticError {
+                    funScope.declare(id, type, builderTemplateFromContext(ctx, st))
                 }
             }
         }
@@ -692,41 +648,23 @@ class ASTProducer(
         return super.visitFunc(ctx)
     }
 
-    /**
-     * Visit the struct entirely with its elements as well
-     * */
     override fun visitStruct(ctx: WACCParser.StructContext): WACCStruct {
         // extracting parameters from context
         val paramMap = mutableMapOf<String, WAny>()
-        var numRepeated = 0
-        for (param in ctx.structElems().param()) {
-            val identity = param.IDENTIFIER().text
-            // cannot have multiple parameters with the same identifier
-            if (identity in paramMap.keys) {
-                builderTemplateFromContext(ctx, st).structContainsDuplicateElements(identity)
-                    .buildAndPrint()
-                numRepeated++
-            } else {
-                // check whether the type is valid
-                paramMap[identity] = (safeVisit(
-                    WACCType(
-                        st,
-                        WUnknown
-                    )
-                ) { this.visit(param.type()) } as WACCType).type
+        ctx.structElems().param().forEach {
+            val id = it.IDENTIFIER().text
+            val prev = paramMap.putIfAbsent(
+                id, (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
+            )
+            // if the element is already in the paramMap then throw a semantic Error
+            catchSemanticError {
+                prev ?: {
+                    builderTemplateFromContext(ctx, st).structContainsDuplicateElements(id)
+                        .buildAndPrint()
+                    throw SemanticException("Duplicate Element detected")
+                }
             }
         }
-        if (numRepeated > 0) {
-            semanticErrorCount.addAndGet(numRepeated - 1) // -1 since we add again after exit out of visitStruct
-            throw SemanticException("repeated elements in $ctx")
-        }
-        return WACCStruct(
-            st, ctx.IDENTIFIER()?.text ?: throw Exception("Struct has no identifier"), paramMap
-        )
+        return WACCStruct(st, ctx.IDENTIFIER()!!.text, paramMap)
     }
-
-    private fun scrapeStruct(ctx: WACCParser.StructContext): WStruct {
-        return WStruct(ctx.IDENTIFIER().text)
-    }
-
 }
