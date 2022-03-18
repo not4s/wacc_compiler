@@ -9,7 +9,7 @@ TARGET_DIR=../src/main/kotlin/antlr
 
 rm -rf $TARGET_DIR
 
-echo Compiling the lexer..
+echo Compiling the lexer for Kotlin...
 java -jar $BASEDIR/../lib/antlr-4.9.3-complete.jar $BASEDIR/$LEXER_FILE -o $TARGET_DIR -package antlr -no-listener -visitor -Werror
 
 if [ $? -ne 0 ]
@@ -17,5 +17,42 @@ then
 	exit 1
 fi
 
-echo Compiling the parser..
+echo Compiling the parser for Kotlin...
 java -jar $BASEDIR/../lib/antlr-4.9.3-complete.jar $BASEDIR/$PARSER_FILE -o $TARGET_DIR -package antlr -no-listener -visitor -Werror
+
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
+
+# Python WACC IDE:
+PY_TARGET_DIR=../ide/antlr
+GEN_G4_DIR=g4py
+
+rm -rf $PY_TARGET_DIR
+rm -rf $GEN_G4_DIR
+
+echo Generating Python-conflict-free g4 files...
+./namedeclash
+
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
+
+cd $GEN_G4_DIR || exit
+
+echo Compiling the lexer for Python...
+java -Xmx500M -cp ../$BASEDIR/../lib/antlr-4.9.3-complete.jar org.antlr.v4.Tool \
+	-Dlanguage=Python3 $BASEDIR/$LEXER_FILE -o ../$PY_TARGET_DIR \
+	-package antlr -no-listener -visitor -Werror
+
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
+
+echo Compiling the parser for Python...
+java -Xmx500M -cp ../$BASEDIR/../lib/antlr-4.9.3-complete.jar org.antlr.v4.Tool \
+	-Dlanguage=Python3 $BASEDIR/$PARSER_FILE -o ../$PY_TARGET_DIR \
+	-package antlr -no-listener -visitor -Werror
