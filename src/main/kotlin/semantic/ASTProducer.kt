@@ -599,13 +599,17 @@ class ASTProducer(
         val funScope = st.createChildScope() as ParentRefSymbolTable
         funScope.forceOffset = -4 // Accounts for extra space between LR and stack frame.
         // for each parameter declare it in the function's scope
-        ctx.paramList().param().forEach {
-            val id = it.IDENTIFIER().text
-            funScope.redeclaredVars.add(id)
-            val type =
-                (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
-            params[id] = type
-            catchSemanticError { funScope.declare(id, type, builderTemplateFromContext(ctx, st)) }
+        ctx.paramList()?.let { paramList ->
+            paramList.param().forEach {
+                val id = it.IDENTIFIER().text
+                funScope.redeclaredVars.add(id)
+                val type =
+                    (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
+                params[id] = type
+                catchSemanticError {
+                    funScope.declare(id, type, builderTemplateFromContext(ctx, st))
+                }
+            }
         }
         return WACCFunction(
             funScope.createChildScope(),
