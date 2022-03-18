@@ -43,12 +43,19 @@ class Bulb(tk.Label):
         ''' Change position when user scrolls '''
         char_pos = self.error.char_pos()
         character = self.text.get(char_pos)
-        x, y, width, height = self.text.bbox(char_pos)
+        try:
+            x, y, width, height = self.text.bbox(char_pos)
+        except TypeError:
+            self.hide()
+            return
 
         # Coords of char center relative to the top left corner of code text
         self.frame_x = x + self.PADX_OFFSET - width
         self.frame_y = y + self.DISTANCE_FROM_CHAR + self.PADY_OFFSET
         self.place_configure(x=self.frame_x, y=self.frame_y)
+
+    def hide(self):
+        self.place_configure(x=-200, y=-200)
 
     def _hover(self, event):
         self.hover_label = Label(
@@ -114,9 +121,10 @@ class CodeText(tk.Text):
         self.tk.call("rename", self._w, self._orig)
         self.tk.createcommand(self._w, self._proxy)
 
-        self.event_counter = 0
+        self.text_type_counter = 0
+        self.event_delete('<<Copy>>', '<Control-c>')
         self.bind("<<TextModified>>", self._on_change)
-        self.bind("<<CopyLineCommand>>", self._copy_current_line)
+        self.bind('<Control-c>', self._copy_clipboard)
         self.bind("<<CutLineCommand>>", self._cut_current_line)
         self.bind("<<CursorLineUpdate>>", self._highlight_current_line)
 
@@ -139,9 +147,7 @@ class CodeText(tk.Text):
         # Handling copy and cut commands (^C and ^X)
         if args[0] == 'sel.first' and args[1] == 'sel.last':
             if not self.tag_ranges('sel'):
-                if command == 'get':
-                    self.event_generate('<<CopyLineCommand>>')
-                elif command == 'delete':
+                if command == 'delete':
                     self.event_generate('<<CutLineCommand>>')
                 return
 
@@ -197,29 +203,38 @@ class CodeText(tk.Text):
 
     def handle_events(self, triggerer_count):
         ''' Calls syntax painting only if user didn't edit text for more than one second '''
-        if triggerer_count != self.event_counter:
+        if triggerer_count != self.text_type_counter:
             return
         self.update_highlight()
 
     def _on_change(self, event):
         self.clear_error_bulbs()
 
-        self.event_counter += 1
-        self.after(ONE_SECOND, self.handle_events, self.event_counter)
+        self.text_type_counter += 1
+        self.after(ONE_SECOND, self.handle_events, self.text_type_counter)
 
-        if (self.event_counter >= sys.maxsize):
-            self.event_counter = 0
+        if (self.text_type_counter >= sys.maxsize):
+            self.text_type_counter = 0
 
     def _highlight_current_line(self, event):
         self.tag_remove("current_line", '1.0', "end")
         self.tag_add("current_line", "insert linestart", "insert lineend+1c")
 
-    def _copy_current_line(self, event):
+    def _copy_clipboard(self, event):
+        try:
+            copied_text = self.selection_get()
+        except:
+            # Copy entire line if selection is empty
+            copied_text = self.get("insert linestart", "insert lineend+1c")
+
         self.clipboard_clear()
-        self.clipboard_append(self.get("insert linestart", "insert lineend+1c"))
+        self.clipboard_append(copied_text)
 
     def _cut_current_line(self, event):
-        self._copy_current_line(event)
+        self.clipboard_clear()
+        line = self.get("insert linestart", "insert lineend+1c")
+        self.clipboard_append(line)
+
         self.delete("insert linestart", "insert lineend+1c")
 
         self.event_generate("<<CursorLineUpdate>>")
