@@ -389,14 +389,8 @@ class ASTProducer(
      */
     override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): Expr {
         val symbol = ctx.IDENTIFIER().text
-        val identifier_val = st.get(symbol, builderTemplateFromContext(ctx, st))
-        if (identifier_val is WInt && identifier_val.value != null) {
-            return Literal(st, WInt(identifier_val.value))
-        } else if (identifier_val is WBool && identifier_val.value != null) {
-            return Literal(st, WBool(identifier_val.value))
-        } else {
-            return IdentifierGet(st, symbol, ctx)
-        }
+        st.get(symbol, builderTemplateFromContext(ctx, st))
+        return IdentifierGet(st, symbol, ctx)
     }
 
     override fun visitExprLiteral(ctx: WACCParser.ExprLiteralContext): Expr {
@@ -660,8 +654,7 @@ class ASTProducer(
         ctx.structElems().param().forEach {
             val id = it.IDENTIFIER().text
             val prev = paramMap.putIfAbsent(
-                id, (safeVisit(WACCType(st, WUnknown))
-                { this.visit(it.type()) } as WACCType).type
+                id, (safeVisit(WACCType(st, WUnknown)) { this.visit(it.type()) } as WACCType).type
             )
             // if the element is already in the paramMap then throw a semantic Error
             catchSemanticError {
