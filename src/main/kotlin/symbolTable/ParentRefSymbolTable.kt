@@ -186,7 +186,10 @@ class ParentRefSymbolTable(
         // Work out this variable's offset from the start of symbol table.
         var offset = -data.spOffset + forceOffset
         var isSmall = false
+
+        // Check and calculate the stack offset
         if (symbol in getMap()) {
+            // increment the offset until the symbol has been reached
             for ((k, v) in getMap().entries) {
                 offset += typeToByteSize(v)
                 if (k == symbol) {
@@ -194,7 +197,7 @@ class ParentRefSymbolTable(
                     break
                 }
             }
-            if (type == null) {
+            if (type == null) { // assignments
                 if (symbol in redeclaredVars) {
                     // Assigning, variable redeclare.
                     return listOf(
@@ -205,16 +208,8 @@ class ParentRefSymbolTable(
                             isSignedByte = isSmall
                         )
                     )
-                } else {
-                    // Assigning, variable NOT redeclare. Go to parent.
-                    data.spOffset += totalByteSize
-                    try {
-                        return parentTable?.asmAssign(symbol, fromRegister, data, type)!!
-                    } finally {
-                        data.spOffset -= totalByteSize
-                    }
                 }
-            } else {
+            } else { // declaring
                 if (symbol in redeclaredVars) {
                     // Declaring, variable redeclare.
                     throw Exception("Double declare")
@@ -231,14 +226,14 @@ class ParentRefSymbolTable(
                     )
                 }
             }
-        } else {
-            // Not found in symbol table, go to parent.
-            data.spOffset += totalByteSize
-            try {
-                return parentTable?.asmAssign(symbol, fromRegister, data, type)!!
-            } finally {
-                data.spOffset -= totalByteSize
-            }
+        }
+
+        // Go to parent
+        data.spOffset += totalByteSize
+        try {
+            return parentTable?.asmAssign(symbol, fromRegister, data, type)!!
+        } finally {
+            data.spOffset -= totalByteSize
         }
     }
 
@@ -310,7 +305,7 @@ class ParentRefSymbolTable(
         for (i in elems.indices) {
             // calculate the position of the elements(s) from the stack
             val struct = get(structSym, SemanticErrorMessageBuilder()) as WACCStruct
-            val offset = getOffset(struct, elems[i])
+            val offset = getOffsetForStructElem(struct, elems[i])
             // add the offset into destination register, which will contain the value of the element
             addressOfElem.add(
                 ADD(addressOfElemRegister, addressOfStructRegister, Immediate(offset))
@@ -336,6 +331,7 @@ class ParentRefSymbolTable(
         // Work out this variable's offset from the start of symbol table.
         var offset = -data.spOffset + forceOffset
         var isSmall = false
+
         if (symbol in getMap()) {
             for ((k, v) in getMap().entries) {
                 offset += typeToByteSize(v)
@@ -356,24 +352,14 @@ class ParentRefSymbolTable(
                         isSignedByte = isSmall
                     )
                 )
-            } else {
-                // Not declared yet. Go to parent.
-                data.spOffset += totalByteSize
-                try {
-                    return parentTable!!.asmGet(symbol, toRegister, data)
-                } finally {
-                    data.spOffset -= totalByteSize
-                }
             }
-
-        } else {
-            // Not found in symbol table, go to parent.
-            data.spOffset += totalByteSize
-            try {
-                return parentTable!!.asmGet(symbol, toRegister, data)
-            } finally {
-                data.spOffset -= totalByteSize
-            }
+        }
+        // Go to parent
+        data.spOffset += totalByteSize
+        try {
+            return parentTable!!.asmGet(symbol, toRegister, data)
+        } finally {
+            data.spOffset -= totalByteSize
         }
     }
 
@@ -433,7 +419,7 @@ class ParentRefSymbolTable(
         for (elem in elems) {
             // calculate the position of the elements(s) from the struct
             val offset =
-                getOffset(get(structSym, SemanticErrorMessageBuilder()) as WACCStruct, elem)
+                getOffsetForStructElem(get(structSym, SemanticErrorMessageBuilder()) as WACCStruct, elem)
             // add the offset into destination register
             addressOfElem.add(ADD(toRegister, toRegister, Immediate(offset)))
             // dereference the address
@@ -466,7 +452,7 @@ class ParentRefSymbolTable(
             )
     }
 
-    private fun getOffset(
+    private fun getOffsetForStructElem(
         struct: WACCStruct,
         elem: String
     ): Int {
