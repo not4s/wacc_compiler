@@ -390,9 +390,9 @@ class ASTProducer(
     override fun visitExprIdentifier(ctx: WACCParser.ExprIdentifierContext): Expr {
         val symbol = ctx.IDENTIFIER().text
         val identifier_val = st.get(symbol, builderTemplateFromContext(ctx, st))
-        if(identifier_val is WInt && identifier_val.value != null) {
+        if (identifier_val is WInt && identifier_val.value != null) {
             return Literal(st, WInt(identifier_val.value))
-        } else if(identifier_val is WBool && identifier_val.value != null) {
+        } else if (identifier_val is WBool && identifier_val.value != null) {
             return Literal(st, WBool(identifier_val.value))
         } else {
             return IdentifierGet(st, symbol, ctx)
@@ -665,9 +665,11 @@ class ASTProducer(
             )
             // if the element is already in the paramMap then throw a semantic Error
             catchSemanticError {
-                prev ?: builderTemplateFromContext(ctx, st).structContainsDuplicateElements(id)
-                    .buildAndPrint()
-                throw SemanticException("Duplicate Element detected")
+                prev ?: {
+                    builderTemplateFromContext(ctx, st).structContainsDuplicateElements(id)
+                        .buildAndPrint()
+                    throw SemanticException("Duplicate Element detected")
+                }
             }
         }
         return WACCStruct(st, ctx.IDENTIFIER()!!.text, paramMap)
